@@ -511,7 +511,7 @@
 
           <div class="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
             <span class="text-[11px] text-slate-300 font-medium block">현재 보유 저축합계</span>
-            <span class="text-lg sm:text-xl font-black text-emerald-300 mt-1 block tracking-tight">91,807,567원</span>
+            <span id="houseTopKpiSavings" class="text-lg sm:text-xl font-black text-emerald-300 mt-1 block tracking-tight">91,807,567원</span>
             <span class="text-[10px] text-emerald-200 mt-1 block">주식+보증금+청약+월저축 등</span>
           </div>
         </div>
@@ -854,7 +854,7 @@
               </div>
               <div class="text-right">
                 <span class="text-[10px] text-slate-400 block font-medium">총 저축합계</span>
-                <span class="text-lg font-black text-emerald-600">91,807,567원</span>
+                <span id="houseTotalSavingsTop" class="text-lg font-black text-emerald-600">91,807,567원</span>
               </div>
             </div>
 
@@ -862,13 +862,13 @@
             <div class="space-y-1.5 mb-4">
               <div class="flex justify-between text-xs text-slate-500 font-semibold">
                 <span>자산 포트폴리오 비중</span>
-                <span>총 9,180만원</span>
+                <span id="houseTotalSavingsHeader">총 9,181만원</span>
               </div>
               <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex">
-                <div class="h-full bg-emerald-500" style="width: 39.4%" title="월별 저축 (39.4%)"></div>
-                <div class="h-full bg-blue-500" style="width: 32.5%" title="전세보증금 (32.5%)"></div>
-                <div class="h-full bg-violet-500" style="width: 18.5%" title="주식 (18.5%)"></div>
-                <div class="h-full bg-amber-500" style="width: 9.6%" title="주택청약 (9.6%)"></div>
+                <div id="barMonthlySavings" class="h-full bg-emerald-500 transition-all duration-500" style="width: 39.4%" title="월별 저축 (39.4%)"></div>
+                <div id="barDeposit" class="h-full bg-blue-500 transition-all duration-500" style="width: 32.5%" title="전세보증금 (32.5%)"></div>
+                <div id="barStock" class="h-full bg-violet-500 transition-all duration-500" style="width: 18.5%" title="주식 (18.5%)"></div>
+                <div id="barHousingSubscription" class="h-full bg-amber-500 transition-all duration-500" style="width: 9.6%" title="주택청약 (9.6%)"></div>
               </div>
             </div>
 
@@ -886,7 +886,7 @@
                 </div>
                 <div class="text-right">
                   <span class="text-xs font-bold text-slate-800">36,160,000원</span>
-                  <span class="text-[10px] text-emerald-600 block">39.4%</span>
+                  <span id="houseMonthlySavingsRatio" class="text-[10px] text-emerald-600 block">39.4%</span>
                 </div>
               </div>
 
@@ -902,23 +902,32 @@
                 </div>
                 <div class="text-right">
                   <span class="text-xs font-bold text-slate-800">29,821,000원</span>
-                  <span class="text-[10px] text-blue-600 block">32.5%</span>
+                  <span id="houseDepositRatio" class="text-[10px] text-blue-600 block">32.5%</span>
                 </div>
               </div>
 
-              <div class="flex justify-between items-center p-2.5 bg-slate-50 hover:bg-slate-100/80 rounded-xl transition">
-                <div class="flex items-center gap-2.5">
-                  <span class="w-7 h-7 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-arrow-trend-up"></i>
-                  </span>
-                  <div>
-                    <span class="text-xs font-bold text-slate-800 block">주식 자산</span>
-                    <span class="text-[10px] text-slate-400">보유 평가 금액</span>
+              <!-- 주식 자산 (구글시트 실시간 연동) -->
+              <div class="p-2.5 bg-slate-50 hover:bg-slate-100/80 rounded-xl transition border border-transparent hover:border-violet-300">
+                <div class="flex justify-between items-center cursor-pointer" onclick="openStockModal()">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-7 h-7 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center text-xs shadow-xs">
+                      <i class="fa-solid fa-arrow-trend-up"></i>
+                    </span>
+                    <div>
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-xs font-bold text-slate-800 block">주식 자산</span>
+                        <span id="stockSyncBadge" class="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded-full inline-flex items-center gap-1">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          시트 연동
+                        </span>
+                      </div>
+                      <span class="text-[10px] text-slate-400">다정 & 선준 보유 평가액 (클릭시 상세)</span>
+                    </div>
                   </div>
-                </div>
-                <div class="text-right">
-                  <span class="text-xs font-bold text-slate-800">16,974,329원</span>
-                  <span class="text-[10px] text-violet-600 block">18.5%</span>
+                  <div class="text-right">
+                    <span id="houseStockAmount" class="text-xs font-bold text-violet-700">16,974,329원</span>
+                    <span id="houseStockRatio" class="text-[10px] text-violet-600 font-semibold block">18.5%</span>
+                  </div>
                 </div>
               </div>
 
@@ -934,7 +943,7 @@
                 </div>
                 <div class="text-right">
                   <span class="text-xs font-bold text-slate-800">8,850,000원</span>
-                  <span class="text-[10px] text-amber-600 block">9.6%</span>
+                  <span id="houseSubRatio" class="text-[10px] text-amber-600 block">9.6%</span>
                 </div>
               </div>
 
@@ -950,7 +959,7 @@
                 </div>
                 <div class="text-right">
                   <span class="text-xs font-bold text-slate-800">2,238원</span>
-                  <span class="text-[10px] text-slate-400 block">0.0%</span>
+                  <span id="houseParkingRatio" class="text-[10px] text-slate-400 block">0.0%</span>
                 </div>
               </div>
             </div>
@@ -958,7 +967,7 @@
 
           <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-between">
             <span class="text-xs font-bold text-emerald-800">가용 자산 합계</span>
-            <span class="text-base font-black text-emerald-700">91,807,567원</span>
+            <span id="houseTotalSavingsBottom" class="text-base font-black text-emerald-700">91,807,567원</span>
           </div>
         </div>
 
@@ -1120,6 +1129,7 @@
         setupSeonjunFilters();
         renderSeonjunList();
         renderCharts();
+        renderHouseTab();
       } catch (err) {
         console.error("데이터 로딩 실패:", err);
         alert("데이터를 불러오는 중 오류가 발생했습니다: " + err.message);
@@ -1728,8 +1738,135 @@
     };
 
     let currentSimLoan = 400000000; // 시뮬레이터 기본 4억
+    let isStockSyncedFromSheet = false;
+    let stockItemsData = [];
+
+    function processStockFromRawData() {
+      if (!rawData) return;
+
+      let detectedStock = null;
+      let detectedItems = [];
+
+      // 1. rawData.stocks 또는 rawData.stock 확인
+      const stockSource = rawData.stocks || rawData.stock || rawData.stockData;
+      if (stockSource !== undefined && stockSource !== null) {
+        if (typeof stockSource === 'number') {
+          detectedStock = stockSource;
+        } else if (typeof stockSource === 'object') {
+          if (Array.isArray(stockSource)) {
+            detectedItems = stockSource;
+            detectedStock = stockSource.reduce((acc, cur) => acc + (Number(cur.amount || cur.value || cur.price) || 0), 0);
+          } else {
+            detectedStock = Number(stockSource.total !== undefined ? stockSource.total : (stockSource.totalAmount || stockSource.amount)) || 0;
+            detectedItems = stockSource.items || stockSource.list || [];
+            if (detectedStock === 0 && detectedItems.length > 0) {
+              detectedStock = detectedItems.reduce((acc, cur) => acc + (Number(cur.amount || cur.value) || 0), 0);
+            }
+          }
+        }
+      }
+
+      if (detectedStock !== null && !isNaN(detectedStock) && detectedStock > 0) {
+        HOUSE_DATA.savings.stock = detectedStock;
+        stockItemsData = detectedItems;
+        isStockSyncedFromSheet = true;
+      }
+
+      // 총 저축합계 동적 재계산
+      HOUSE_DATA.savings.total = 
+        (HOUSE_DATA.savings.stock || 0) + 
+        (HOUSE_DATA.savings.deposit || 0) + 
+        (HOUSE_DATA.savings.housingSubscription || 0) + 
+        (HOUSE_DATA.savings.monthlySavings || 0) + 
+        (HOUSE_DATA.savings.parkingAccount || 0);
+    }
+
+    function renderHouseAssetsUI() {
+      const total = HOUSE_DATA.savings.total || 1;
+      const stock = HOUSE_DATA.savings.stock || 0;
+      const monthly = HOUSE_DATA.savings.monthlySavings || 0;
+      const deposit = HOUSE_DATA.savings.deposit || 0;
+      const sub = HOUSE_DATA.savings.housingSubscription || 0;
+      const parking = HOUSE_DATA.savings.parkingAccount || 0;
+
+      const stockRatio = ((stock / total) * 100).toFixed(1);
+      const monthlyRatio = ((monthly / total) * 100).toFixed(1);
+      const depositRatio = ((deposit / total) * 100).toFixed(1);
+      const subRatio = ((sub / total) * 100).toFixed(1);
+      const parkingRatio = ((parking / total) * 100).toFixed(1);
+
+      // 상단 큰 카드
+      const topKpi = document.getElementById("houseTopKpiSavings");
+      if (topKpi) topKpi.innerText = total.toLocaleString() + "원";
+
+      // 4번 섹션 헤더
+      const topSavings = document.getElementById("houseTotalSavingsTop");
+      if (topSavings) topSavings.innerText = total.toLocaleString() + "원";
+
+      const headerSavings = document.getElementById("houseTotalSavingsHeader");
+      if (headerSavings) headerSavings.innerText = "총 " + Math.round(total / 10000).toLocaleString() + "만원";
+
+      const bottomSavings = document.getElementById("houseTotalSavingsBottom");
+      if (bottomSavings) bottomSavings.innerText = total.toLocaleString() + "원";
+
+      // 주식 금액 및 비율
+      const stockAmt = document.getElementById("houseStockAmount");
+      if (stockAmt) stockAmt.innerText = stock.toLocaleString() + "원";
+
+      const stockRat = document.getElementById("houseStockRatio");
+      if (stockRat) stockRat.innerText = stockRatio + "%";
+
+      // 기타 자산 비율 텍스트
+      const mRat = document.getElementById("houseMonthlySavingsRatio");
+      if (mRat) mRat.innerText = monthlyRatio + "%";
+
+      const dRat = document.getElementById("houseDepositRatio");
+      if (dRat) dRat.innerText = depositRatio + "%";
+
+      const sRat = document.getElementById("houseSubRatio");
+      if (sRat) sRat.innerText = subRatio + "%";
+
+      const pRat = document.getElementById("houseParkingRatio");
+      if (pRat) pRat.innerText = parkingRatio + "%";
+
+      // 프로그레스 바 너비 및 타이틀
+      const bStock = document.getElementById("barStock");
+      if (bStock) {
+        bStock.style.width = stockRatio + "%";
+        bStock.title = `주식 (${stockRatio}%)`;
+      }
+      const bMonthly = document.getElementById("barMonthlySavings");
+      if (bMonthly) {
+        bMonthly.style.width = monthlyRatio + "%";
+        bMonthly.title = `월별 저축 (${monthlyRatio}%)`;
+      }
+      const bDep = document.getElementById("barDeposit");
+      if (bDep) {
+        bDep.style.width = depositRatio + "%";
+        bDep.title = `전세보증금 (${depositRatio}%)`;
+      }
+      const bSub = document.getElementById("barHousingSubscription");
+      if (bSub) {
+        bSub.style.width = subRatio + "%";
+        bSub.title = `주택청약 (${subRatio}%)`;
+      }
+
+      // 연동 상태 뱃지
+      const badge = document.getElementById("stockSyncBadge");
+      if (badge) {
+        if (isStockSyncedFromSheet) {
+          badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>시트 실시간 연동';
+          badge.className = 'text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded-full inline-flex items-center gap-1';
+        } else {
+          badge.innerHTML = '<i class="fa-solid fa-arrows-rotate text-[9px]"></i>시트 연동 대기';
+          badge.className = 'text-[10px] font-bold text-violet-700 bg-violet-100 px-1.5 py-0.2 rounded-full inline-flex items-center gap-1';
+        }
+      }
+    }
 
     function renderHouseTab() {
+      processStockFromRawData();
+      renderHouseAssetsUI();
       renderLoanScenarioTable();
       updateSimulatorUI(currentSimLoan);
     }
@@ -1977,15 +2114,142 @@
       }
     }
 
+    // ==============================================
+    // 주식 자산 상세 모달 제어 로직
+    // ==============================================
+    function openStockModal() {
+      const modal = document.getElementById("stockModal");
+      if (!modal) return;
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+
+      const modalTotal = document.getElementById("stockModalTotal");
+      if (modalTotal) modalTotal.innerText = (HOUSE_DATA.savings.stock || 0).toLocaleString() + "원";
+
+      const total = HOUSE_DATA.savings.total || 1;
+      const ratio = (((HOUSE_DATA.savings.stock || 0) / total) * 100).toFixed(1);
+      const ratioText = document.getElementById("stockModalRatioText");
+      if (ratioText) ratioText.innerText = ratio + "%";
+
+      const badge = document.getElementById("stockModalStatusBadge");
+      if (badge) {
+        if (isStockSyncedFromSheet) {
+          badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>시트 실시간 연동 중';
+          badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-400/30';
+        } else {
+          badge.innerHTML = '<i class="fa-solid fa-arrows-rotate text-[9px]"></i>시트 연동 대기 (기본값 반영)';
+          badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold text-violet-200 bg-violet-900/60 px-2 py-0.5 rounded-full border border-violet-400/30';
+        }
+      }
+
+      renderStockItemsTable();
+    }
+
+    function closeStockModal() {
+      const modal = document.getElementById("stockModal");
+      if (!modal) return;
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function renderStockItemsTable() {
+      const container = document.getElementById("stockModalItemsList");
+      if (!container) return;
+
+      if (stockItemsData && stockItemsData.length > 0) {
+        let html = `
+          <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="py-2.5 px-3">소유자</th>
+                  <th class="py-2.5 px-3">종목명</th>
+                  <th class="py-2.5 px-3 text-right">수량</th>
+                  <th class="py-2.5 px-3 text-right">평가금액</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+        `;
+
+        stockItemsData.forEach(item => {
+          const isDajeong = item.owner && item.owner.includes('다정');
+          const isSeonjun = item.owner && item.owner.includes('선준');
+          const ownerBadge = isDajeong 
+            ? '<span class="px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 font-extrabold text-[10px]">다정</span>'
+            : (isSeonjun 
+              ? '<span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-extrabold text-[10px]">선준</span>'
+              : '<span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px]">공통</span>');
+
+          html += `
+            <tr class="hover:bg-slate-50/80 transition">
+              <td class="py-2.5 px-3 whitespace-nowrap">${ownerBadge}</td>
+              <td class="py-2.5 px-3 font-bold text-slate-800">${item.name || '-'}</td>
+              <td class="py-2.5 px-3 text-right text-slate-500">${item.quantity ? item.quantity.toLocaleString() + '주' : '-'}</td>
+              <td class="py-2.5 px-3 text-right font-extrabold text-violet-700">${Number(item.amount || 0).toLocaleString()}원</td>
+            </tr>
+          `;
+        });
+
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = `
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2 text-xs text-slate-600">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800">현재 반영된 평가금액</span>
+              <span class="text-sm font-extrabold text-violet-700">${(HOUSE_DATA.savings.stock || 0).toLocaleString()}원</span>
+            </div>
+            <p class="text-[11px] text-slate-500 leading-relaxed">
+              구글 시트의 <strong>[주식]</strong> 시트 총 평가금액이 내 집 마련 플랜 및 부족액 계산에 실시간 반영됩니다.
+              아래 Apps Script 코드를 구글 시트에 적용하시면 다정 & 선준 개별 종목별 상세 목록까지 즉시 연동됩니다.
+            </p>
+          </div>
+        `;
+      }
+    }
+
+    async function copyAppsScriptCode() {
+      const code = `// Google Apps Script (Code.gs)
+// 구글 스프레드시트 ➔ 확장 프로그램 ➔ Apps Script 에 아래 코드를 붙여넣고 [새 배포] 하세요.
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var summaryData = getSummaryData(ss);
+  var dajeongData = getDajeongData(ss);
+  var seonjunData = getSeonjunData(ss);
+  var stockData = getStockData(ss);
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "success",
+    summary: summaryData,
+    dajeong: dajeongData,
+    seonjun: seonjunData,
+    stocks: stockData
+  })).setMimeType(ContentService.MimeType.JSON);
+}`;
+      try {
+        await navigator.clipboard.writeText(code);
+        alert("Apps Script 코드가 복사되었습니다! 전체 코드는 프로젝트 폴더의 google_apps_script.js 파일에서 확인하실 수 있습니다.");
+      } catch(e) {
+        alert("프로젝트 폴더의 google_apps_script.js 파일을 확인해 주세요.");
+      }
+    }
+
+    function toggleAppsScriptCodeBox() {
+      const box = document.getElementById("appsScriptCodeBox");
+      if (box) box.classList.toggle("hidden");
+    }
+
     // ESC 키로 모달 닫기 및 모달 배경 클릭 시 닫기
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeShareModal();
+      if (e.key === "Escape") {
+        closeShareModal();
+        closeStockModal();
+      }
     });
     document.addEventListener("click", (e) => {
-      const modal = document.getElementById("shareModal");
-      if (modal && e.target === modal) {
-        closeShareModal();
-      }
+      const shareM = document.getElementById("shareModal");
+      if (shareM && e.target === shareM) closeShareModal();
+      const stockM = document.getElementById("stockModal");
+      if (stockM && e.target === stockM) closeStockModal();
     });
 
     // 초기 데이터 로딩 시작
@@ -2105,6 +2369,105 @@
       <!-- 모달 푸터 -->
       <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end">
         <button onclick="closeShareModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-700 text-xs font-bold rounded-xl transition">
+          닫기
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- 📈 다정 & 선준 주식 자산 상세 및 연동 모달 -->
+  <!-- ============================================== -->
+  <div id="stockModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 transition-all duration-300">
+    <div class="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
+      
+      <!-- 모달 헤더 -->
+      <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-50 to-violet-50/50">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center text-base shadow-sm shadow-violet-200">
+            <i class="fa-solid fa-arrow-trend-up"></i>
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-black text-slate-900">다정 & 선준 주식 자산 상세</h3>
+            <p class="text-xs text-slate-500">구글 스프레드시트 [주식] 시트 실시간 자동 연동</p>
+          </div>
+        </div>
+        <button onclick="closeStockModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- 모달 본문 (스크롤 가능) -->
+      <div class="p-5 sm:p-6 overflow-y-auto space-y-5">
+        
+        <!-- 1. 총 평가금액 KPI 배너 -->
+        <div class="bg-gradient-to-br from-violet-600 via-indigo-700 to-purple-800 text-white rounded-2xl p-5 shadow-sm space-y-2 relative overflow-hidden">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-semibold text-violet-200">현재 주식 총 평가금액</span>
+            <span id="stockModalStatusBadge" class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-400/30">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              시트 연동
+            </span>
+          </div>
+          <span id="stockModalTotal" class="text-2xl sm:text-3xl font-black block tracking-tight">16,974,329원</span>
+          <p class="text-[11px] text-violet-200">
+            내 집 마련 보유 자산의 <strong id="stockModalRatioText">18.5%</strong>를 차지하며, 입주 잔금 산정에 자동 합산됩니다.
+          </p>
+        </div>
+
+        <!-- 2. 세부 보유 종목 내역 -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-bold text-slate-700">보유 종목 내역 (다정 & 선준)</label>
+            <span class="text-[11px] text-slate-400">구글 시트 '주식' 시트 데이터</span>
+          </div>
+          <div id="stockModalItemsList">
+            <!-- 동적 렌더링 -->
+          </div>
+        </div>
+
+        <!-- 3. 실시간 구글 시트 연동 안내 및 원클릭 복사 카드 -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+          <div class="flex items-start gap-2.5">
+            <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs shrink-0 mt-0.5">
+              <i class="fa-solid fa-code"></i>
+            </span>
+            <div class="flex-1">
+              <h4 class="text-xs font-bold text-slate-800">구글 시트 수정 즉시 대시보드 반영</h4>
+              <p class="text-[11px] text-slate-500 mt-0.5">
+                구글 시트의 [주식] 시트에서 금액을 변경하고 대시보드 [새로고침]을 누르면 즉시 동기화됩니다.
+              </p>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap gap-2 pt-1 border-t border-slate-200/80">
+            <button onclick="copyAppsScriptCode()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs">
+              <i class="fa-regular fa-copy"></i>
+              <span>Apps Script 코드 복사</span>
+            </button>
+            <button onclick="toggleAppsScriptCodeBox()" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold rounded-xl transition flex items-center gap-1">
+              <i class="fa-solid fa-circle-question text-slate-400"></i>
+              <span>연동 방법 상세</span>
+            </button>
+          </div>
+
+          <div id="appsScriptCodeBox" class="hidden text-[11px] text-slate-600 bg-white p-3 rounded-xl border border-slate-200 space-y-2">
+            <p class="font-bold text-slate-800">📌 1분 연동 방법:</p>
+            <ol class="list-decimal pl-4 space-y-1 text-[11px]">
+              <li>구글 스프레드시트 ➔ 상단 <strong>[확장 프로그램] ➔ [Apps Script]</strong> 클릭</li>
+              <li>폴더 내 <strong>google_apps_script.js</strong> 내용 전체 복사하여 붙여넣기</li>
+              <li>우측 상단 <strong>[배포] ➔ [새 배포] ➔ [웹 앱]</strong> (액세스: 모든 사용자) 배포!</li>
+            </ol>
+            <p class="text-[10px] text-indigo-600">자세한 내용은 폴더 내 <strong>STOCK_SYNC_GUIDE.md</strong> 파일에서도 확인 가능합니다.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 모달 푸터 -->
+      <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end">
+        <button onclick="closeStockModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-700 text-xs font-bold rounded-xl transition">
           닫기
         </button>
       </div>
