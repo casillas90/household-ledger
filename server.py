@@ -36,34 +36,40 @@ def find_available_port(start_port=DEFAULT_PORT):
         port += 1
     return start_port
 
-def print_banner(local_url, iphone_url):
-    print("\n" + "=" * 64)
-    print("   ✨ 다정 & 선준 가계부 대시보드 로컬 서버가 시작되었습니다! ✨")
-    print("=" * 64)
-    print(f" 💻 맥북 접속 주소 : \033[1;36m{local_url}\033[0m")
-    print(f" 📱 아이폰 접속 주소: \033[1;32m{iphone_url}\033[0m")
-    print("-" * 64)
+def print_banner(local_url, iphone_ip_url, port):
+    swdjsj_url = f"http://swdjsj.local:{port}"
+    mac_host_url = f"http://gimseonjun-ui-MacBookAir.local:{port}"
+
+    print("\n" + "=" * 68)
+    print("      ✨ 다정 & 선준 가계부 대시보드 로컬 서버가 시작되었습니다! ✨")
+    print("=" * 68)
+    print(f" 💻 맥북 접속 주소      : \033[1;36m{local_url}\033[0m")
+    print(f" 📱 아이폰 간편 주소 (1) : \033[1;32m{swdjsj_url}\033[0m  \033[0;33m(추천: swdjsj 적용시)\033[0m")
+    print(f" 📱 아이폰 호스트 주소 (2): \033[1;32m{mac_host_url}\033[0m  \033[0;32m(지금 바로 가능)\033[0m")
+    print(f" 📱 아이폰 숫자 IP 주소  : \033[1;30m{iphone_ip_url}\033[0m")
+    print("-" * 68)
     
-    # QR코드 터미널 출력
+    # QR코드 터미널 출력 (swdjsj_url 기본)
     try:
         import qrcode
         qr = qrcode.QRCode(border=1)
-        qr.add_data(iphone_url)
+        qr.add_data(swdjsj_url)
         qr.make(fit=True)
-        print(" 📷 [아이폰 카메라로 아래 QR 코드를 비추면 즉시 열립니다]\n")
+        print(f" 📷 [아이폰 카메라로 아래 QR 코드를 비추면 즉시 열립니다] ({swdjsj_url})\n")
         qr.print_ascii(invert=True)
         print()
     except Exception as e:
-        print(f" (QR코드 생성 안내: 아이폰 사파리 주소창에 {iphone_url} 입력)")
+        print(f" (QR코드 생성 안내: 아이폰 사파리 주소창에 {swdjsj_url} 입력)")
 
-    print("=" * 64)
-    print(" 💡 유용한 팁:")
-    print("  1. 맥북과 아이폰이 같은 Wi-Fi에 연결되어 있어야 합니다.")
-    print("  2. 아이폰 Safari 접속 후 [공유 ⎋] ➔ [홈 화면에 추가 ➕]를 누르면")
-    print("     스마트폰 앱처럼 전체화면으로 이용하실 수 있습니다.")
-    print("  3. 맥북에서 index.html을 수정하고 저장하면, 아이폰에서 새로고침 시 즉시 반영됩니다.")
+    print("=" * 68)
+    print(" 💡 아이폰에서 접속이 안 될 때 체크리스트:")
+    print("  1. [가장 중요] 아이폰의 Wi-Fi가 켜져 있고 맥북과 같은 Wi-Fi에 연결되어 있어야 합니다.")
+    print("     (아이폰이 LTE/5G 데이터로 켜져 있으면 접속되지 않습니다)")
+    print("  2. 주소창 입력 시 'http://' 를 반드시 포함해 주세요: http://swdjsj.local:8080")
+    print("  3. 맥북에서 'swdjsj.local' 주소를 활성화하는 초간단 방법:")
+    print("     맥북 [시스템 설정] ➔ [일반] ➔ [공유] ➔ 맨 밑 [로컬 호스트 이름]을 'swdjsj'로 변경!")
     print("  4. 서버를 종료하려면 터미널에서 [Ctrl + C]를 누르세요.")
-    print("=" * 64 + "\n")
+    print("=" * 68 + "\n")
 
 class CustomHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -87,7 +93,7 @@ def main():
     local_url = f"http://localhost:{port}"
     iphone_url = f"http://{ip}:{port}"
     
-    print_banner(local_url, iphone_url)
+    print_banner(local_url, iphone_url, port)
     
     # 맥북 브라우저 자동 오픈
     try:

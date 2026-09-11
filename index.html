@@ -2013,20 +2013,28 @@
     }
 
     // ==============================================
-    // 아이폰 공유 모달 제어 로직
+    // 아이폰 공유 모달 제어 로직 (swdjsj 지원)
     // ==============================================
-    const MACBOOK_LOCAL_IP = "192.168.20.34";
-    const LOCAL_PORT = "8080";
+    const SWDJSJ_URL = "http://swdjsj.local:8080";
+    const MAC_HOST_URL = "http://gimseonjun-ui-MacBookAir.local:8080";
+    const MACBOOK_LOCAL_IP_URL = "http://192.168.20.34:8080";
 
-    function getTargetShareUrl() {
-      const current = window.location.href;
-      if (current.startsWith("http://localhost") || current.startsWith("http://127.0.0.1")) {
-        return `http://${MACBOOK_LOCAL_IP}:${window.location.port || LOCAL_PORT}/`;
-      }
-      if (current.startsWith("http://") || current.startsWith("https://")) {
-        return current;
-      }
-      return `http://${MACBOOK_LOCAL_IP}:${LOCAL_PORT}/`;
+    let activeShareUrl = SWDJSJ_URL;
+
+    function setShareUrl(url) {
+      activeShareUrl = url;
+      const input = document.getElementById("shareUrlInput");
+      if (input) input.value = activeShareUrl;
+      renderQrCode(activeShareUrl);
+
+      // 칩 활성화 상태 변경
+      document.querySelectorAll(".share-url-chip").forEach(btn => {
+        if (btn.dataset.url === url) {
+          btn.className = "share-url-chip px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition";
+        } else {
+          btn.className = "share-url-chip px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition";
+        }
+      });
     }
 
     function openShareModal() {
@@ -2035,12 +2043,7 @@
       modal.classList.remove("hidden");
       modal.classList.add("flex");
 
-      const shareUrl = getTargetShareUrl();
-      const input = document.getElementById("shareUrlInput");
-      if (input) input.value = shareUrl;
-
-      // QR 코드 렌더링
-      renderQrCode(shareUrl);
+      setShareUrl(activeShareUrl);
     }
 
     function closeShareModal() {
@@ -2296,9 +2299,23 @@ function doGet(e) {
           </p>
         </div>
 
-        <!-- 2. 링크 복사 & Web Share 카드 -->
-        <div class="space-y-2">
-          <label class="text-xs font-bold text-slate-600 block">접속 링크 주소</label>
+        <!-- 2. 주소 선택 및 링크 복사 카드 -->
+        <div class="space-y-2.5">
+          <div>
+            <label class="text-xs font-bold text-slate-700 block mb-1.5">접속 주소 선택 (아이폰용)</label>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="setShareUrl('http://swdjsj.local:8080')" data-url="http://swdjsj.local:8080" class="share-url-chip px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition">
+                ✨ swdjsj.local:8080 (추천)
+              </button>
+              <button type="button" onclick="setShareUrl('http://gimseonjun-ui-MacBookAir.local:8080')" data-url="http://gimseonjun-ui-MacBookAir.local:8080" class="share-url-chip px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+                💻 맥북 기본 호스트
+              </button>
+              <button type="button" onclick="setShareUrl('http://192.168.20.34:8080')" data-url="http://192.168.20.34:8080" class="share-url-chip px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+                🔢 숫자 IP 주소
+              </button>
+            </div>
+          </div>
+
           <div class="flex items-center gap-2">
             <div class="relative flex-1">
               <input id="shareUrlInput" type="text" readonly class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold rounded-xl px-3.5 py-2.5 outline-none font-mono focus:border-indigo-400 select-all" value="" />
@@ -2308,16 +2325,24 @@ function doGet(e) {
               <span id="copyBtnText">링크 복사</span>
             </button>
           </div>
-          <div class="flex gap-2 pt-1">
-            <button onclick="triggerNativeShare()" class="flex-1 py-2.5 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-indigo-200">
+          <div class="flex gap-2 pt-0.5">
+            <button onclick="triggerNativeShare()" class="flex-1 py-2 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-indigo-200">
               <i class="fa-solid fa-arrow-up-right-from-square"></i>
               <span>카카오톡 / 메시지 공유</span>
             </button>
           </div>
-          <p id="shareNetworkNotice" class="text-[11px] text-slate-500 pt-0.5">
-            <i class="fa-solid fa-circle-info text-indigo-500"></i>
-            맥북과 아이폰이 <strong>같은 Wi-Fi</strong>에 연결되어 있어야 로컬 링크가 열립니다.
-          </p>
+
+          <!-- 아이폰 안 열릴 때 체크 박스 -->
+          <div class="p-3 bg-amber-50/90 rounded-xl border border-amber-200 text-[11px] text-amber-900 space-y-1">
+            <p class="font-bold flex items-center gap-1.5 text-amber-900">
+              <i class="fa-solid fa-circle-exclamation text-amber-600"></i>
+              아이폰에서 주소가 안 열릴 때 2가지만 확인해 주세요:
+            </p>
+            <ul class="list-disc pl-4 space-y-0.5 text-amber-800 text-[10.5px]">
+              <li><strong>Wi-Fi 연결</strong>: 아이폰이 LTE/5G 데이터가 아닌, 맥북과 <strong>같은 Wi-Fi</strong>에 연결되어 있어야 합니다.</li>
+              <li><strong>swdjsj 주소 바로 쓰는 법</strong>: 맥북 [시스템 설정] ➔ [일반] ➔ [공유] ➔ 맨 밑 [로컬 호스트 이름]을 <strong>swdjsj</strong> 로 변경해 주시면 즉시 접속됩니다!</li>
+            </ul>
+          </div>
         </div>
 
         <!-- 3. 아이폰 Safari '홈 화면에 추가' 안내 -->
