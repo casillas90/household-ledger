@@ -791,23 +791,150 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- 3. 차트 & 통계 탭 -->
+    <!-- 3. 차트 & 통계 탭 (재정 통계 & 심층 분석 센터) -->
     <!-- ============================================== -->
     <div id="tab-charts" class="tab-content hidden space-y-6">
       
-      <!-- 상단 추이 차트 -->
+      <!-- 상단 컨트롤 헤더 및 필터 툴바 -->
+      <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+              <i class="fa-solid fa-chart-pie"></i>
+            </span>
+            <div>
+              <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                재정 통계 & 심층 지출 분석 센터
+                <span class="text-[11px] font-semibold bg-indigo-100/70 text-indigo-700 px-2 py-0.5 rounded-full">Analytics Pro</span>
+              </h2>
+              <p class="text-xs text-slate-400 mt-0.5">수입·지출 밸런스, 4대 배분 흐름(적금/용돈/생활비/비상금), 소비처 TOP 순위를 심층 분석합니다</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 필터 컨트롤 그룹 -->
+        <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          <!-- 분석 대상 선택 (선준 / 다정 / 합산) -->
+          <div class="flex items-center bg-slate-100 p-1 rounded-2xl text-xs font-bold text-slate-600">
+            <button onclick="setAnalyticsTarget('seonjun')" id="btnTargetSeonjun" class="px-3 py-1.5 rounded-xl bg-white text-indigo-600 shadow-2xs font-bold transition">선준 카드</button>
+            <button onclick="setAnalyticsTarget('dajeong')" id="btnTargetDajeong" class="px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 transition font-medium">다정 카드</button>
+            <button onclick="setAnalyticsTarget('both')" id="btnTargetBoth" class="px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 transition font-medium">부부 합산</button>
+          </div>
+
+          <!-- 기간 프리셋 (6개월 / 12개월 / 2026년 / 2025년 / 전체) -->
+          <div class="flex items-center bg-slate-100 p-1 rounded-2xl text-xs font-semibold text-slate-600">
+            <button onclick="updateTrendChartRange(6)" id="btnRange6" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white text-indigo-600 shadow-2xs transition">6개월</button>
+            <button onclick="updateTrendChartRange(12)" id="btnRange12" class="px-2.5 py-1.5 rounded-xl text-xs hover:text-slate-900 transition">12개월</button>
+            <button onclick="updateTrendChartRange('2026')" id="btnRange2026" class="px-2.5 py-1.5 rounded-xl text-xs hover:text-slate-900 transition">2026년</button>
+            <button onclick="updateTrendChartRange('2025')" id="btnRange2025" class="px-2.5 py-1.5 rounded-xl text-xs hover:text-slate-900 transition">2025년</button>
+            <button onclick="updateTrendChartRange(999)" id="btnRangeAll" class="px-2.5 py-1.5 rounded-xl text-xs hover:text-slate-900 transition">전체</button>
+          </div>
+
+          <!-- 특정 월 드릴다운 셀렉터 -->
+          <div class="relative">
+            <select id="analyticsMonthSelect" onchange="onAnalyticsMonthChange(this.value)" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 font-bold text-slate-700 outline-none hover:bg-slate-100 transition cursor-pointer">
+              <!-- JS에서 자동 주입 -->
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ① 4대 핵심 재정 KPI 요약 카드 -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="analyticsKpiContainer">
+        <!-- 1. 월평균 급여 -->
+        <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/70 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-bold text-slate-400">월평균 급여 수입</span>
+            <span class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-wallet"></i>
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="text-lg sm:text-xl font-black text-slate-900" id="kpiAvgSalary">-</div>
+            <div class="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1" id="kpiAvgSalarySub">
+              <i class="fa-solid fa-circle-check text-[10px]"></i> 정기 급여 기준
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. 월평균 카드값 지출 -->
+        <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/70 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-bold text-slate-400" id="kpiCardLabel">월평균 선준 카드값</span>
+            <span class="w-7 h-7 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-credit-card"></i>
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="text-lg sm:text-xl font-black text-rose-600" id="kpiAvgCard">-</div>
+            <div class="text-[11px] text-slate-500 font-semibold mt-1 flex items-center gap-1" id="kpiAvgCardSub">
+              최근 지출 추세
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 평균 저축 성향(저축률) -->
+        <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/70 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-bold text-slate-400">평균 저축 성향 (적금률)</span>
+            <span class="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-piggy-bank"></i>
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="text-lg sm:text-xl font-black text-indigo-600" id="kpiAvgSavingsRate">-</div>
+            <div class="text-[11px] text-indigo-500 font-semibold mt-1 flex items-center gap-1" id="kpiAvgSavingsSub">
+              월평균 적금액
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. 최고 지출월 vs 최저 지출월 -->
+        <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/70 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-bold text-slate-400">최대/최소 지출월 격차</span>
+            <span class="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-arrows-up-down"></i>
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="text-lg sm:text-xl font-black text-slate-900" id="kpiMinMaxGap">-</div>
+            <div class="text-[11px] text-amber-700 font-semibold mt-1 truncate" id="kpiMinMaxSub">
+              최대 vs 최소 지출월
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 스마트 재정 인사이트 배너 -->
+      <div id="analyticsInsightBanner" class="bg-gradient-to-r from-indigo-900/95 via-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-lg border border-indigo-500/20 relative overflow-hidden">
+        <div class="flex items-start gap-3.5 relative z-10">
+          <div class="w-9 h-9 rounded-2xl bg-indigo-500/30 border border-indigo-400/40 text-amber-300 flex items-center justify-center shrink-0 text-base shadow-sm">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <h4 class="text-sm font-bold text-white tracking-wide">스마트 재정 브리핑 & 소비 패턴 진단</h4>
+              <span class="text-[10px] bg-indigo-500/40 text-indigo-200 px-2 py-0.5 rounded-md font-semibold" id="insightPeriodBadge">2026년 9월 기준</span>
+            </div>
+            <div id="analyticsInsightContent" class="text-xs text-slate-200/90 mt-1.5 leading-relaxed space-y-1">
+              <!-- JS 동적 생성 -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 차트 1: 수입 · 지출 · 잔금 복합 추이 (Bar + Line) -->
       <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
           <div>
             <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-              <i class="fa-solid fa-chart-line text-indigo-500"></i> 월별 급여 vs 선준 카드값 vs 월 잔금 추이
+              <i class="fa-solid fa-chart-line text-indigo-500"></i> 월별 수입(급여) vs 카드 지출 vs 잔금 변동 추이
             </h3>
-            <p class="text-xs text-slate-400 mt-0.5">수입(급여)과 선준 카드값 지출, 그리고 남은 월 잔금의 변동성을 시각적으로 확인합니다</p>
+            <p class="text-xs text-slate-400 mt-0.5">선택한 기간 동안의 수입, 카드 지출 총액, 그리고 남은 월 잔금의 밸런스를 비교합니다</p>
           </div>
-          <div class="flex items-center gap-2">
-            <button onclick="updateTrendChartRange(6)" id="btnRange6" class="px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 transition">최근 6개월</button>
-            <button onclick="updateTrendChartRange(12)" id="btnRange12" class="px-3 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">최근 12개월</button>
-            <button onclick="updateTrendChartRange(999)" id="btnRangeAll" class="px-3 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">전체</button>
+          <div class="text-xs font-semibold text-slate-500" id="trendChartPeriodText">
+            최근 6개월
           </div>
         </div>
         <div class="relative h-[320px] w-full">
@@ -815,37 +942,82 @@
         </div>
       </div>
 
-      <!-- 하단 2분할 차트 (선준 카드 구분 비율 & 카드사별 비율) -->
+      <!-- 차트 2: 잔금 배분 4대 축 누적 추이 (Stacked Bar Chart) -->
+      <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-layer-group text-emerald-500"></i> 월 잔금 4대 배분 누적 추이 (적금 · 용돈 · 생활비 · 비상금)
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">매월 잔금이 자산(적금)과 필수 소비(용돈, 생활비, 비상금)로 어떻게 축적되고 배분되었는지 누적 비교합니다</p>
+          </div>
+          <div class="flex items-center gap-3 text-xs font-semibold text-slate-600">
+            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>적금</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>용돈</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>생활비</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>비상금</span>
+          </div>
+        </div>
+        <div class="relative h-[300px] w-full">
+          <canvas id="allocStackedChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 하단 2분할 섹션: 도넛 차트 2종 (지출 구분 & 카드사 비중) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        <!-- 선준 카드 구분 (공통/개인/생활비) -->
+        <!-- 도넛 1: 구분별 지출 비중 -->
         <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
           <div class="flex justify-between items-center mb-4">
             <div>
-              <h3 class="text-sm font-bold text-slate-900">선준 카드값 구분 비율</h3>
+              <h3 class="text-sm font-bold text-slate-900" id="chartTypeTitle">카드 지출 구분별 비율</h3>
               <p class="text-[11px] text-slate-400 mt-0.5" id="chartTypeSub">현재 필터 기준</p>
             </div>
             <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-bold">지출 비중</span>
           </div>
-          <div class="relative h-[240px] w-full flex items-center justify-center">
+          <div class="relative h-[250px] w-full flex items-center justify-center">
             <canvas id="typeDoughnutChart"></canvas>
           </div>
         </div>
 
-        <!-- 선준 카드사별 지출 비율 -->
+        <!-- 도넛 2: 카드사별 사용 비율 -->
         <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
           <div class="flex justify-between items-center mb-4">
             <div>
-              <h3 class="text-sm font-bold text-slate-900">선준 카드사별 사용 비율</h3>
+              <h3 class="text-sm font-bold text-slate-900" id="chartCardTitle">결제 카드사별 사용 비율</h3>
               <p class="text-[11px] text-slate-400 mt-0.5" id="chartCardSub">하나 / 롯데 / 신한 / 기업 등</p>
             </div>
             <span class="text-xs bg-violet-50 text-violet-600 px-2 py-1 rounded-lg font-bold">카드사</span>
           </div>
-          <div class="relative h-[240px] w-full flex items-center justify-center">
+          <div class="relative h-[250px] w-full flex items-center justify-center">
             <canvas id="cardDoughnutChart"></canvas>
           </div>
         </div>
+      </div>
 
+      <!-- 섹션 4: 주요 지출 가맹점 / 사용처 TOP 랭킹 (차트 + 순위 리스트) -->
+      <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-ranking-star text-rose-500"></i> 주요 지출 가맹점 / 사용처 TOP 순위
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">해당 기간 동안 가장 지출 비중이 컸던 주요 소비처를 집계하여 낭비 요소를 점검합니다</p>
+          </div>
+          <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-xl" id="topSpendingTargetBadge">
+            선준 카드 기준
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <!-- 좌측 가로 막대 차트 -->
+          <div class="lg:col-span-7 relative h-[280px] w-full">
+            <canvas id="topSpendingChart"></canvas>
+          </div>
+          <!-- 우측 랭킹 리스트 -->
+          <div class="lg:col-span-5 flex flex-col justify-center space-y-2.5" id="topSpendingListContainer">
+            <!-- JS 동적 생성 -->
+          </div>
+        </div>
       </div>
 
     </div>
@@ -1496,11 +1668,15 @@
     let selectedSummaryIndex = -1; // -1 means latest
     let dajeongSortDesc = true;
     let trendRange = 6;
+    let analyticsTarget = 'seonjun'; // 'seonjun' | 'dajeong' | 'both'
+    let analyticsMonth = 'ALL';
 
     // Charts instances
     let trendChartInstance = null;
+    let allocChartInstance = null;
     let typeChartInstance = null;
     let cardChartInstance = null;
+    let topSpendingChartInstance = null;
 
     async function loadData() {
       const refreshIcon = document.getElementById("refreshIcon");
@@ -3587,80 +3763,352 @@
     }
 
     // ==========================================
-    // 4. 차트 렌더링 (Chart.js)
+    // 4. 차트 & 심층 분석 렌더링 (Chart.js Pro)
     // ==========================================
     function updateTrendChartRange(range) {
       trendRange = range;
-      ['btnRange6', 'btnRange12', 'btnRangeAll'].forEach(id => {
+      ['btnRange6', 'btnRange12', 'btnRange2026', 'btnRange2025', 'btnRangeAll'].forEach(id => {
         const btn = document.getElementById(id);
-        btn.className = "px-3 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition";
+        if (btn) btn.className = "px-2.5 py-1.5 rounded-xl text-xs hover:text-slate-900 transition font-semibold text-slate-600";
       });
 
-      if (range === 6) document.getElementById('btnRange6').className = "px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 transition";
-      if (range === 12) document.getElementById('btnRange12').className = "px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 transition";
-      if (range === 999) document.getElementById('btnRangeAll').className = "px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 transition";
+      const activeId = range === 6 ? 'btnRange6' :
+                       range === 12 ? 'btnRange12' :
+                       range === '2026' ? 'btnRange2026' :
+                       range === '2025' ? 'btnRange2025' : 'btnRangeAll';
+      const activeBtn = document.getElementById(activeId);
+      if (activeBtn) activeBtn.className = "px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white text-indigo-600 shadow-2xs transition";
 
-      renderTrendChart();
+      const periodLabelMap = {
+        6: '최근 6개월',
+        12: '최근 12개월',
+        '2026': '2026년 연간',
+        '2025': '2025년 연간',
+        999: '전체 기간'
+      };
+      const periodText = document.getElementById('trendChartPeriodText');
+      if (periodText) periodText.innerText = periodLabelMap[range] || '최근 6개월';
+
+      renderCharts();
+    }
+
+    function setAnalyticsTarget(target) {
+      analyticsTarget = target;
+      ['btnTargetSeonjun', 'btnTargetDajeong', 'btnTargetBoth'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.className = "px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 transition font-medium";
+      });
+
+      if (target === 'seonjun') {
+        const b = document.getElementById('btnTargetSeonjun');
+        if (b) b.className = "px-3 py-1.5 rounded-xl bg-white text-indigo-600 shadow-2xs font-bold transition";
+      } else if (target === 'dajeong') {
+        const b = document.getElementById('btnTargetDajeong');
+        if (b) b.className = "px-3 py-1.5 rounded-xl bg-white text-rose-600 shadow-2xs font-bold transition";
+      } else if (target === 'both') {
+        const b = document.getElementById('btnTargetBoth');
+        if (b) b.className = "px-3 py-1.5 rounded-xl bg-white text-purple-600 shadow-2xs font-bold transition";
+      }
+
+      const badge = document.getElementById('topSpendingTargetBadge');
+      if (badge) {
+        badge.innerText = target === 'seonjun' ? '선준 카드 기준' :
+                          target === 'dajeong' ? '다정 카드 기준' : '부부 합산 기준';
+        badge.className = target === 'seonjun' ? 'text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-xl' :
+                          target === 'dajeong' ? 'text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-xl' :
+                          'text-xs font-bold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-xl';
+      }
+
+      renderCharts();
+    }
+
+    function populateAnalyticsMonthSelect() {
+      const select = document.getElementById('analyticsMonthSelect');
+      if (!select) return;
+      const currentVal = analyticsMonth;
+
+      const list = getValidSummaryList().filter(item => {
+        const m = getMonthMetrics(item);
+        return m.salary > 0 || m.totalCost > 0 || m.remainBalance > 0;
+      }).reverse();
+
+      let html = `<option value="ALL">전체 선택 기간 집계</option>`;
+      list.forEach(it => {
+        const val = `${it.year || ''} ${it.month}`.trim();
+        html += `<option value="${val}">${val} 심층 조회</option>`;
+      });
+      select.innerHTML = html;
+      if (currentVal && (currentVal === 'ALL' || list.some(it => `${it.year || ''} ${it.month}`.trim() === currentVal))) {
+        select.value = currentVal;
+      } else {
+        select.value = 'ALL';
+        analyticsMonth = 'ALL';
+      }
+    }
+
+    function onAnalyticsMonthChange(val) {
+      analyticsMonth = val;
+      renderCharts();
+    }
+
+    function getDajeongMonthCardCost(year, month) {
+      const allD = getAllDajeongItems();
+      const filtered = allD.filter(it => (it.year === year || !it.year) && it.month === month);
+      return filtered.reduce((sum, cur) => sum + (cur.amount || 0), 0);
+    }
+
+    function getAnalyticsDisplayList() {
+      const list = getValidSummaryList();
+      if (!list || list.length === 0) return [];
+
+      // 제외: 미래 빈 데이터 (급여, 카드값, 잔금, 적금 모두 0인 월)
+      const activeMonths = list.filter(item => {
+        const m = getMonthMetrics(item);
+        return m.salary > 0 || m.totalCost > 0 || m.remainBalance > 0 || m.savings > 0;
+      });
+
+      if (trendRange === '2026') {
+        return activeMonths.filter(item => item.year === '2026년');
+      } else if (trendRange === '2025') {
+        return activeMonths.filter(item => item.year === '2025년');
+      } else if (trendRange === 6) {
+        return activeMonths.slice(-6);
+      } else if (trendRange === 12) {
+        return activeMonths.slice(-12);
+      } else {
+        return activeMonths;
+      }
     }
 
     function renderCharts() {
-      renderTrendChart();
-      renderDoughnutCharts();
+      populateAnalyticsMonthSelect();
+      const displayList = getAnalyticsDisplayList();
+      if (displayList.length === 0) return;
+
+      renderAnalyticsKPIs(displayList);
+      renderFinancialInsight(displayList);
+      renderTrendChart(displayList);
+      renderAllocationStackedChart(displayList);
+      renderDoughnutCharts(displayList);
+      renderTopSpendingRanking(displayList);
     }
 
-    function renderTrendChart() {
-      const list = getValidSummaryList();
-      if (list.length === 0) return;
+    function renderAnalyticsKPIs(displayList) {
+      if (!displayList || displayList.length === 0) return;
 
-      let displayList = [...list];
-      if (trendRange < 900 && displayList.length > trendRange) {
-        displayList = displayList.slice(displayList.length - trendRange);
+      // 1. 월평균 급여 수입
+      const salaryMonths = displayList.filter(it => it.salary > 0);
+      const avgSalary = salaryMonths.length > 0 
+        ? Math.round(salaryMonths.reduce((a, b) => a + (b.salary || 0), 0) / salaryMonths.length)
+        : 0;
+      const elAvgSalary = document.getElementById("kpiAvgSalary");
+      const elAvgSalarySub = document.getElementById("kpiAvgSalarySub");
+      if (elAvgSalary) elAvgSalary.innerText = `${avgSalary.toLocaleString()}원`;
+      if (elAvgSalarySub) elAvgSalarySub.innerHTML = `<i class="fa-solid fa-circle-check text-[10px]"></i> 정기 급여 ${salaryMonths.length}개월 기준`;
+
+      // 2. 월평균 카드값 지출
+      let cardCosts = [];
+      const elCardLabel = document.getElementById("kpiCardLabel");
+      if (analyticsTarget === 'seonjun') {
+        if (elCardLabel) elCardLabel.innerText = "월평균 선준 카드값";
+        cardCosts = displayList.map(it => getMonthMetrics(it).totalCost);
+      } else if (analyticsTarget === 'dajeong') {
+        if (elCardLabel) elCardLabel.innerText = "월평균 다정 카드값";
+        cardCosts = displayList.map(it => getDajeongMonthCardCost(it.year, it.month));
+      } else {
+        if (elCardLabel) elCardLabel.innerText = "월평균 부부 합산 카드값";
+        cardCosts = displayList.map(it => getMonthMetrics(it).totalCost + getDajeongMonthCardCost(it.year, it.month));
       }
+
+      const validCardCosts = cardCosts.filter(c => c > 0);
+      const avgCard = validCardCosts.length > 0
+        ? Math.round(validCardCosts.reduce((a, b) => a + b, 0) / validCardCosts.length)
+        : 0;
+      const elAvgCard = document.getElementById("kpiAvgCard");
+      const elAvgCardSub = document.getElementById("kpiAvgCardSub");
+      if (elAvgCard) elAvgCard.innerText = `${avgCard.toLocaleString()}원`;
+      if (elAvgCardSub) elAvgCardSub.innerText = `${validCardCosts.length}개월 지출 기준`;
+
+      // 3. 평균 저축 성향(저축률)
+      const totalSalary = displayList.reduce((a, b) => a + (b.salary || 0), 0);
+      const totalSavings = displayList.reduce((a, b) => a + (getMonthMetrics(b).savings || 0), 0);
+      const savingsRate = totalSalary > 0 ? ((totalSavings / totalSalary) * 100).toFixed(1) : "0.0";
+      const elAvgSavingsRate = document.getElementById("kpiAvgSavingsRate");
+      const elAvgSavingsSub = document.getElementById("kpiAvgSavingsSub");
+      if (elAvgSavingsRate) elAvgSavingsRate.innerText = `${savingsRate}%`;
+      const avgSavingsAmount = displayList.length > 0 ? Math.round(totalSavings / displayList.length) : 0;
+      if (elAvgSavingsSub) elAvgSavingsSub.innerText = `월평균 적금 ${avgSavingsAmount.toLocaleString()}원`;
+
+      // 4. 최고 지출월 vs 최저 지출월
+      let minMonth = "-", maxMonth = "-", minVal = Infinity, maxVal = -1;
+      displayList.forEach((it, idx) => {
+        const val = cardCosts[idx] || 0;
+        if (val > 0) {
+          const label = `${(it.year || '').replace('20', '')} ${it.month}`;
+          if (val > maxVal) {
+            maxVal = val;
+            maxMonth = label;
+          }
+          if (val < minVal) {
+            minVal = val;
+            minMonth = label;
+          }
+        }
+      });
+
+      const elMinMaxGap = document.getElementById("kpiMinMaxGap");
+      const elMinMaxSub = document.getElementById("kpiMinMaxSub");
+      if (maxVal > 0 && minVal < Infinity) {
+        const gap = maxVal - minVal;
+        if (elMinMaxGap) elMinMaxGap.innerText = `${gap.toLocaleString()}원`;
+        if (elMinMaxSub) elMinMaxSub.innerText = `최고 ${maxMonth} (${(maxVal/10000).toFixed(0)}만) vs 최저 ${minMonth} (${(minVal/10000).toFixed(0)}만)`;
+      } else {
+        if (elMinMaxGap) elMinMaxGap.innerText = "0원";
+        if (elMinMaxSub) elMinMaxSub.innerText = "데이터 집계 중";
+      }
+    }
+
+    function renderFinancialInsight(displayList) {
+      const banner = document.getElementById("analyticsInsightBanner");
+      const badge = document.getElementById("insightPeriodBadge");
+      const content = document.getElementById("analyticsInsightContent");
+      if (!banner || !content) return;
+
+      let targetMonthItem = null;
+      let prevMonthItem = null;
+
+      if (analyticsMonth !== 'ALL') {
+        const idx = displayList.findIndex(it => `${it.year || ''} ${it.month}`.trim() === analyticsMonth);
+        if (idx >= 0) {
+          targetMonthItem = displayList[idx];
+          prevMonthItem = idx > 0 ? displayList[idx - 1] : null;
+        }
+      }
+      if (!targetMonthItem && displayList.length > 0) {
+        targetMonthItem = displayList[displayList.length - 1];
+        prevMonthItem = displayList.length > 1 ? displayList[displayList.length - 2] : null;
+      }
+
+      if (!targetMonthItem) return;
+
+      const mYear = targetMonthItem.year || '';
+      const mMonth = targetMonthItem.month || '';
+      const metrics = getMonthMetrics(targetMonthItem);
+
+      if (badge) badge.innerText = `${mYear} ${mMonth} 기준`;
+
+      let currCost = metrics.totalCost;
+      let prevCost = prevMonthItem ? getMonthMetrics(prevMonthItem).totalCost : 0;
+      let targetLabel = "선준 카드값";
+
+      if (analyticsTarget === 'dajeong') {
+        currCost = getDajeongMonthCardCost(mYear, mMonth);
+        prevCost = prevMonthItem ? getDajeongMonthCardCost(prevMonthItem.year, prevMonthItem.month) : 0;
+        targetLabel = "다정 카드값";
+      } else if (analyticsTarget === 'both') {
+        currCost = metrics.totalCost + getDajeongMonthCardCost(mYear, mMonth);
+        prevCost = prevMonthItem ? (getMonthMetrics(prevMonthItem).totalCost + getDajeongMonthCardCost(prevMonthItem.year, prevMonthItem.month)) : 0;
+        targetLabel = "부부 합산 총 카드값";
+      }
+
+      let diffHtml = "";
+      if (prevCost > 0) {
+        const diff = currCost - prevCost;
+        const pct = ((Math.abs(diff) / prevCost) * 100).toFixed(1);
+        const sign = diff >= 0 ? "+" : "-";
+        const color = diff > 0 ? "text-rose-300 font-bold" : "text-emerald-300 font-bold";
+        diffHtml = `전월 대비 <span class="${color}">${sign}${Math.abs(diff).toLocaleString()}원 (${sign}${pct}%)</span> 변동`;
+      } else {
+        diffHtml = "기준월 데이터 집계";
+      }
+
+      const savingsRate = metrics.salary > 0 ? ((metrics.savings / metrics.salary) * 100).toFixed(1) : "0";
+
+      content.innerHTML = `
+        <div class="flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0"></span>
+          <span><strong>지출 흐름:</strong> ${mYear} ${mMonth} ${targetLabel}은 <strong>${currCost.toLocaleString()}원</strong>이며, ${diffHtml}되었습니다.</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+          <span><strong>저축 기조:</strong> 정기 급여 ${metrics.salary.toLocaleString()}원 중 <strong>${metrics.savings.toLocaleString()}원 (저축률 ${savingsRate}%)</strong>을 적금으로 배분했습니다.</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+          <span><strong>잔금 운용:</strong> 배분 잔금 <strong>${metrics.remainBalance.toLocaleString()}원</strong>에서 용돈(${metrics.pocketMoney.toLocaleString()}원), 생활비(${metrics.livingExpense.toLocaleString()}원)를 집행하고 <strong>비상금 ${metrics.emergencyFund.toLocaleString()}원</strong>을 적립했습니다.</span>
+        </div>
+      `;
+    }
+
+    function renderTrendChart(displayList) {
+      if (!displayList || displayList.length === 0) return;
 
       const labels = displayList.map(item => `${item.year ? item.year.replace('20', '') + ' ' : ''}${item.month}`);
       const salaries = displayList.map(item => item.salary || 0);
-      const totalCosts = displayList.map(item => getMonthMetrics(item).totalCost);
       const remainBalances = displayList.map(item => getMonthMetrics(item).remainBalance);
 
-      const ctx = document.getElementById("trendChart").getContext("2d");
-      if (trendChartInstance) {
-        trendChartInstance.destroy();
+      const datasets = [
+        {
+          type: 'bar',
+          label: '총 급여 (수입)',
+          data: salaries,
+          backgroundColor: 'rgba(16, 185, 129, 0.75)',
+          borderRadius: 6,
+          barPercentage: 0.7,
+          order: 2
+        }
+      ];
+
+      if (analyticsTarget === 'seonjun' || analyticsTarget === 'both') {
+        const seonjunCosts = displayList.map(item => getMonthMetrics(item).totalCost);
+        datasets.push({
+          type: 'bar',
+          label: '선준 카드값 (지출)',
+          data: seonjunCosts,
+          backgroundColor: 'rgba(244, 63, 94, 0.75)',
+          borderRadius: 6,
+          barPercentage: 0.7,
+          order: 2
+        });
       }
+
+      if (analyticsTarget === 'dajeong' || analyticsTarget === 'both') {
+        const dajeongCosts = displayList.map(item => getDajeongMonthCardCost(item.year, item.month));
+        datasets.push({
+          type: 'bar',
+          label: '다정 카드값 (지출)',
+          data: dajeongCosts,
+          backgroundColor: 'rgba(236, 72, 153, 0.75)',
+          borderRadius: 6,
+          barPercentage: 0.7,
+          order: 2
+        });
+      }
+
+      datasets.push({
+        type: 'line',
+        label: '월 잔금 (배분자금)',
+        data: remainBalances,
+        borderColor: 'rgba(217, 119, 6, 1)',
+        backgroundColor: 'rgba(217, 119, 6, 0.1)',
+        borderWidth: 3,
+        tension: 0.3,
+        fill: false,
+        pointBackgroundColor: 'rgba(217, 119, 6, 1)',
+        pointRadius: 4,
+        order: 1
+      });
+
+      const canvas = document.getElementById("trendChart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (trendChartInstance) trendChartInstance.destroy();
 
       trendChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: labels,
-          datasets: [
-            {
-              type: 'bar',
-              label: '총 급여 (수입)',
-              data: salaries,
-              backgroundColor: 'rgba(16, 185, 129, 0.75)',
-              borderRadius: 6,
-              barPercentage: 0.7,
-            },
-            {
-              type: 'bar',
-              label: '선준 카드값 (지출)',
-              data: totalCosts,
-              backgroundColor: 'rgba(244, 63, 94, 0.75)',
-              borderRadius: 6,
-              barPercentage: 0.7,
-            },
-            {
-              type: 'line',
-              label: '월 잔금 (배분자금)',
-              data: remainBalances,
-              borderColor: 'rgba(217, 119, 6, 1)',
-              backgroundColor: 'rgba(217, 119, 6, 0.1)',
-              borderWidth: 3,
-              tension: 0.3,
-              fill: false,
-              pointBackgroundColor: 'rgba(217, 119, 6, 1)',
-              pointRadius: 4,
-            }
-          ]
+          datasets: datasets
         },
         options: {
           responsive: true,
@@ -3704,110 +4152,381 @@
       });
     }
 
-    function renderDoughnutCharts() {
-      if (!rawData || !rawData.seonjun) return;
+    function renderAllocationStackedChart(displayList) {
+      const canvas = document.getElementById("allocStackedChart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (allocChartInstance) allocChartInstance.destroy();
 
-      const selectedMonth = document.getElementById("seonjunMonthFilter")?.value || "9월";
-      const filtered = rawData.seonjun.filter(it => selectedMonth === "ALL" || it.month === selectedMonth);
+      const labels = displayList.map(item => `${item.year ? item.year.replace('20', '') + ' ' : ''}${item.month}`);
+      const savings = displayList.map(item => getMonthMetrics(item).savings);
+      const pockets = displayList.map(item => getMonthMetrics(item).pocketMoney);
+      const livings = displayList.map(item => getMonthMetrics(item).livingExpense);
+      const emergencies = displayList.map(item => Math.max(0, getMonthMetrics(item).emergencyFund));
 
-      document.getElementById("chartTypeSub").innerText = `${selectedMonth} 기준 데이터`;
-      document.getElementById("chartCardSub").innerText = `${selectedMonth} 기준 데이터`;
-
-      // 1. 구분별 (공통, 선준, 생활비)
-      const typeMap = {};
-      filtered.forEach(it => {
-        const key = it.type || '기타';
-        typeMap[key] = (typeMap[key] || 0) + (it.amount || 0);
-      });
-
-      const typeLabels = Object.keys(typeMap);
-      const typeData = Object.values(typeMap);
-      const typeColors = ['#6366f1', '#f59e0b', '#10b981', '#ec4899', '#64748b'];
-
-      const ctxType = document.getElementById("typeDoughnutChart").getContext("2d");
-      if (typeChartInstance) typeChartInstance.destroy();
-
-      typeChartInstance = new Chart(ctxType, {
-        type: 'doughnut',
+      allocChartInstance = new Chart(ctx, {
+        type: 'bar',
         data: {
-          labels: typeLabels,
-          datasets: [{
-            data: typeData,
-            backgroundColor: typeColors.slice(0, typeLabels.length),
-            borderWidth: 2,
-            borderColor: '#ffffff',
-          }]
+          labels: labels,
+          datasets: [
+            {
+              label: '적금 (저축)',
+              data: savings,
+              backgroundColor: '#10b981',
+              borderRadius: 4
+            },
+            {
+              label: '용돈',
+              data: pockets,
+              backgroundColor: '#6366f1',
+              borderRadius: 4
+            },
+            {
+              label: '생활비',
+              data: livings,
+              backgroundColor: '#0ea5e9',
+              borderRadius: 4
+            },
+            {
+              label: '비상금',
+              data: emergencies,
+              backgroundColor: '#f59e0b',
+              borderRadius: 4
+            }
+          ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
           plugins: {
             legend: {
-              position: 'bottom',
-              labels: { font: { family: 'Pretendard', size: 11 }, boxWidth: 10 }
+              position: 'top',
+              labels: {
+                boxWidth: 10,
+                font: { family: 'Pretendard', size: 11, weight: 'bold' }
+              }
             },
             tooltip: {
               callbacks: {
                 label: function(ctx) {
-                  const val = ctx.parsed || 0;
-                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                  const pct = total ? Math.round((val / total) * 100) : 0;
-                  return `${ctx.label}: ${val.toLocaleString()}원 (${pct}%)`;
+                  const val = ctx.parsed.y || 0;
+                  return `${ctx.dataset.label}: ${val.toLocaleString()}원`;
+                },
+                footer: function(items) {
+                  const total = items.reduce((sum, item) => sum + (item.parsed.y || 0), 0);
+                  return `월 배분 합계: ${total.toLocaleString()}원`;
                 }
               }
             }
           },
-          cutout: '65%'
+          scales: {
+            x: {
+              stacked: true,
+              grid: { display: false },
+              ticks: { font: { family: 'Pretendard', size: 11 } }
+            },
+            y: {
+              stacked: true,
+              grid: { color: 'rgba(226, 232, 240, 0.6)' },
+              ticks: {
+                font: { family: 'Pretendard', size: 11 },
+                callback: function(val) {
+                  return (val / 10000).toLocaleString() + '만';
+                }
+              }
+            }
+          }
         }
       });
+    }
 
-      // 2. 카드사별 (하나카드, 롯데카드 등)
+    function renderDoughnutCharts(displayList) {
+      const elTypeTitle = document.getElementById("chartTypeTitle");
+      const elTypeSub = document.getElementById("chartTypeSub");
+      const elCardTitle = document.getElementById("chartCardTitle");
+      const elCardSub = document.getElementById("chartCardSub");
+
+      // Filter transactions based on analyticsMonth & displayList
+      let seonjunItems = getAllSeonjunItems();
+      let dajeongItems = getAllDajeongItems();
+
+      if (analyticsMonth !== 'ALL') {
+        const parts = analyticsMonth.split(' ');
+        const filterYear = parts[0] || '';
+        const filterMonth = parts[1] || '';
+        seonjunItems = seonjunItems.filter(it => (it.year === filterYear || !it.year) && it.month === filterMonth);
+        dajeongItems = dajeongItems.filter(it => (it.year === filterYear || !it.year) && it.month === filterMonth);
+        if (elTypeSub) elTypeSub.innerText = `${analyticsMonth} 기준`;
+        if (elCardSub) elCardSub.innerText = `${analyticsMonth} 기준`;
+      } else {
+        const allowedMonths = new Set(displayList.map(it => `${it.year || ''}_${it.month}`));
+        seonjunItems = seonjunItems.filter(it => allowedMonths.has(`${it.year || ''}_${it.month}`));
+        dajeongItems = dajeongItems.filter(it => allowedMonths.has(`${it.year || ''}_${it.month}`));
+        const periodText = document.getElementById('trendChartPeriodText')?.innerText || '선택 기간';
+        if (elTypeSub) elTypeSub.innerText = `${periodText} 누적 기준`;
+        if (elCardSub) elCardSub.innerText = `${periodText} 누적 기준`;
+      }
+
+      // Doughnut 1: Type or Target
+      let typeLabels = [];
+      let typeData = [];
+      let typeColors = ['#6366f1', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#64748b'];
+
+      if (analyticsTarget === 'both') {
+        if (elTypeTitle) elTypeTitle.innerText = "부부 카드 지출 비중";
+        const seonjunSum = seonjunItems.reduce((acc, it) => acc + (it.amount || 0), 0);
+        const dajeongSum = dajeongItems.reduce((acc, it) => acc + (it.amount || 0), 0);
+        typeLabels = ['선준 카드', '다정 카드'];
+        typeData = [seonjunSum, dajeongSum];
+        typeColors = ['#f43f5e', '#ec4899'];
+      } else {
+        const targetItems = analyticsTarget === 'dajeong' ? dajeongItems : seonjunItems;
+        if (elTypeTitle) elTypeTitle.innerText = `${analyticsTarget === 'dajeong' ? '다정' : '선준'} 카드 구분별 비율`;
+        const typeMap = {};
+        targetItems.forEach(it => {
+          const key = it.type || (analyticsTarget === 'dajeong' ? '개인지출' : '기타');
+          typeMap[key] = (typeMap[key] || 0) + (it.amount || 0);
+        });
+        typeLabels = Object.keys(typeMap);
+        typeData = Object.values(typeMap);
+      }
+
+      const ctxType = document.getElementById("typeDoughnutChart")?.getContext("2d");
+      if (typeChartInstance) typeChartInstance.destroy();
+      if (ctxType) {
+        typeChartInstance = new Chart(ctxType, {
+          type: 'doughnut',
+          data: {
+            labels: typeLabels,
+            datasets: [{
+              data: typeData,
+              backgroundColor: typeColors.slice(0, typeLabels.length),
+              borderWidth: 2,
+              borderColor: '#ffffff',
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { font: { family: 'Pretendard', size: 11 }, boxWidth: 10 }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) {
+                    const val = ctx.parsed || 0;
+                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                    const pct = total ? Math.round((val / total) * 100) : 0;
+                    return `${ctx.label}: ${val.toLocaleString()}원 (${pct}%)`;
+                  }
+                }
+              }
+            },
+            cutout: '65%'
+          }
+        });
+      }
+
+      // Doughnut 2: Card Company
+      const activeItems = analyticsTarget === 'both' 
+        ? [...seonjunItems, ...dajeongItems] 
+        : (analyticsTarget === 'dajeong' ? dajeongItems : seonjunItems);
+
+      if (elCardTitle) {
+        elCardTitle.innerText = analyticsTarget === 'both' ? '통합 카드사별 사용 비율' : `${analyticsTarget === 'dajeong' ? '다정' : '선준'} 카드사별 사용 비율`;
+      }
+
       const cardMap = {};
-      filtered.forEach(it => {
-        const key = it.card || '기타';
+      activeItems.forEach(it => {
+        const key = it.card || (analyticsTarget === 'dajeong' ? '다정카드' : '기타');
         cardMap[key] = (cardMap[key] || 0) + (it.amount || 0);
       });
 
       const cardLabels = Object.keys(cardMap);
       const cardData = Object.values(cardMap);
-      const cardColors = ['#0ea5e9', '#ef4444', '#8b5cf6', '#10b981', '#f97316'];
+      const cardColors = ['#0ea5e9', '#ef4444', '#8b5cf6', '#10b981', '#f97316', '#06b6d4'];
 
-      const ctxCard = document.getElementById("cardDoughnutChart").getContext("2d");
+      const ctxCard = document.getElementById("cardDoughnutChart")?.getContext("2d");
       if (cardChartInstance) cardChartInstance.destroy();
-
-      cardChartInstance = new Chart(ctxCard, {
-        type: 'doughnut',
-        data: {
-          labels: cardLabels,
-          datasets: [{
-            data: cardData,
-            backgroundColor: cardColors.slice(0, cardLabels.length),
-            borderWidth: 2,
-            borderColor: '#ffffff',
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: { font: { family: 'Pretendard', size: 11 }, boxWidth: 10 }
-            },
-            tooltip: {
-              callbacks: {
-                label: function(ctx) {
-                  const val = ctx.parsed || 0;
-                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                  const pct = total ? Math.round((val / total) * 100) : 0;
-                  return `${ctx.label}: ${val.toLocaleString()}원 (${pct}%)`;
+      if (ctxCard) {
+        cardChartInstance = new Chart(ctxCard, {
+          type: 'doughnut',
+          data: {
+            labels: cardLabels,
+            datasets: [{
+              data: cardData,
+              backgroundColor: cardColors.slice(0, cardLabels.length),
+              borderWidth: 2,
+              borderColor: '#ffffff',
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { font: { family: 'Pretendard', size: 11 }, boxWidth: 10 }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) {
+                    const val = ctx.parsed || 0;
+                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                    const pct = total ? Math.round((val / total) * 100) : 0;
+                    return `${ctx.label}: ${val.toLocaleString()}원 (${pct}%)`;
+                  }
                 }
               }
-            }
-          },
-          cutout: '65%'
+            },
+            cutout: '65%'
+          }
+        });
+      }
+    }
+
+    function renderTopSpendingRanking(displayList) {
+      let activeItems = [];
+      if (analyticsTarget === 'seonjun') {
+        activeItems = getAllSeonjunItems();
+      } else if (analyticsTarget === 'dajeong') {
+        activeItems = getAllDajeongItems();
+      } else {
+        activeItems = [...getAllSeonjunItems(), ...getAllDajeongItems()];
+      }
+
+      if (analyticsMonth !== 'ALL') {
+        const parts = analyticsMonth.split(' ');
+        const filterYear = parts[0] || '';
+        const filterMonth = parts[1] || '';
+        activeItems = activeItems.filter(it => (it.year === filterYear || !it.year) && it.month === filterMonth);
+      } else {
+        const allowedMonths = new Set(displayList.map(it => `${it.year || ''}_${it.month}`));
+        activeItems = activeItems.filter(it => allowedMonths.has(`${it.year || ''}_${it.month}`));
+      }
+
+      const itemMap = {};
+      let totalSpending = 0;
+      activeItems.forEach(it => {
+        let name = (it.item || '기타').trim();
+        if (!name) name = '미분류';
+        if (!itemMap[name]) {
+          itemMap[name] = { name, amount: 0, count: 0, card: it.card || '', type: it.type || '' };
         }
+        itemMap[name].amount += (it.amount || 0);
+        itemMap[name].count += 1;
+        totalSpending += (it.amount || 0);
       });
+
+      const sorted = Object.values(itemMap).sort((a, b) => b.amount - a.amount).slice(0, 6);
+
+      const listContainer = document.getElementById("topSpendingListContainer");
+      const canvas = document.getElementById("topSpendingChart");
+      if (topSpendingChartInstance) topSpendingChartInstance.destroy();
+
+      if (sorted.length === 0) {
+        if (listContainer) {
+          listContainer.innerHTML = `
+            <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-2xl">
+              <i class="fa-solid fa-receipt text-3xl mb-2 text-slate-300"></i>
+              <p class="text-xs">선택한 기간에 등록된 지출 내역이 없습니다.</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      // Horizontal Bar Chart
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+        const barLabels = sorted.map(it => it.name.length > 8 ? it.name.substring(0, 7) + '…' : it.name);
+        const barData = sorted.map(it => it.amount);
+        const barColors = ['#f43f5e', '#fb7185', '#f59e0b', '#6366f1', '#0ea5e9', '#64748b'];
+
+        topSpendingChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: barLabels,
+            datasets: [{
+              label: '지출액',
+              data: barData,
+              backgroundColor: barColors.slice(0, sorted.length),
+              borderRadius: 6,
+              barPercentage: 0.65
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) {
+                    const val = ctx.parsed.x || 0;
+                    const pct = totalSpending > 0 ? ((val / totalSpending) * 100).toFixed(1) : 0;
+                    return ` ${val.toLocaleString()}원 (${pct}%)`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: 'rgba(226, 232, 240, 0.6)' },
+                ticks: {
+                  font: { family: 'Pretendard', size: 10 },
+                  callback: function(val) {
+                    return (val / 10000).toLocaleString() + '만';
+                  }
+                }
+              },
+              y: {
+                grid: { display: false },
+                ticks: { font: { family: 'Pretendard', size: 11, weight: 'bold' } }
+              }
+            }
+          }
+        });
+      }
+
+      // Render Rank Cards in listContainer
+      if (listContainer) {
+        const rankIcons = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣'];
+        const badgeBgs = ['bg-rose-50 text-rose-600', 'bg-pink-50 text-pink-600', 'bg-amber-50 text-amber-600', 'bg-indigo-50 text-indigo-600', 'bg-sky-50 text-sky-600', 'bg-slate-100 text-slate-600'];
+
+        let html = '';
+        sorted.forEach((it, idx) => {
+          const pct = totalSpending > 0 ? ((it.amount / totalSpending) * 100).toFixed(1) : 0;
+          html += `
+            <div class="p-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100/80 transition flex items-center justify-between gap-3 border border-slate-100">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="text-base">${rankIcons[idx] || (idx + 1)}</span>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-slate-800 truncate">${it.name}</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded-md font-semibold ${badgeBgs[idx] || 'bg-slate-100 text-slate-500'}">${it.count}건</span>
+                  </div>
+                  <div class="w-24 bg-slate-200 h-1 rounded-full mt-1.5 overflow-hidden">
+                    <div class="bg-indigo-500 h-1 rounded-full" style="width: ${pct}%"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="text-xs font-bold text-slate-900">${it.amount.toLocaleString()}원</div>
+                <div class="text-[10px] text-slate-400">${pct}%</div>
+              </div>
+            </div>
+          `;
+        });
+        listContainer.innerHTML = html;
+      }
     }
 
     // ==========================================
