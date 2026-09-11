@@ -4,14 +4,12 @@
 
 ---
 
-## 🚀 가장 쉬운 방법: 더블 클릭 한 번으로 GitHub 자동 배포 (추천 ⭐)
+## 🎉 배포 완료! 현재 운영 중인 접속 링크
 
-폴더 안에 준비해 둔 **[deploy_github.command](file:///Users/swdjsj/Desktop/가계부대시보드/deploy_github.command)** 파일을 더블 클릭하기만 하면 끝납니다!
+👉 **실시간 웹링크: [https://casillas90.github.io/household-ledger/](https://casillas90.github.io/household-ledger/)**
 
-1. 맥북 화면에 열린 터미널 창을 확인합니다. (또는 `deploy_github.command` 더블 클릭)
-2. 화면에 뜨는 8자리 코드를 복사하고 웹 브라우저에서 **[Confirm & Authorize]** 승인
-3. 자동으로 저장소 생성 ➔ 코드 업로드 ➔ **GitHub Pages 웹링크가 즉시 생성**됩니다!
-   👉 **`https://<내GitHub아이디>.github.io/household-ledger/`**
+- 이제 맥북을 꺼두어도, 아이폰이 LTE/5G 데이터 상태여도 언제 어디서든 접속할 수 있습니다.
+- 카카오톡이나 메시지로 다정님께 위 링크를 공유하시면 둘 다 언제든 확인하실 수 있습니다.
 
 ---
 
