@@ -332,14 +332,41 @@ function getDajeongData(ss) {
   if (archiveSheet) {
     var aValues = archiveSheet.getDataRange().getValues();
     if (aValues && aValues.length > 1) {
+      var headerRow = aValues[0].map(function(h) { return String(h || '').trim(); });
+      var hasYearCol = headerRow.indexOf('년도') !== -1 || headerRow.indexOf('년') !== -1;
+      
       for (var ar = 1; ar < aValues.length; ar++) {
         var aRow = aValues[ar];
-        var aMonth = String(aRow[0] || '').trim();
-        var aItem = String(aRow[1] || '').trim();
-        var aAmount = parseNumeric(aRow[2]);
-        var aCard = String(aRow[3] || '다정카드').trim();
+        var aYear = '2026년';
+        var aMonth = '';
+        var aItem = '';
+        var aAmount = 0;
+        var aCard = '다정카드';
+
+        if (hasYearCol) {
+          aYear = String(aRow[0] || '2026년').trim();
+          aMonth = String(aRow[1] || '').trim();
+          aItem = String(aRow[2] || '').trim();
+          aAmount = parseNumeric(aRow[3]);
+          aCard = String(aRow[4] || '다정카드').trim();
+        } else {
+          aMonth = String(aRow[0] || '').trim();
+          aItem = String(aRow[1] || '').trim();
+          aAmount = parseNumeric(aRow[2]);
+          aCard = String(aRow[3] || '다정카드').trim();
+        }
+
+        if (aMonth.indexOf('년') !== -1) {
+          var p = aMonth.split(/\s+/);
+          if (p.length >= 2) {
+            aYear = p[0];
+            aMonth = p[1];
+          }
+        }
+
         if (aItem && aAmount > 0) {
           archiveItems.push({
+            year: aYear,
             month: aMonth,
             item: aItem,
             amount: aAmount,
@@ -369,8 +396,20 @@ function getSeonjunData(ss) {
     var type = String(values[r][3] || '').trim();
     var note = String(values[r][4] || '').trim();
     var month = String(values[r][5] || '').trim();
+    var year = '2026년';
+
+    if (values[r].length > 6 && String(values[r][6] || '').trim()) {
+      year = String(values[r][6]).trim();
+    } else if (month.indexOf('년') !== -1) {
+      var parts = month.split(/\s+/);
+      if (parts.length >= 2) {
+        year = parts[0];
+        month = parts[1];
+      }
+    }
+
     if (item || amount > 0) {
-      result.push({ card: card, item: item, amount: amount, type: type, note: note, month: month });
+      result.push({ card: card, item: item, amount: amount, type: type, note: note, month: month, year: year });
     }
   }
   return result;
@@ -437,7 +476,7 @@ function doPost(e) {
       var cardSheet = ss.getSheetByName(target === 'dajeong' ? '다정' : '선준');
       if (cardSheet) {
         if (target === 'dajeong') {
-          cardSheet.appendRow([it.item, it.amount, it.month || '', it.card || '다정카드']);
+          cardSheet.appendRow([it.item, it.amount, it.month || '', it.card || '다정카드', it.year || '2026년']);
         } else {
           cardSheet.appendRow([
             it.card || '신용카드',
@@ -445,7 +484,8 @@ function doPost(e) {
             it.amount,
             it.type || '공통',
             it.note || '일반',
-            it.month
+            it.month,
+            it.year || '2026년'
           ]);
         }
       }
@@ -509,21 +549,22 @@ function doPost(e) {
 
     // 4. 다정 카드 특정 월 보존 저장 (archiveDajeongMonth)
     if (action === 'archiveDajeongMonth') {
+      var targetYear = postData.year || '2026년';
       var targetMonth = postData.month;
       var itemsToArchive = postData.items || [];
       var archiveSheet = ss.getSheetByName('다정_기록보관');
       if (!archiveSheet) {
         archiveSheet = ss.insertSheet('다정_기록보관');
-        archiveSheet.appendRow(['월', '항목', '금액', '카드', '저장일시']);
+        archiveSheet.appendRow(['년도', '월', '항목', '금액', '카드', '저장일시']);
       }
       var nowStr = new Date().toISOString();
       for (var k = 0; k < itemsToArchive.length; k++) {
         var it = itemsToArchive[k];
-        archiveSheet.appendRow([targetMonth, it.item, it.amount, it.card || '다정카드', nowStr]);
+        archiveSheet.appendRow([targetYear, targetMonth, it.item, it.amount, it.card || '다정카드', nowStr]);
       }
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
-        message: "다정 " + targetMonth + " " + itemsToArchive.length + "건 영구보관 완료"
+        message: "다정 " + targetYear + " " + targetMonth + " " + itemsToArchive.length + "건 영구보관 완료"
       })).setMimeType(ContentService.MimeType.JSON);
     }
 

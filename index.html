@@ -598,11 +598,17 @@
               </div>
             </div>
 
-            <!-- 구글 시트 작성 월 지정 및 과거 월 영구 보존 안내 바 -->
+            <!-- 구글 시트 작성 년도/월 지정 및 과거 월 영구 보존 안내 바 -->
             <div class="bg-rose-50/80 border border-rose-200/70 rounded-2xl p-2.5 mb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 flex-wrap">
                 <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                <span class="text-[11px] font-bold text-rose-900">시트 작성 월:</span>
+                <span class="text-[11px] font-bold text-rose-900">시트 작성 년월:</span>
+                <select id="dajeongSyncYearSelect" onchange="onDajeongSyncMonthChange()" class="px-2 py-0.5 bg-white border border-rose-300 rounded-lg text-xs font-bold text-rose-700 outline-none cursor-pointer">
+                  <option value="2026년" selected>2026년</option>
+                  <option value="2025년">2025년</option>
+                  <option value="2024년">2024년</option>
+                  <option value="2027년">2027년</option>
+                </select>
                 <select id="dajeongSyncMonthSelect" onchange="onDajeongSyncMonthChange()" class="px-2 py-0.5 bg-white border border-rose-300 rounded-lg text-xs font-bold text-rose-700 outline-none cursor-pointer">
                   <option value="9월">9월</option>
                   <option value="10월">10월</option>
@@ -617,8 +623,8 @@
                   <option value="7월">7월</option>
                   <option value="8월">8월</option>
                 </select>
-                <button type="button" onclick="archiveCurrentDajeongData()" class="px-2 py-0.5 bg-white hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold rounded-lg transition flex items-center gap-1 cursor-pointer">
-                  <i class="fa-solid fa-box-archive"></i> 현재 월 보관
+                <button type="button" onclick="archiveCurrentDajeongData()" class="px-2.5 py-0.5 bg-white hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold rounded-lg transition flex items-center gap-1 cursor-pointer">
+                  <i class="fa-solid fa-box-archive"></i> 현재 년월 보관
                 </button>
               </div>
               <span class="text-[10px] text-rose-600 font-medium">
@@ -626,18 +632,27 @@
               </span>
             </div>
 
-            <!-- 월 선택 필터 & 검색 & 정렬 -->
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-3">
-              <div class="sm:col-span-4">
+            <!-- 년도 & 월 분리 필터 바 & 검색 & 정렬 -->
+            <div class="grid grid-cols-2 sm:grid-cols-12 gap-2 mb-3">
+              <div class="col-span-1 sm:col-span-2">
+                <label class="text-[10px] text-slate-400 font-bold block mb-1">년도 선택</label>
+                <select id="dajeongYearFilter" onchange="renderDajeong()" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-rose-400 transition cursor-pointer">
+                  <option value="ALL">전체 년도</option>
+                </select>
+              </div>
+              <div class="col-span-1 sm:col-span-2">
+                <label class="text-[10px] text-slate-400 font-bold block mb-1">월 선택</label>
                 <select id="dajeongMonthFilter" onchange="renderDajeong()" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-rose-400 transition cursor-pointer">
                   <option value="ALL">전체 월</option>
                 </select>
               </div>
-              <div class="sm:col-span-5 relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                <input type="text" id="dajeongSearchInput" oninput="renderDajeong()" placeholder="항목명 검색..." class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-rose-400 focus:bg-white transition" />
+              <div class="col-span-2 sm:col-span-5 relative flex flex-col justify-end">
+                <div class="relative w-full">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                  <input type="text" id="dajeongSearchInput" oninput="renderDajeong()" placeholder="항목명 검색..." class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-rose-400 focus:bg-white transition" />
+                </div>
               </div>
-              <div class="sm:col-span-3">
+              <div class="col-span-2 sm:col-span-3 flex flex-col justify-end">
                 <button onclick="toggleDajeongSort()" id="btnDajeongSort" class="w-full px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center justify-center gap-1 cursor-pointer">
                   <i class="fa-solid fa-arrow-down-wide-short"></i>
                   <span id="dajeongSortText">금액순</span>
@@ -655,7 +670,7 @@
               <table class="w-full text-xs text-left">
                 <thead class="bg-slate-50 text-slate-400 font-semibold border-b sticky top-0 bg-slate-50 z-10">
                   <tr>
-                    <th class="py-2.5 px-3 w-16">월</th>
+                    <th class="py-2.5 px-3 w-28 whitespace-nowrap">년도 / 월</th>
                     <th class="py-2.5 px-3">항목</th>
                     <th class="py-2.5 px-3 text-right">금액</th>
                     <th class="py-2.5 px-2 text-center w-8"></th>
@@ -700,8 +715,15 @@
               </div>
             </div>
 
-            <!-- 필터 바 (월 / 구분 / 형태 / 카드) -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+            <!-- 필터 바 (년도 / 월 / 구분 / 유형 / 카드사) -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
+              <div>
+                <label class="text-[10px] text-slate-400 font-bold block mb-1">년도 선택</label>
+                <select id="seonjunYearFilter" onchange="renderSeonjunList()" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-indigo-400 transition cursor-pointer">
+                  <option value="ALL">전체 년도</option>
+                </select>
+              </div>
+
               <div>
                 <label class="text-[10px] text-slate-400 font-bold block mb-1">월 선택</label>
                 <select id="seonjunMonthFilter" onchange="renderSeonjunList()" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-indigo-400 transition cursor-pointer">
@@ -752,7 +774,7 @@
               <table class="w-full text-xs text-left">
                 <thead class="bg-slate-50 text-slate-400 font-semibold border-b sticky top-0 bg-slate-50 z-10">
                   <tr>
-                    <th class="py-2.5 px-3">카드 / 월</th>
+                    <th class="py-2.5 px-3">년도 / 월 / 카드</th>
                     <th class="py-2.5 px-3">항목</th>
                     <th class="py-2.5 px-3 text-center">구분</th>
                     <th class="py-2.5 px-3 text-center">유형</th>
@@ -2615,9 +2637,10 @@
     }
 
     // ==========================================
-    // 2. 다정 카드값 로직 (월별 영구 보관 & 시트 동기화)
+    // 2. 다정 카드값 로직 (년도/월별 영구 보관 & 시트 동기화)
     // ==========================================
     const STORAGE_KEY_DAJEONG_MONTHLY_ARCHIVE = "household_dajeong_monthly_archive";
+    const STORAGE_KEY_DAJEONG_SYNC_YEAR = "household_dajeong_sync_year";
     const STORAGE_KEY_DAJEONG_SYNC_MONTH = "household_dajeong_sync_month";
 
     function getDajeongArchiveMap() {
@@ -2630,6 +2653,14 @@
 
     function saveDajeongArchiveMap(map) {
       localStorage.setItem(STORAGE_KEY_DAJEONG_MONTHLY_ARCHIVE, JSON.stringify(map));
+    }
+
+    function getActiveDajeongSyncYear() {
+      return localStorage.getItem(STORAGE_KEY_DAJEONG_SYNC_YEAR) || "2026년";
+    }
+
+    function setActiveDajeongSyncYear(y) {
+      localStorage.setItem(STORAGE_KEY_DAJEONG_SYNC_YEAR, y);
     }
 
     function getActiveDajeongSyncMonth() {
@@ -2646,47 +2677,76 @@
     function syncDajeongDataToArchive(dajeongData) {
       if (!dajeongData) return;
       const archiveMap = getDajeongArchiveMap();
+      const activeYear = getActiveDajeongSyncYear();
       const activeMonth = getActiveDajeongSyncMonth();
+      const activeKey = `${activeYear}_${activeMonth}`;
 
       // 1. Google Sheets '다정_기록보관' 시트에서 가져온 데이터가 있다면 병합
       if (dajeongData.archivedItems && Array.isArray(dajeongData.archivedItems)) {
         dajeongData.archivedItems.forEach(item => {
-          const m = item.month || '9월';
-          if (!archiveMap[m]) archiveMap[m] = [];
-          const exists = archiveMap[m].some(it => it.item === item.item && it.amount === item.amount);
+          let y = item.year || '2026년';
+          let m = item.month || '9월';
+          if (m.includes('년')) {
+            const parts = m.split(/\s+/);
+            if (parts.length >= 2) {
+              y = parts[0];
+              m = parts[1];
+            }
+          }
+          const k = `${y}_${m}`;
+          if (!archiveMap[k]) archiveMap[k] = [];
+          const exists = archiveMap[k].some(it => it.item === item.item && it.amount === item.amount);
           if (!exists) {
-            archiveMap[m].push(item);
+            archiveMap[k].push({ ...item, year: y, month: m });
           }
         });
       }
 
-      // 2. 현재 시트의 데이터가 있다면 현재 활성 월(activeMonth)에 저장
+      // 2. 현재 시트의 데이터가 있다면 현재 활성 년월(activeKey)에 저장
       if (dajeongData.items && Array.isArray(dajeongData.items) && dajeongData.items.length > 0) {
-        archiveMap[activeMonth] = dajeongData.items.map(it => ({
-          ...it,
-          month: it.month || activeMonth,
-          source: 'sheet'
-        }));
+        archiveMap[activeKey] = dajeongData.items.map(it => {
+          let y = it.year || activeYear;
+          let m = it.month || activeMonth;
+          if (m.includes('년')) {
+            const parts = m.split(/\s+/);
+            if (parts.length >= 2) {
+              y = parts[0];
+              m = parts[1];
+            }
+          }
+          return {
+            ...it,
+            year: y,
+            month: m,
+            source: 'sheet'
+          };
+        });
       }
 
       saveDajeongArchiveMap(archiveMap);
 
-      const syncSelect = document.getElementById("dajeongSyncMonthSelect");
-      if (syncSelect) {
-        syncSelect.value = activeMonth;
-      }
+      const syncYearSelect = document.getElementById("dajeongSyncYearSelect");
+      if (syncYearSelect) syncYearSelect.value = activeYear;
+      const syncMonthSelect = document.getElementById("dajeongSyncMonthSelect");
+      if (syncMonthSelect) syncMonthSelect.value = activeMonth;
     }
 
     function onDajeongSyncMonthChange() {
-      const syncSelect = document.getElementById("dajeongSyncMonthSelect");
-      if (!syncSelect) return;
-      const newMonth = syncSelect.value;
+      const syncYearSelect = document.getElementById("dajeongSyncYearSelect");
+      const syncMonthSelect = document.getElementById("dajeongSyncMonthSelect");
+      if (!syncMonthSelect) return;
+      const newYear = syncYearSelect ? syncYearSelect.value : "2026년";
+      const newMonth = syncMonthSelect.value;
+      setActiveDajeongSyncYear(newYear);
       setActiveDajeongSyncMonth(newMonth);
+
+      const activeKey = `${newYear}_${newMonth}`;
 
       if (rawData && rawData.dajeong && rawData.dajeong.items && rawData.dajeong.items.length > 0) {
         const archiveMap = getDajeongArchiveMap();
-        archiveMap[newMonth] = rawData.dajeong.items.map(it => ({
+        archiveMap[activeKey] = rawData.dajeong.items.map(it => ({
           ...it,
+          year: newYear,
           month: newMonth,
           source: 'sheet'
         }));
@@ -2694,16 +2754,18 @@
       }
 
       setupDajeongFilters();
-      const filterSelect = document.getElementById("dajeongMonthFilter");
-      if (filterSelect) {
-        filterSelect.value = newMonth;
-      }
+      const yearFilter = document.getElementById("dajeongYearFilter");
+      if (yearFilter) yearFilter.value = newYear;
+      const monthFilter = document.getElementById("dajeongMonthFilter");
+      if (monthFilter) monthFilter.value = newMonth;
       renderDajeong();
-      showToast(`시트 작성 월이 [${newMonth}]로 설정되었습니다. 앞으로 시트에 입력하는 내역은 [${newMonth}]로 보관됩니다.`);
+      showToast(`시트 작성 년월이 [${newYear} ${newMonth}]로 설정되었습니다. 앞으로 시트에 입력하는 내역은 [${newYear} ${newMonth}]로 보관됩니다.`);
     }
 
     async function archiveCurrentDajeongData() {
+      const activeYear = getActiveDajeongSyncYear();
       const activeMonth = getActiveDajeongSyncMonth();
+      const activeKey = `${activeYear}_${activeMonth}`;
       const items = (rawData && rawData.dajeong && rawData.dajeong.items) ? rawData.dajeong.items : [];
       if (items.length === 0) {
         alert("현재 보관할 시트 데이터가 없습니다. 구글 시트 '다정' 탭에 내역을 작성해 주세요.");
@@ -2712,8 +2774,9 @@
 
       const totalAmount = items.reduce((sum, it) => sum + (it.amount || 0), 0);
       const archiveMap = getDajeongArchiveMap();
-      archiveMap[activeMonth] = items.map(it => ({
+      archiveMap[activeKey] = items.map(it => ({
         ...it,
+        year: activeYear,
         month: activeMonth,
         source: 'sheet'
       }));
@@ -2728,8 +2791,9 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               action: 'archiveDajeongMonth',
+              year: activeYear,
               month: activeMonth,
-              items: archiveMap[activeMonth]
+              items: archiveMap[activeKey]
             })
           });
         } catch (e) {
@@ -2739,7 +2803,7 @@
 
       setupDajeongFilters();
       renderDajeong();
-      alert(`[${activeMonth} 다정 카드값 영구 보관 완료]\n\n• 총 금액: ${totalAmount.toLocaleString()}원\n• 건수: ${items.length}건\n\n이제 구글 시트에서 ${activeMonth} 내역을 모두 지우고 다음 달 내역을 작성하셔도, 이 홈페이지에서는 ${activeMonth} 내역이 안전하게 영구 보존됩니다!`);
+      alert(`[${activeYear} ${activeMonth} 다정 카드값 영구 보관 완료]\n\n• 총 금액: ${totalAmount.toLocaleString()}원\n• 건수: ${items.length}건\n\n이제 구글 시트에서 ${activeYear} ${activeMonth} 내역을 모두 지우고 다음 달 내역을 작성하셔도, 이 홈페이지에서는 안전하게 영구 보존됩니다!`);
     }
 
     function getAllDajeongItems() {
@@ -2747,24 +2811,60 @@
       const customList = getCustomDajeongItems();
       const allItems = [];
 
-      // 1. 아카이브 맵의 모든 월 내역 수집
-      Object.keys(archiveMap).forEach(m => {
-        (archiveMap[m] || []).forEach(it => {
-          allItems.push({ ...it, month: it.month || m });
+      // 1. 아카이브 맵의 모든 월/년 내역 수집
+      Object.keys(archiveMap).forEach(key => {
+        let defYear = "2026년";
+        let defMonth = "9월";
+        if (key.includes("_")) {
+          const parts = key.split("_");
+          defYear = parts[0];
+          defMonth = parts[1];
+        } else if (key.includes("년")) {
+          defYear = key;
+        } else {
+          defMonth = key;
+        }
+
+        (archiveMap[key] || []).forEach(it => {
+          let y = it.year || defYear;
+          let m = it.month || defMonth;
+          if (m.includes("년")) {
+            const parts = m.split(/\s+/);
+            if (parts.length >= 2) {
+              y = parts[0];
+              m = parts[1];
+            }
+          }
+          allItems.push({ ...it, year: y, month: m });
         });
       });
 
       // 만약 아카이브가 아직 비어있다면 rawData에서 로드
       if (allItems.length === 0 && rawData && rawData.dajeong && rawData.dajeong.items) {
+        const activeY = getActiveDajeongSyncYear();
         const activeM = getActiveDajeongSyncMonth();
         rawData.dajeong.items.forEach(it => {
-          allItems.push({ ...it, month: it.month || activeM });
+          let y = it.year || activeY;
+          let m = it.month || activeM;
+          if (m.includes("년")) {
+            const parts = m.split(/\s+/);
+            if (parts.length >= 2) {
+              y = parts[0];
+              m = parts[1];
+            }
+          }
+          allItems.push({ ...it, year: y, month: m });
         });
       }
 
       // 2. 직접 추가한 커스텀 내역 수집
       customList.forEach(it => {
-        allItems.push({ ...it, isCustom: true });
+        allItems.push({
+          ...it,
+          year: it.year || "2026년",
+          month: it.month || "9월",
+          isCustom: true
+        });
       });
 
       return allItems;
@@ -2778,46 +2878,76 @@
 
     function setupDajeongFilters() {
       const allItems = getAllDajeongItems();
+      const years = [];
       const months = [];
 
-      // 1. 전체 요약 리스트의 월들 기본 추가
+      // 1. 전체 요약 리스트의 년도 및 월 기본 추가
       getValidSummaryList().forEach(m => {
-        if (!months.includes(m.month)) months.push(m.month);
+        if (m.year && !years.includes(m.year)) years.push(m.year);
+        if (m.month && !months.includes(m.month)) months.push(m.month);
       });
-      // 2. 다정 아카이브에 존재하는 월 추가
+      // 2. 다정 아카이브에 존재하는 년도 및 월 추가
       allItems.forEach(it => {
+        if (it.year && !years.includes(it.year)) years.push(it.year);
         if (it.month && !months.includes(it.month)) months.push(it.month);
       });
 
+      if (!years.includes("2026년")) years.push("2026년");
+      if (!months.includes("9월")) months.push("9월");
+
+      // 년도 필터 채우기
+      const yearSelect = document.getElementById("dajeongYearFilter");
+      if (yearSelect) {
+        const currentVal = yearSelect.value;
+        yearSelect.innerHTML = `<option value="ALL">전체 년도 (${years.length}개년)</option>`;
+        years.forEach(y => {
+          const opt = document.createElement("option");
+          opt.value = y;
+          opt.innerText = y;
+          yearSelect.appendChild(opt);
+        });
+        const activeYear = getActiveDajeongSyncYear();
+        if (currentVal && currentVal !== "ALL" && years.includes(currentVal)) {
+          yearSelect.value = currentVal;
+        } else if (years.includes(activeYear)) {
+          yearSelect.value = activeYear;
+        } else if (years.includes("2026년")) {
+          yearSelect.value = "2026년";
+        }
+      }
+
+      // 월 필터 채우기
       const monthSelect = document.getElementById("dajeongMonthFilter");
-      if (!monthSelect) return;
-      const currentVal = monthSelect.value;
-      monthSelect.innerHTML = `<option value="ALL">전체 월 (${months.length}개월)</option>`;
-      months.forEach(m => {
-        const opt = document.createElement("option");
-        opt.value = m;
-        opt.innerText = m;
-        monthSelect.appendChild(opt);
-      });
-
-      const activeMonth = getActiveDajeongSyncMonth();
-      if (currentVal && currentVal !== "ALL" && months.includes(currentVal)) {
-        monthSelect.value = currentVal;
-      } else if (months.includes(activeMonth)) {
-        monthSelect.value = activeMonth;
-      } else if (months.includes("9월")) {
-        monthSelect.value = "9월";
+      if (monthSelect) {
+        const currentVal = monthSelect.value;
+        monthSelect.innerHTML = `<option value="ALL">전체 월 (${months.length}개월)</option>`;
+        months.forEach(m => {
+          const opt = document.createElement("option");
+          opt.value = m;
+          opt.innerText = m;
+          monthSelect.appendChild(opt);
+        });
+        const activeMonth = getActiveDajeongSyncMonth();
+        if (currentVal && currentVal !== "ALL" && months.includes(currentVal)) {
+          monthSelect.value = currentVal;
+        } else if (months.includes(activeMonth)) {
+          monthSelect.value = activeMonth;
+        } else if (months.includes("9월")) {
+          monthSelect.value = "9월";
+        }
       }
 
-      const syncSelect = document.getElementById("dajeongSyncMonthSelect");
-      if (syncSelect) {
-        syncSelect.value = activeMonth;
-      }
+      const syncYearSelect = document.getElementById("dajeongSyncYearSelect");
+      if (syncYearSelect) syncYearSelect.value = getActiveDajeongSyncYear();
+      const syncMonthSelect = document.getElementById("dajeongSyncMonthSelect");
+      if (syncMonthSelect) syncMonthSelect.value = getActiveDajeongSyncMonth();
     }
 
     function renderDajeong() {
       const allItems = getAllDajeongItems();
+      const yearSelect = document.getElementById("dajeongYearFilter");
       const monthSelect = document.getElementById("dajeongMonthFilter");
+      const selectedYear = yearSelect ? yearSelect.value : "ALL";
       const selectedMonth = monthSelect ? monthSelect.value : "ALL";
       const search = (document.getElementById("dajeongSearchInput")?.value || "").trim().toLowerCase();
       const tbody = document.getElementById("dajeongTableBody");
@@ -2825,10 +2955,10 @@
       tbody.innerHTML = "";
 
       let filtered = allItems.filter(it => {
-        if (selectedMonth !== "ALL") {
-          const itemMonth = it.month || '9월';
-          if (itemMonth !== selectedMonth) return false;
-        }
+        const itemYear = it.year || '2026년';
+        const itemMonth = it.month || '9월';
+        if (selectedYear !== "ALL" && itemYear !== selectedYear) return false;
+        if (selectedMonth !== "ALL" && itemMonth !== selectedMonth) return false;
         if (search && !((it.item || '').toLowerCase().includes(search))) return false;
         return true;
       });
@@ -2841,10 +2971,11 @@
       filtered.sort((a, b) => dajeongSortDesc ? (b.amount || 0) - (a.amount || 0) : (a.amount || 0) - (b.amount || 0));
 
       const countEl = document.getElementById("dajeongCountText");
-      if (countEl) countEl.innerText = `총 ${filtered.length}건 (선택: ${selectedMonth === "ALL" ? "전체" : selectedMonth})`;
+      const filterDesc = `${selectedYear === "ALL" ? "전체년도" : selectedYear} ${selectedMonth === "ALL" ? "전체월" : selectedMonth}`;
+      if (countEl) countEl.innerText = `총 ${filtered.length}건 (선택: ${filterDesc})`;
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400">지출 내역이 없습니다. (시트 작성 후 [현재 월 보관]을 눌러두면 영구 보존됩니다)</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400">지출 내역이 없습니다. (시트 작성 후 [현재 년월 보관]을 눌러두면 영구 보존됩니다)</td></tr>`;
         return;
       }
 
@@ -2852,11 +2983,15 @@
         const tr = document.createElement("tr");
         tr.className = "hover:bg-slate-50/80 transition border-b border-slate-100 last:border-none";
         const isCustom = !!it.isCustom;
+        const yearBadge = it.year || '2026년';
         const monthBadge = it.month || '9월';
 
         tr.innerHTML = `
           <td class="py-2.5 px-3 text-slate-500 whitespace-nowrap">
-            <span class="inline-block px-1.5 py-0.5 bg-rose-50 rounded text-[10px] font-semibold text-rose-700">${monthBadge}</span>
+            <div class="flex items-center gap-1">
+              <span class="inline-block px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-bold text-slate-600">${yearBadge}</span>
+              <span class="inline-block px-1.5 py-0.5 bg-rose-50 rounded text-[10px] font-semibold text-rose-700">${monthBadge}</span>
+            </div>
           </td>
           <td class="py-2.5 px-3 font-medium text-slate-800">
             <div class="flex items-center gap-1.5">
@@ -2876,8 +3011,42 @@
     }
 
     // ==========================================
-    // 3. 선준 카드값 로직 (카드 원클릭 칩 선택 & 상세 필터)
+    // 3. 선준 카드값 로직 (카드 원클릭 칩 선택 & 년도/월 상세 필터)
     // ==========================================
+    function getAllSeonjunItems() {
+      const customList = getCustomSeonjunItems();
+      const rawList = (rawData && rawData.seonjun) ? rawData.seonjun : [];
+      const allList = [];
+
+      rawList.forEach(it => {
+        let y = it.year || "2026년";
+        let m = it.month || "9월";
+        if (m.includes("년")) {
+          const parts = m.split(/\s+/);
+          if (parts.length >= 2) {
+            y = parts[0];
+            m = parts[1];
+          }
+        }
+        allList.push({
+          ...it,
+          year: y,
+          month: m
+        });
+      });
+
+      customList.forEach(it => {
+        allList.push({
+          ...it,
+          year: it.year || "2026년",
+          month: it.month || "9월",
+          isCustom: true
+        });
+      });
+
+      return allList;
+    }
+
     function renderSeonjunCardChips(cardList) {
       const container = document.getElementById("seonjunCardChipsContainer");
       const activeLabel = document.getElementById("seonjunActiveCardLabel");
@@ -2923,16 +3092,47 @@
     }
 
     function setupSeonjunFilters() {
-      const customList = getCustomSeonjunItems();
-      const rawList = (rawData && rawData.seonjun) ? rawData.seonjun : [];
-      const combined = [...rawList, ...customList];
-      
-      // 월 필터 목록 (중복 제거)
-      const months = [...new Set(combined.map(it => it.month).filter(Boolean))];
+      const allSeonjun = getAllSeonjunItems();
+      const years = [];
+      const months = [];
+      const cards = [];
+
       getValidSummaryList().forEach(m => {
-        if (!months.includes(m.month)) months.push(m.month);
+        if (m.year && !years.includes(m.year)) years.push(m.year);
+        if (m.month && !months.includes(m.month)) months.push(m.month);
       });
 
+      allSeonjun.forEach(it => {
+        if (it.year && !years.includes(it.year)) years.push(it.year);
+        if (it.month && !months.includes(it.month)) months.push(it.month);
+        if (it.card && !cards.includes(it.card)) cards.push(it.card);
+      });
+
+      if (!years.includes("2026년")) years.push("2026년");
+      if (!months.includes("9월")) months.push("9월");
+      ['신한카드', '하나카드', '롯데카드', '기업카드'].forEach(c => {
+        if (!cards.includes(c)) cards.push(c);
+      });
+
+      // 년도 필터
+      const yearSelect = document.getElementById("seonjunYearFilter");
+      if (yearSelect) {
+        const currentYear = yearSelect.value;
+        yearSelect.innerHTML = `<option value="ALL">전체 년도 (${years.length}개년)</option>`;
+        years.forEach(y => {
+          const opt = document.createElement("option");
+          opt.value = y;
+          opt.innerText = y;
+          yearSelect.appendChild(opt);
+        });
+        if (currentYear && currentYear !== "ALL" && years.includes(currentYear)) {
+          yearSelect.value = currentYear;
+        } else if (years.includes("2026년")) {
+          yearSelect.value = "2026년";
+        }
+      }
+
+      // 월 필터 목록
       const monthSelect = document.getElementById("seonjunMonthFilter");
       if (monthSelect) {
         const currentVal = monthSelect.value;
@@ -2950,12 +3150,6 @@
       }
 
       // 카드사 필터 목록
-      const cards = [...new Set(combined.map(it => it.card).filter(Boolean))];
-      // 주요 카드 보장 (하나카드, 신한카드, 롯데카드, 기업카드)
-      ['신한카드', '하나카드', '롯데카드', '기업카드'].forEach(c => {
-        if (!cards.includes(c)) cards.push(c);
-      });
-
       const cardSelect = document.getElementById("seonjunCardFilter");
       if (cardSelect) {
         const prevCard = cardSelect.value || "ALL";
@@ -2979,10 +3173,9 @@
     }
 
     function renderSeonjunList() {
-      const customList = getCustomSeonjunItems();
-      const rawList = (rawData && rawData.seonjun) ? rawData.seonjun : [];
-      const allSeonjun = [...rawList, ...customList];
+      const allSeonjun = getAllSeonjunItems();
 
+      const selectedYear = document.getElementById("seonjunYearFilter") ? document.getElementById("seonjunYearFilter").value : "ALL";
       const selectedMonth = document.getElementById("seonjunMonthFilter") ? document.getElementById("seonjunMonthFilter").value : "ALL";
       const selectedType = document.getElementById("seonjunTypeFilter") ? document.getElementById("seonjunTypeFilter").value : "ALL";
       const selectedNote = document.getElementById("seonjunNoteFilter") ? document.getElementById("seonjunNoteFilter").value : "ALL";
@@ -2998,7 +3191,10 @@
       tbody.innerHTML = "";
 
       let filtered = allSeonjun.filter(it => {
-        if (selectedMonth !== "ALL" && it.month !== selectedMonth) return false;
+        const itemYear = it.year || '2026년';
+        const itemMonth = it.month || '9월';
+        if (selectedYear !== "ALL" && itemYear !== selectedYear) return false;
+        if (selectedMonth !== "ALL" && itemMonth !== selectedMonth) return false;
         if (selectedType !== "ALL" && it.type !== selectedType) return false;
         if (selectedNote !== "ALL" && it.note !== selectedNote) return false;
         if (selectedCard !== "ALL" && it.card !== selectedCard) return false;
@@ -3043,6 +3239,8 @@
         const tr = document.createElement("tr");
         tr.className = "hover:bg-slate-50 transition border-b border-slate-100 last:border-none";
         const isCustom = !!it.isCustom;
+        const yearBadge = it.year || '2026년';
+        const monthBadge = it.month || '9월';
 
         // 구분 배지
         let typeBadge = "";
@@ -3068,8 +3266,11 @@
 
         tr.innerHTML = `
           <td class="py-2.5 px-3 text-slate-500 whitespace-nowrap">
-            <span class="inline-block px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-semibold text-slate-600">${it.month}</span>
-            <span class="font-medium text-slate-700 ml-1">${it.card}</span>
+            <div class="flex items-center gap-1">
+              <span class="inline-block px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-bold text-slate-600">${yearBadge}</span>
+              <span class="inline-block px-1.5 py-0.5 bg-indigo-50 rounded text-[10px] font-semibold text-indigo-600">${monthBadge}</span>
+              <span class="font-medium text-slate-700 ml-0.5">${it.card || '카드'}</span>
+            </div>
           </td>
           <td class="py-2.5 px-3 font-semibold text-slate-800">
             <div class="flex items-center gap-1.5">
@@ -3269,9 +3470,13 @@
       }
       onCardTargetChange();
 
-      // 현재 선택된 요약 월 기본 세팅
+      // 현재 선택된 요약 년도/월 기본 세팅
       const list = getValidSummaryList();
       const curr = list[selectedSummaryIndex >= 0 ? selectedSummaryIndex : list.length - 1];
+      const yearSelect = document.getElementById("cardItemYear");
+      if (yearSelect && curr && curr.year) {
+        yearSelect.value = curr.year;
+      }
       const monthSelect = document.getElementById("cardItemMonth");
       if (monthSelect && curr && curr.month) {
         monthSelect.value = curr.month;
@@ -3307,7 +3512,8 @@
 
     async function submitAddCardItem() {
       const target = document.getElementById("cardItemTarget").value;
-      const month = document.getElementById("cardItemMonth").value;
+      const year = (document.getElementById("cardItemYear")?.value || "2026년").trim();
+      const month = (document.getElementById("cardItemMonth")?.value || "9월").trim();
       const item = (document.getElementById("cardItemName").value || "").trim();
       const amount = parseNumberInput(document.getElementById("cardItemAmount"));
 
@@ -3322,6 +3528,7 @@
 
       const newItem = {
         id: 'custom_' + Date.now(),
+        year,
         month,
         item,
         amount,
@@ -3361,7 +3568,7 @@
       }
 
       closeAddCardItemModal();
-      showToast(`${month} ${target === 'dajeong' ? '다정' : '선준'} 카드값 [${item}: ${amount.toLocaleString()}원] 등록 완료!`);
+      showToast(`${year} ${month} ${target === 'dajeong' ? '다정' : '선준'} 카드값 [${item}: ${amount.toLocaleString()}원] 등록 완료!`);
     }
 
     // ==========================================
@@ -4567,17 +4774,26 @@ function doGet(e) {
         </button>
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-3 gap-2">
         <div>
           <label class="text-xs font-bold text-slate-600 block mb-1">대상</label>
-          <select id="cardItemTarget" onchange="onCardTargetChange()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+          <select id="cardItemTarget" onchange="onCardTargetChange()" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
             <option value="dajeong">다정 카드</option>
             <option value="seonjun">선준 카드</option>
           </select>
         </div>
         <div>
+          <label class="text-xs font-bold text-slate-600 block mb-1">해당 년도</label>
+          <select id="cardItemYear" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+            <option value="2025년">2025년</option>
+            <option value="2026년" selected>2026년</option>
+            <option value="2027년">2027년</option>
+            <option value="2028년">2028년</option>
+          </select>
+        </div>
+        <div>
           <label class="text-xs font-bold text-slate-600 block mb-1">해당 월</label>
-          <select id="cardItemMonth" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+          <select id="cardItemMonth" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
             <option value="1월">1월</option>
             <option value="2월">2월</option>
             <option value="3월">3월</option>
