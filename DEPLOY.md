@@ -4,30 +4,34 @@
 
 ---
 
-## 🚀 방법 1: GitHub Pages로 무료 배포 (가장 추천)
+## 🚀 가장 쉬운 방법: 더블 클릭 한 번으로 GitHub 자동 배포 (추천 ⭐)
 
-맥북을 꺼두어도 어디서든 아이폰 사파리나 카카오톡으로 열어볼 수 있는 고유 웹 주소(예: `https://내아이디.github.io/가계부대시보드`)가 생성됩니다.
+폴더 안에 준비해 둔 **[deploy_github.command](file:///Users/swdjsj/Desktop/가계부대시보드/deploy_github.command)** 파일을 더블 클릭하기만 하면 끝납니다!
+
+1. 맥북 화면에 열린 터미널 창을 확인합니다. (또는 `deploy_github.command` 더블 클릭)
+2. 화면에 뜨는 8자리 코드를 복사하고 웹 브라우저에서 **[Confirm & Authorize]** 승인
+3. 자동으로 저장소 생성 ➔ 코드 업로드 ➔ **GitHub Pages 웹링크가 즉시 생성**됩니다!
+   👉 **`https://<내GitHub아이디>.github.io/household-ledger/`**
+
+---
+
+## 🛠 수동으로 직접 배포하고 싶으실 때
 
 ### 1단계: GitHub 새 저장소 만들기
 1. [GitHub.com](https://github.com)에 로그인합니다.
 2. 우측 상단 **[+] ➔ [New repository]**를 클릭합니다.
-3. Repository name에 `household-ledger` (또는 원하는 이름)를 입력합니다.
+3. Repository name에 `household-ledger`를 입력합니다.
 4. **Public**을 선택하고 **[Create repository]**를 클릭합니다.
 
 ### 2단계: 맥북 터미널에서 코드 올리기
-맥북 터미널을 열고 가계부 폴더에서 아래 3줄만 복사하여 실행합니다:
+맥북 터미널을 열고 아래 명령어를 실행합니다:
 
 ```bash
 cd "/Users/swdjsj/Desktop/가계부대시보드"
 
-# Git 초기화 및 커밋
-git init
-git add .
-git commit -m "첫 배포: 가계부 대시보드"
-
-# GitHub 원격 저장소 연결 (내 아이디와 저장소 이름으로 변경)
+# GitHub 원격 저장소 연결 (내 아이디로 변경)
 git branch -M main
-git remote add origin https://github.com/<내깃허브아이디>/household-ledger.git
+git remote add origin https://github.com/<내GitHub아이디>/household-ledger.git
 git push -u origin main
 ```
 
