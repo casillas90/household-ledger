@@ -1510,7 +1510,7 @@
       { year: '2026년', month: '6월',  remain: 3016017, savings: 2000000, pocketMoney: 450000, livingExpense: 400000, emergencyFund: 166017 },
       { year: '2026년', month: '7월',  remain: 2215661, savings: 2000000, pocketMoney: 100000, livingExpense: 100000, emergencyFund: 15661 },
       { year: '2026년', month: '8월',  remain: 1025473, savings: 600000,  pocketMoney: 200000, livingExpense: 200000, emergencyFund: 25473 },
-      { year: '2026년', month: '9월',  remain: 1366167, savings: 0,       pocketMoney: 450000, livingExpense: 450000, emergencyFund: 466167 }
+      { year: '2026년', month: '9월',  remain: 1366167, savings: 950000,  pocketMoney: 135734, livingExpense: 252000, emergencyFund: 28433 }
     ];
 
     let currentSummaryTableMode = 'costs'; // 'costs' | 'flow'
@@ -1533,7 +1533,13 @@
 
     function getAllocOverrides() {
       try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY_ALLOC_OVERRIDES) || "{}");
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY_ALLOC_OVERRIDES) || "{}");
+        // 과거 잘못 저장되었을 수 있는 구버전 2026년 9월 임시 오버라이드 정제
+        if (data["2026년_9월"] && (data["2026년_9월"].savings === 0 || data["2026년_9월"].pocketMoney === 450000)) {
+          delete data["2026년_9월"];
+          localStorage.setItem(STORAGE_KEY_ALLOC_OVERRIDES, JSON.stringify(data));
+        }
+        return data;
       } catch (e) {
         return {};
       }
@@ -1677,10 +1683,13 @@
         livingExpense = 0;
       }
 
-      // D. 비상금 (수식 배제: 시트 기재 숫자 우선, 공란일 경우 잔금 - (적금+용돈+생활비) 산출)
+      // D. 비상금 (수식 배제: 시트 기재 숫자 우선, 공란이거나 적금/용돈/생활비 수정 시 잔금 - (적금+용돈+생활비) 잔여액 산출)
       let emergencyFund = 0;
       if (overrides.emergencyFund !== undefined) {
         emergencyFund = overrides.emergencyFund;
+      } else if (overrides.savings !== undefined || overrides.pocketMoney !== undefined || overrides.livingExpense !== undefined) {
+        // 적금/용돈/생활비 수정 시 비상금은 잔금 잔여액으로 자동 연동
+        emergencyFund = Math.max(0, remainBalance - (savings + pocketMoney + livingExpense));
       } else if (sheetExp && sheetExp.emergencyFund !== undefined && sheetExp.emergencyFund > 0) {
         emergencyFund = sheetExp.emergencyFund;
       } else {
