@@ -135,9 +135,9 @@
     <!-- ============================================== -->
     <!-- 1. 월별 가계부 & 저축 탭 -->
     <!-- ============================================== -->
-    <div id="tab-summary" class="tab-content space-y-6">
+        <div id="tab-summary" class="tab-content space-y-6">
       
-      <!-- 상단 컨트롤: 월 선택 -->
+      <!-- 상단 컨트롤: 월 선택 & 빠른 정보 -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl border border-slate-200/70 shadow-xs">
         <div class="flex items-center gap-2">
           <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">조회 기준 월</span>
@@ -145,97 +145,343 @@
             <!-- Dynamic Options -->
           </select>
         </div>
-        <div class="text-xs text-slate-500 font-medium" id="summaryMonthNotice">
-          선택한 월의 주요 수입 및 지출 지표입니다.
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs text-slate-500 font-medium" id="summaryMonthNotice">
+            선택한 월의 주요 수입 및 지출 지표입니다.
+          </span>
+          <span id="quickEmergencyBadge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-xs font-semibold border border-amber-200/60">
+            <i class="fa-solid fa-vault text-amber-500"></i>
+            비상금 잔액: <strong id="quickEmergencyText">0원</strong>
+          </span>
         </div>
       </div>
 
-      <!-- 요약 KPI 카드 그리드 -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <!-- 1. 급여 -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-sm relative overflow-hidden group hover:border-emerald-200 transition">
-          <div class="flex justify-between items-center text-slate-400">
-            <span class="text-xs font-semibold">총 급여 수입</span>
-            <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
-              <i class="fa-solid fa-money-bill-wave"></i>
-            </span>
+      <!-- [섹션 1] 월별 비용 및 자금 계산 흐름 (전체비용 & 잔금 공식 시각화) -->
+      <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm space-y-5">
+        <!-- 섹션 헤더 & 계산 공식 배너 -->
+        <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-xs font-bold mb-1">
+              <i class="fa-solid fa-calculator"></i> 월별 비용 계산 체계
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+              전체비용 및 잔금 계산 흐름
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">
+              급여에서 카드결제 정산 후, 다정 남은금액과 합산하여 <strong class="text-rose-600">월 전체비용</strong>을 계산하고 <strong class="text-amber-600">잔금</strong>을 산출합니다.
+            </p>
           </div>
-          <span id="summarySalary" class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2 block tracking-tight">-</span>
-          <span class="text-[11px] text-emerald-600 font-medium mt-1 inline-block bg-emerald-50/80 px-2 py-0.5 rounded-md" id="summarySalaryDiff">-</span>
+          <!-- 공식 비주얼 배너 -->
+          <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-medium text-slate-600 overflow-x-auto whitespace-nowrap">
+            <span class="px-2 py-1 bg-emerald-100/70 text-emerald-800 rounded-lg font-bold">급여</span>
+            <span class="text-slate-400 font-bold">−</span>
+            <span class="px-2 py-1 bg-blue-100/70 text-blue-800 rounded-lg font-bold">급여-카드</span>
+            <span class="text-slate-400 font-bold">=</span>
+            <span class="px-2 py-1 bg-amber-100/70 text-amber-800 rounded-lg font-bold">잔금</span>
+            <span class="text-slate-300 mx-1">|</span>
+            <span class="px-2 py-1 bg-blue-100/70 text-blue-800 rounded-lg font-bold">급여-카드</span>
+            <span class="text-slate-400 font-bold">+</span>
+            <span class="px-2 py-1 bg-purple-100/70 text-purple-800 rounded-lg font-bold">다정남은금액</span>
+            <span class="text-slate-400 font-bold">=</span>
+            <span class="px-2 py-1 bg-rose-100/70 text-rose-800 rounded-lg font-bold">전체비용</span>
+          </div>
         </div>
 
-        <!-- 2. 카드결제 합계 -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-sm relative overflow-hidden group hover:border-rose-200 transition">
-          <div class="flex justify-between items-center text-slate-400">
-            <span class="text-xs font-semibold">월 카드결제 합계</span>
-            <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-xs">
-              <i class="fa-solid fa-credit-card"></i>
-            </span>
+        <!-- 5대 핵심 지표 카드 -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+          <!-- 1. 급여 -->
+          <div class="bg-gradient-to-b from-white to-emerald-50/20 p-4 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-emerald-300 transition shadow-xs">
+            <div class="flex justify-between items-center text-slate-400">
+              <span class="text-xs font-semibold text-slate-600">1. 총 급여 수입</span>
+              <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-money-bill-wave"></i>
+              </span>
+            </div>
+            <span id="summarySalary" class="text-lg sm:text-xl font-extrabold text-slate-900 mt-2 block tracking-tight">-</span>
+            <span class="text-[10px] text-emerald-600 font-medium mt-1 inline-block bg-emerald-50 px-2 py-0.5 rounded-md" id="summarySalaryDiff">-</span>
           </div>
-          <span id="summaryCards" class="text-xl sm:text-2xl font-extrabold text-rose-500 mt-2 block tracking-tight">-</span>
-          <span class="text-[11px] text-rose-600 font-medium mt-1 inline-block bg-rose-50/80 px-2 py-0.5 rounded-md" id="summaryCardsDiff">-</span>
-        </div>
 
-        <!-- 3. 총 지출 / 비용 -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-sm relative overflow-hidden group hover:border-violet-200 transition">
-          <div class="flex justify-between items-center text-slate-400">
-            <span class="text-xs font-semibold">총 지출(고정+변동)</span>
-            <span class="w-7 h-7 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center text-xs">
-              <i class="fa-solid fa-receipt"></i>
-            </span>
+          <!-- 2. 급여 - 카드결제금액 -->
+          <div class="bg-gradient-to-b from-white to-blue-50/20 p-4 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-blue-300 transition shadow-xs">
+            <div class="flex justify-between items-center text-slate-400">
+              <span class="text-xs font-semibold text-blue-900">2. 급여 − 카드결제</span>
+              <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </span>
+            </div>
+            <span id="summarySalaryMinusCard" class="text-lg sm:text-xl font-extrabold text-blue-700 mt-2 block tracking-tight">-</span>
+            <span class="text-[10px] text-blue-600 font-medium mt-1 inline-block bg-blue-50 px-2 py-0.5 rounded-md" id="summarySalaryMinusCardSub">카드결제 정산 차액</span>
           </div>
-          <span id="summaryTotalCost" class="text-xl sm:text-2xl font-extrabold text-violet-600 mt-2 block tracking-tight">-</span>
-          <span class="text-[11px] text-slate-400 font-medium mt-1 block">카드 및 고정지출 합산</span>
-        </div>
 
-        <!-- 4. 용돈 / 잔여 배분 -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-sm relative overflow-hidden group hover:border-indigo-200 transition">
-          <div class="flex justify-between items-center text-slate-400">
-            <span class="text-xs font-semibold">용돈 & 잔여 배분</span>
-            <span class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs">
-              <i class="fa-solid fa-piggy-bank"></i>
-            </span>
+          <!-- 3. 다정 남은금액 -->
+          <div class="bg-gradient-to-b from-white to-purple-50/20 p-4 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-purple-300 transition shadow-xs">
+            <div class="flex justify-between items-center text-slate-400">
+              <span class="text-xs font-semibold text-purple-900">3. 다정 남은금액</span>
+              <span class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-coins"></i>
+              </span>
+            </div>
+            <span id="summaryDajeongRemain" class="text-lg sm:text-xl font-extrabold text-purple-700 mt-2 block tracking-tight">-</span>
+            <span class="text-[10px] text-purple-600 font-medium mt-1 inline-block bg-purple-50 px-2 py-0.5 rounded-md">다정 잔여 예산</span>
           </div>
-          <span id="summaryPocket" class="text-xl sm:text-2xl font-extrabold text-indigo-600 mt-2 block tracking-tight">-</span>
-          <span class="text-[11px] text-indigo-600 font-medium mt-1 inline-block bg-indigo-50/80 px-2 py-0.5 rounded-md" id="summaryPocketInfo">-</span>
+
+          <!-- 4. 전체비용 (총비용) -->
+          <div class="bg-gradient-to-b from-white to-rose-50/20 p-4 sm:p-5 rounded-2xl border border-rose-200/80 hover:border-rose-300 transition shadow-xs">
+            <div class="flex justify-between items-center text-slate-400">
+              <span class="text-xs font-bold text-rose-800">4. 월 전체비용</span>
+              <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-receipt"></i>
+              </span>
+            </div>
+            <span id="summaryTotalCost" class="text-lg sm:text-xl font-extrabold text-rose-600 mt-2 block tracking-tight">-</span>
+            <span class="text-[10px] text-rose-600 font-medium mt-1 inline-block bg-rose-50 px-2 py-0.5 rounded-md">(급여-카드)+다정남은금액</span>
+          </div>
+
+          <!-- 5. 잔금 (남은 자금) -->
+          <div class="col-span-2 md:col-span-1 bg-gradient-to-b from-white to-amber-50/30 p-4 sm:p-5 rounded-2xl border border-amber-200/80 hover:border-amber-400 transition shadow-xs">
+            <div class="flex justify-between items-center text-slate-400">
+              <span class="text-xs font-bold text-amber-900">5. 월 잔금 (배분 기준)</span>
+              <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-sack-dollar"></i>
+              </span>
+            </div>
+            <span id="summaryRemainBalance" class="text-lg sm:text-xl font-extrabold text-amber-700 mt-2 block tracking-tight">-</span>
+            <span class="text-[10px] text-amber-700 font-medium mt-1 inline-block bg-amber-100/60 px-2 py-0.5 rounded-md" id="summaryRemainRatio">급여의 0%</span>
+          </div>
         </div>
       </div>
 
-      <!-- 보조 지표 3개 카드 (저축, 급여-카드, 다정 잔액) -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div class="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 p-4 rounded-2xl border border-emerald-200/60 flex items-center justify-between">
+      <!-- [섹션 2] 잔금 배분 체계 (잔금 / 적금 / 용돈 / 생활비 / 비상금) -->
+      <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
           <div>
-            <span class="text-xs font-semibold text-emerald-800">월 저축 / 적금</span>
-            <span id="subSummarySavings" class="text-lg font-bold text-emerald-700 block mt-1">0원</span>
+            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-700 text-xs font-bold mb-1">
+              <i class="fa-solid fa-diagram-project"></i> 잔금 세부 배분 현황
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900">
+              잔금 배분 (적금 · 용돈 · 생활비 · 비상금)
+            </h3>
+            <p class="text-xs text-slate-400">
+              월 잔금에서 4대 필수 지출 및 저축으로 배분되는 상세 구조입니다.
+            </p>
           </div>
-          <i class="fa-solid fa-vault text-emerald-500 text-2xl opacity-70"></i>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500 font-medium">배분 기준 잔금:</span>
+            <span id="allocBaseAmount" class="text-sm font-extrabold text-amber-700">0원</span>
+          </div>
         </div>
 
-        <div class="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 p-4 rounded-2xl border border-blue-200/60 flex items-center justify-between">
-          <div>
-            <span class="text-xs font-semibold text-blue-800">급여 - 카드결제 차액</span>
-            <span id="subSummarySalaryMinusCard" class="text-lg font-bold text-blue-700 block mt-1">0원</span>
+        <!-- 배분 프로그레스 바 (시각화) -->
+        <div class="space-y-1.5">
+          <div class="flex justify-between text-[11px] font-semibold text-slate-500">
+            <span>배분 비중</span>
+            <span id="allocProgressSummary">적금 0% · 용돈 0% · 생활비 0% · 비상금 0%</span>
           </div>
-          <i class="fa-solid fa-scale-balanced text-blue-500 text-2xl opacity-70"></i>
+          <div class="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden flex shadow-inner" id="allocProgressBar">
+            <div id="barSavings" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%" title="적금"></div>
+            <div id="barPocket" class="h-full bg-indigo-500 transition-all duration-500" style="width: 0%" title="용돈"></div>
+            <div id="barLiving" class="h-full bg-sky-500 transition-all duration-500" style="width: 0%" title="생활비"></div>
+            <div id="barEmergency" class="h-full bg-amber-500 transition-all duration-500" style="width: 0%" title="비상금"></div>
+            <div id="barNetRemain" class="h-full bg-slate-300 transition-all duration-500" style="width: 100%" title="잔여 순잔금"></div>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 pt-0.5">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> 적금(저축)</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> 용돈</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-500"></span> 생활비</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> 비상금</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-300"></span> 잔여 순잔금</span>
+          </div>
         </div>
 
-        <div class="bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-4 rounded-2xl border border-purple-200/60 flex items-center justify-between">
-          <div>
-            <span class="text-xs font-semibold text-purple-800">다정 잔여 예산</span>
-            <span id="subSummaryDajeongRemain" class="text-lg font-bold text-purple-700 block mt-1">0원</span>
+        <!-- 5개 배분 카드 그리드 -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <!-- 1. 적금 (저축) -->
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 hover:border-emerald-300 transition">
+            <div class="flex items-center justify-between text-emerald-600 mb-1.5">
+              <span class="text-xs font-bold">적금 (저축)</span>
+              <i class="fa-solid fa-vault text-xs"></i>
+            </div>
+            <span id="allocSavings" class="text-base sm:text-lg font-bold text-slate-800 block tracking-tight">0원</span>
+            <span id="allocSavingsRatio" class="text-[10px] text-emerald-600 font-medium mt-0.5 block">잔금의 0%</span>
           </div>
-          <i class="fa-solid fa-coins text-purple-500 text-2xl opacity-70"></i>
+
+          <!-- 2. 용돈 -->
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 hover:border-indigo-300 transition">
+            <div class="flex items-center justify-between text-indigo-600 mb-1.5">
+              <span class="text-xs font-bold">용돈</span>
+              <i class="fa-solid fa-piggy-bank text-xs"></i>
+            </div>
+            <span id="allocPocket" class="text-base sm:text-lg font-bold text-slate-800 block tracking-tight">0원</span>
+            <span id="allocPocketRatio" class="text-[10px] text-indigo-600 font-medium mt-0.5 block">잔금의 0%</span>
+          </div>
+
+          <!-- 3. 생활비 -->
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 hover:border-sky-300 transition">
+            <div class="flex items-center justify-between text-sky-600 mb-1.5">
+              <span class="text-xs font-bold">생활비</span>
+              <i class="fa-solid fa-cart-shopping text-xs"></i>
+            </div>
+            <span id="allocLiving" class="text-base sm:text-lg font-bold text-slate-800 block tracking-tight">0원</span>
+            <span id="allocLivingRatio" class="text-[10px] text-sky-600 font-medium mt-0.5 block">잔금의 0%</span>
+          </div>
+
+          <!-- 4. 비상금 -->
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 hover:border-amber-300 transition relative overflow-hidden">
+            <div class="flex items-center justify-between text-amber-600 mb-1.5">
+              <span class="text-xs font-bold">비상금</span>
+              <i class="fa-solid fa-shield-halved text-xs"></i>
+            </div>
+            <span id="allocEmergency" class="text-base sm:text-lg font-bold text-amber-700 block tracking-tight">0원</span>
+            <span id="allocEmergencyRatio" class="text-[10px] text-amber-600 font-medium mt-0.5 block">잔금의 0%</span>
+          </div>
+
+          <!-- 5. 잔여 순잔금 -->
+          <div class="col-span-2 sm:col-span-1 bg-amber-50/40 p-4 rounded-2xl border border-amber-200/60 hover:border-amber-400 transition">
+            <div class="flex items-center justify-between text-amber-800 mb-1.5">
+              <span class="text-xs font-bold">배분 후 순잔금</span>
+              <i class="fa-solid fa-wallet text-xs"></i>
+            </div>
+            <span id="allocNetRemain" class="text-base sm:text-lg font-bold text-amber-800 block tracking-tight">0원</span>
+            <span id="allocNetRemainRatio" class="text-[10px] text-slate-500 font-medium mt-0.5 block">남은 잔액</span>
+          </div>
         </div>
       </div>
 
-      <!-- 월별 흐름 테이블 -->
+      <!-- [섹션 3] 비상금 금고 & 잔액 실시간 직접 입력 및 관리 -->
+      <div class="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-orange-500/10 p-5 sm:p-7 rounded-3xl border border-amber-200/80 shadow-sm space-y-5">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-amber-200/60 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-lg shadow-sm shadow-amber-200">
+              <i class="fa-solid fa-vault"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-base sm:text-lg font-bold text-slate-900">비상금 금고 & 잔액 실시간 관리</h3>
+                <span class="px-2 py-0.5 bg-amber-200 text-amber-900 text-[10px] font-extrabold rounded-md">사이트 직접 입력</span>
+              </div>
+              <p class="text-xs text-slate-600 mt-0.5">비상금이 얼마 남았는지 사이트에서 직접 적고 브라우저에 안전하게 보관하세요.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] text-slate-500 bg-white/80 px-3 py-1.5 rounded-xl border border-amber-200" id="emergencyLastUpdated">
+              최종 저장: 없음
+            </span>
+          </div>
+        </div>
+
+        <!-- 비상금 메인 영역: 좌측 현재 잔액 표시 / 우측 직접 입력 및 조절 -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          
+          <!-- 좌측: 현재 비상금 잔액 대형 배너 (lg:col-span-5) -->
+          <div class="lg:col-span-5 bg-white p-5 sm:p-6 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex justify-between items-center text-xs font-semibold text-slate-500">
+                <span>현재 비상금 통장 잔액</span>
+                <span class="flex items-center gap-1 text-emerald-600 font-bold">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  실시간 보존
+                </span>
+              </div>
+              <div class="mt-3">
+                <span id="currentEmergencyDisplay" class="text-2xl sm:text-3xl font-black text-amber-600 tracking-tight block">
+                  0원
+                </span>
+                <p class="text-xs text-slate-400 mt-1" id="currentEmergencyNote">
+                  현재 등록된 비상금 잔액이 없습니다. 우측에서 입력해보세요.
+                </p>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+              <span class="text-slate-500 font-medium">선택 월(<span id="emergencyTargetMonthText">기준월</span>) 배분액</span>
+              <span id="monthEmergencyAllocationText" class="font-bold text-slate-800">0원</span>
+            </div>
+          </div>
+
+          <!-- 우측: 비상금 직접 입력창 및 빠른 조절 버튼 (lg:col-span-7) -->
+          <div class="lg:col-span-7 bg-white p-5 sm:p-6 rounded-2xl border border-amber-200/80 shadow-xs space-y-4">
+            <div>
+              <label class="text-xs font-bold text-slate-700 block mb-1.5">
+                남은 비상금 금액 적기
+              </label>
+              <div class="relative">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">₩</span>
+                <input 
+                  type="text" 
+                  id="emergencyInput" 
+                  placeholder="예: 2,500,000" 
+                  oninput="onEmergencyInputChange(this)"
+                  class="w-full pl-8 pr-24 py-3 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-lg font-bold text-slate-800 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition"
+                />
+                <button 
+                  type="button" 
+                  onclick="applyCurrentDisplayToInput()" 
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800 bg-slate-200/80 hover:bg-slate-300 rounded-lg transition"
+                  title="현재 저장된 금액 불러오기"
+                >
+                  현재값
+                </button>
+              </div>
+            </div>
+
+            <!-- 빠른 증감 버튼 -->
+            <div>
+              <span class="text-[11px] font-semibold text-slate-400 block mb-1">빠른 금액 조절</span>
+              <div class="flex flex-wrap gap-1.5">
+                <button type="button" onclick="adjustEmergencyInput(100000)" class="px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200/60 transition active:scale-95">+10만</button>
+                <button type="button" onclick="adjustEmergencyInput(300000)" class="px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200/60 transition active:scale-95">+30만</button>
+                <button type="button" onclick="adjustEmergencyInput(500000)" class="px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200/60 transition active:scale-95">+50만</button>
+                <button type="button" onclick="adjustEmergencyInput(1000000)" class="px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200/60 transition active:scale-95">+100만</button>
+                <span class="w-[1px] h-6 bg-slate-200 mx-0.5 self-center"></span>
+                <button type="button" onclick="adjustEmergencyInput(-50000)" class="px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg border border-slate-200 transition active:scale-95">-5만</button>
+                <button type="button" onclick="adjustEmergencyInput(-100000)" class="px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg border border-slate-200 transition active:scale-95">-10만</button>
+                <button type="button" onclick="adjustEmergencyInput(-300000)" class="px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg border border-slate-200 transition active:scale-95">-30만</button>
+                <button type="button" onclick="resetEmergencyInputField()" class="px-2.5 py-1 text-xs font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg border border-rose-200 transition active:scale-95">0원 초기화</button>
+              </div>
+            </div>
+
+            <!-- 메모 입력 및 저장 버튼 행 -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+              <input 
+                type="text" 
+                id="emergencyMemoInput" 
+                placeholder="메모 / 변동 사유 (예: 정기 생활비 잔액 비상금으로 이체)" 
+                class="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-amber-400 outline-none"
+              />
+              <button 
+                type="button" 
+                onclick="saveEmergencyFundAction()" 
+                class="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm shadow-amber-300 transition flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
+              >
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span>비상금 저장하기</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 최근 비상금 변경 내역 (히스토리) -->
+        <div class="bg-white/70 p-3.5 rounded-2xl border border-amber-200/50">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-clock-rotate-left text-amber-500"></i> 최근 비상금 기록 히스토리
+            </span>
+            <button type="button" onclick="clearEmergencyHistory()" class="text-[10px] text-slate-400 hover:text-rose-500 transition">기록 지우기</button>
+          </div>
+          <div id="emergencyHistoryList" class="space-y-1.5 text-xs">
+            <span class="text-slate-400 text-[11px] block py-1">아직 기록된 비상금 히스토리가 없습니다.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- [섹션 4] 월별 흐름 테이블 -->
       <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
           <div>
             <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
               <i class="fa-solid fa-table-list text-indigo-500"></i> 월별 수입 및 지출 전체 흐름
             </h3>
-            <p class="text-xs text-slate-400 mt-0.5">전체 월별 데이터 내역 (최신순 정렬)</p>
+            <p class="text-xs text-slate-400 mt-0.5">전체 월별 데이터 내역 (행을 클릭하면 상단에서 해당 월의 잔금 배분과 비상금을 확인/수정할 수 있습니다)</p>
           </div>
           <div class="text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl font-medium" id="summaryCountText">
             총 0개월 데이터
@@ -248,16 +494,18 @@
               <tr>
                 <th class="py-3 px-3 sm:px-4">연도/월</th>
                 <th class="py-3 px-3 sm:px-4 text-right">급여</th>
-                <th class="py-3 px-3 sm:px-4 text-right">카드결제</th>
-                <th class="py-3 px-3 sm:px-4 text-right">총비용</th>
                 <th class="py-3 px-3 sm:px-4 text-right">급여-카드</th>
-                <th class="py-3 px-3 sm:px-4 text-right">저축(적금)</th>
-                <th class="py-3 px-3 sm:px-4 text-right">용돈</th>
-                <th class="py-3 px-3 sm:px-4 text-right">다정잔액</th>
+                <th class="py-3 px-3 sm:px-4 text-right">다정남은금액</th>
+                <th class="py-3 px-3 sm:px-4 text-right text-rose-600 font-bold">월 전체비용</th>
+                <th class="py-3 px-3 sm:px-4 text-right text-amber-700 font-bold">잔금</th>
+                <th class="py-3 px-3 sm:px-4 text-right text-emerald-600">적금</th>
+                <th class="py-3 px-3 sm:px-4 text-right text-indigo-600">용돈</th>
+                <th class="py-3 px-3 sm:px-4 text-right text-sky-600">생활비</th>
+                <th class="py-3 px-3 sm:px-4 text-right text-amber-600 font-bold">비상금</th>
               </tr>
             </thead>
             <tbody id="summaryTableBody" class="divide-y divide-slate-100 font-medium">
-              <tr><td colspan="8" class="text-center py-8 text-slate-400">데이터를 불러오는 중...</td></tr>
+              <tr><td colspan="10" class="text-center py-8 text-slate-400">데이터를 불러오는 중...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1203,6 +1451,210 @@
       renderSummaryTable();
     }
 
+    // ==========================================
+    // 비상금 (Emergency Fund) 실시간 관리 로직
+    // ==========================================
+    const STORAGE_KEY_EMERGENCY_BALANCE = "household_emergency_balance";
+    const STORAGE_KEY_EMERGENCY_HISTORY = "household_emergency_history";
+    const STORAGE_KEY_EMERGENCY_BY_MONTH = "household_emergency_by_month";
+
+    function getStoredEmergencyBalance() {
+      const val = localStorage.getItem(STORAGE_KEY_EMERGENCY_BALANCE);
+      if (val !== null && val !== "") {
+        return parseInt(val, 10) || 0;
+      }
+      return 0;
+    }
+
+    function getMonthlyEmergencyMap() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY_EMERGENCY_BY_MONTH) || "{}");
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function getMonthlyEmergencyAmount(year, month) {
+      const key = `${year}_${month}`;
+      const map = getMonthlyEmergencyMap();
+      return map[key]?.amount || 0;
+    }
+
+    function getEmergencyHistoryList() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY_EMERGENCY_HISTORY) || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function renderEmergencyFundUI() {
+      const currentBalance = getStoredEmergencyBalance();
+      const displayEl = document.getElementById("currentEmergencyDisplay");
+      const quickBadge = document.getElementById("quickEmergencyBadge");
+      const quickText = document.getElementById("quickEmergencyText");
+      const noteEl = document.getElementById("currentEmergencyNote");
+      const lastUpdatedEl = document.getElementById("emergencyLastUpdated");
+      const inputEl = document.getElementById("emergencyInput");
+
+      if (displayEl) {
+        displayEl.innerText = currentBalance.toLocaleString() + "원";
+      }
+      if (quickText) {
+        quickText.innerText = currentBalance.toLocaleString() + "원";
+      }
+      if (quickBadge) {
+        quickBadge.classList.toggle("hidden", currentBalance === 0);
+      }
+
+      // 인풋이 비어있거나 포커스되지 않은 경우 현재값으로 가이드
+      if (inputEl && !inputEl.value && currentBalance > 0 && document.activeElement !== inputEl) {
+        inputEl.value = currentBalance.toLocaleString();
+      }
+
+      const history = getEmergencyHistoryList();
+      if (history.length > 0) {
+        const latest = history[0];
+        if (noteEl) {
+          noteEl.innerText = latest.memo ? `메모: "${latest.memo}"` : `최근 수정: ${latest.date}`;
+        }
+        if (lastUpdatedEl) {
+          lastUpdatedEl.innerText = `최종 저장: ${latest.date}`;
+        }
+      } else {
+        if (noteEl) {
+          noteEl.innerText = currentBalance > 0 
+            ? "비상금 잔액이 안전하게 저장되어 있습니다." 
+            : "현재 등록된 비상금 잔액이 없습니다. 우측에서 입력해보세요.";
+        }
+        if (lastUpdatedEl) {
+          lastUpdatedEl.innerText = "최종 저장: 없음";
+        }
+      }
+
+      // 히스토리 리스트 렌더링
+      const historyContainer = document.getElementById("emergencyHistoryList");
+      if (historyContainer) {
+        if (history.length === 0) {
+          historyContainer.innerHTML = '<span class="text-slate-400 text-[11px] block py-1">아직 기록된 비상금 히스토리가 없습니다.</span>';
+        } else {
+          historyContainer.innerHTML = history.slice(0, 4).map(h => `
+            <div class="flex items-center justify-between py-1 border-b border-amber-100/60 last:border-none text-xs">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-[10px] text-slate-400">${h.date}</span>
+                <span class="font-bold text-amber-800">${h.amount.toLocaleString()}원</span>
+                ${h.memo ? `<span class="text-[11px] text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-100">${h.memo}</span>` : ''}
+              </div>
+              <span class="text-[10px] text-emerald-600 font-medium">저장완료</span>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    function onEmergencyInputChange(input) {
+      const raw = input.value.replace(/[^0-9]/g, '');
+      if (!raw) {
+        input.value = "";
+        return;
+      }
+      const num = parseInt(raw, 10);
+      input.value = num.toLocaleString();
+    }
+
+    function applyCurrentDisplayToInput() {
+      const current = getStoredEmergencyBalance();
+      const input = document.getElementById("emergencyInput");
+      if (input) input.value = current.toLocaleString();
+    }
+
+    function adjustEmergencyInput(delta) {
+      const input = document.getElementById("emergencyInput");
+      if (!input) return;
+      let current = parseInt(input.value.replace(/[^0-9]/g, ''), 10) || 0;
+      current = Math.max(0, current + delta);
+      input.value = current.toLocaleString();
+    }
+
+    function resetEmergencyInputField() {
+      const input = document.getElementById("emergencyInput");
+      if (input) input.value = "0";
+    }
+
+    function saveEmergencyFundAction() {
+      const input = document.getElementById("emergencyInput");
+      const memoInput = document.getElementById("emergencyMemoInput");
+      if (!input) return;
+
+      const raw = input.value.replace(/[^0-9]/g, '');
+      const amount = parseInt(raw, 10) || 0;
+      const memo = (memoInput?.value || "").trim();
+
+      // 1. 전체 잔액 영구 저장
+      localStorage.setItem(STORAGE_KEY_EMERGENCY_BALANCE, String(amount));
+
+      // 2. 현재 선택된 월의 비상금 기록에도 동기화
+      const list = getValidSummaryList();
+      const idx = selectedSummaryIndex >= 0 && selectedSummaryIndex < list.length 
+        ? selectedSummaryIndex 
+        : list.length - 1;
+      const curr = list[idx];
+      if (curr) {
+        const map = getMonthlyEmergencyMap();
+        const key = `${curr.year}_${curr.month}`;
+        map[key] = { amount, memo, updatedAt: new Date().toISOString() };
+        localStorage.setItem(STORAGE_KEY_EMERGENCY_BY_MONTH, JSON.stringify(map));
+      }
+
+      // 3. 히스토리 기록
+      const history = getEmergencyHistoryList();
+      const now = new Date();
+      const dateStr = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      history.unshift({
+        amount,
+        memo,
+        date: dateStr,
+        timestamp: Date.now()
+      });
+      localStorage.setItem(STORAGE_KEY_EMERGENCY_HISTORY, JSON.stringify(history.slice(0, 20)));
+
+      if (memoInput) memoInput.value = "";
+
+      // 4. 즉시 리렌더링 & 토스트
+      renderSummaryCardsOnly();
+      renderSummaryTable();
+      showToast(`비상금 잔액이 ${amount.toLocaleString()}원으로 저장되었습니다!`);
+    }
+
+    function clearEmergencyHistory() {
+      if (confirm("비상금 변경 히스토리를 초기화하시겠습니까? (현재 비상금 잔액은 유지됩니다)")) {
+        localStorage.removeItem(STORAGE_KEY_EMERGENCY_HISTORY);
+        renderEmergencyFundUI();
+        showToast("비상금 기록 히스토리가 초기화되었습니다.");
+      }
+    }
+
+    function showToast(message) {
+      let toast = document.getElementById("appToast");
+      if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "appToast";
+        toast.className = "fixed bottom-6 right-6 z-50 px-4 py-3 bg-slate-900/95 text-white text-xs sm:text-sm font-semibold rounded-2xl shadow-xl border border-slate-700/60 flex items-center gap-2.5 transition-all duration-300 transform translate-y-12 opacity-0 pointer-events-none";
+        document.body.appendChild(toast);
+      }
+      toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 text-base"></i><span>${message}</span>`;
+      toast.classList.remove("translate-y-12", "opacity-0", "pointer-events-none");
+      toast.classList.add("translate-y-0", "opacity-100");
+
+      setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("translate-y-12", "opacity-0", "pointer-events-none");
+      }, 2500);
+    }
+
+    // ==========================================
+    // 1. 월별 가계부 & 자산 흐름 렌더링
+    // ==========================================
     function renderSummaryCardsOnly() {
       const list = getValidSummaryList();
       if (list.length === 0) return;
@@ -1214,75 +1666,193 @@
       const curr = list[idx];
       const prev = idx > 0 ? list[idx - 1] : null;
 
-      // 1. 급여
-      document.getElementById("summarySalary").innerText = (curr.salary || 0).toLocaleString() + "원";
-      if (prev && prev.salary) {
-        const diff = curr.salary - prev.salary;
-        document.getElementById("summarySalaryDiff").innerText = 
-          diff >= 0 ? `전월대비 +${diff.toLocaleString()}원` : `전월대비 ${diff.toLocaleString()}원`;
-        document.getElementById("summarySalaryDiff").className = 
-          diff >= 0 ? "text-[11px] text-emerald-600 font-medium mt-1 inline-block bg-emerald-50/80 px-2 py-0.5 rounded-md" 
-                    : "text-[11px] text-rose-500 font-medium mt-1 inline-block bg-rose-50/80 px-2 py-0.5 rounded-md";
-      } else {
-        document.getElementById("summarySalaryDiff").innerText = "전월 비교 데이터 없음";
-        document.getElementById("summarySalaryDiff").className = "text-[11px] text-slate-400 font-medium mt-1 inline-block";
+      // [섹션 1: 월별 비용 계산 흐름]
+      // 1. 급여 (수입)
+      const salary = curr.salary || 0;
+      const salaryEl = document.getElementById("summarySalary");
+      if (salaryEl) salaryEl.innerText = salary.toLocaleString() + "원";
+      
+      const salaryDiffEl = document.getElementById("summarySalaryDiff");
+      if (salaryDiffEl) {
+        if (prev && prev.salary) {
+          const diff = salary - prev.salary;
+          salaryDiffEl.innerText = diff >= 0 ? `전월대비 +${diff.toLocaleString()}원` : `전월대비 ${diff.toLocaleString()}원`;
+          salaryDiffEl.className = diff >= 0 
+            ? "text-[10px] text-emerald-600 font-medium mt-1 inline-block bg-emerald-50 px-2 py-0.5 rounded-md" 
+            : "text-[10px] text-rose-500 font-medium mt-1 inline-block bg-rose-50 px-2 py-0.5 rounded-md";
+        } else {
+          salaryDiffEl.innerText = "전월 비교 데이터 없음";
+          salaryDiffEl.className = "text-[10px] text-slate-400 font-medium mt-1 inline-block";
+        }
       }
 
-      // 2. 카드결제
-      document.getElementById("summaryCards").innerText = (curr.cardTotal || 0).toLocaleString() + "원";
-      if (prev && prev.cardTotal !== undefined) {
-        const diff = curr.cardTotal - prev.cardTotal;
-        document.getElementById("summaryCardsDiff").innerText = 
-          diff > 0 ? `전월대비 +${diff.toLocaleString()}원 증가` : `전월대비 ${Math.abs(diff).toLocaleString()}원 절감`;
-        document.getElementById("summaryCardsDiff").className = 
-          diff > 0 ? "text-[11px] text-rose-600 font-medium mt-1 inline-block bg-rose-50/80 px-2 py-0.5 rounded-md" 
-                   : "text-[11px] text-emerald-600 font-medium mt-1 inline-block bg-emerald-50/80 px-2 py-0.5 rounded-md";
-      } else {
-        document.getElementById("summaryCardsDiff").innerText = "-";
+      // 2. 급여 - 카드결제금액
+      const salaryMinusCard = curr.salaryMinusCard || 0;
+      const salaryMinusCardEl = document.getElementById("summarySalaryMinusCard");
+      if (salaryMinusCardEl) salaryMinusCardEl.innerText = salaryMinusCard.toLocaleString() + "원";
+
+      const salaryMinusCardSubEl = document.getElementById("summarySalaryMinusCardSub");
+      if (salaryMinusCardSubEl) {
+        salaryMinusCardSubEl.innerText = curr.cardTotal ? `월 카드결제: ${curr.cardTotal.toLocaleString()}원` : "카드결제 정산 차액";
       }
 
-      // 3. 총 지출
-      document.getElementById("summaryTotalCost").innerText = (curr.totalCost || 0).toLocaleString() + "원";
+      // 3. 다정 남은금액
+      const dajeongRemain = curr.dajeongRemain || 0;
+      const dajeongRemainEl = document.getElementById("summaryDajeongRemain");
+      if (dajeongRemainEl) dajeongRemainEl.innerText = dajeongRemain.toLocaleString() + "원";
 
-      // 4. 용돈 & 잔여 배분
-      document.getElementById("summaryPocket").innerText = (curr.pocketMoney || 0).toLocaleString() + "원";
-      document.getElementById("summaryPocketInfo").innerText = 
-        `급여의 ${curr.salary ? Math.round((curr.pocketMoney / curr.salary) * 100) : 0}% 비율`;
+      // 4. 월 전체비용 (총비용 = (급여-카드) + 다정남은금액)
+      const totalCost = curr.totalCost || (salaryMinusCard + dajeongRemain);
+      const totalCostEl = document.getElementById("summaryTotalCost");
+      if (totalCostEl) totalCostEl.innerText = totalCost.toLocaleString() + "원";
 
-      // 하단 3개 보조 카드
-      document.getElementById("subSummarySavings").innerText = (curr.savings || 0).toLocaleString() + "원";
-      document.getElementById("subSummarySalaryMinusCard").innerText = (curr.salaryMinusCard || 0).toLocaleString() + "원";
-      document.getElementById("subSummaryDajeongRemain").innerText = (curr.dajeongRemain || 0).toLocaleString() + "원";
+      // 5. 월 잔금 = 급여 - (급여 - 카드결제)
+      const remainBalance = Math.max(0, salary - salaryMinusCard);
+      const remainBalanceEl = document.getElementById("summaryRemainBalance");
+      if (remainBalanceEl) remainBalanceEl.innerText = remainBalance.toLocaleString() + "원";
 
-      // 안내 텍스트
+      const remainRatioEl = document.getElementById("summaryRemainRatio");
+      if (remainRatioEl) {
+        const ratio = salary > 0 ? Math.round((remainBalance / salary) * 100) : 0;
+        remainRatioEl.innerText = `급여의 ${ratio}% (남은 잔액)`;
+      }
+
+      // [섹션 2: 잔금 상세 배분 현황]
+      const allocBaseAmountEl = document.getElementById("allocBaseAmount");
+      if (allocBaseAmountEl) allocBaseAmountEl.innerText = remainBalance.toLocaleString() + "원";
+
+      const savings = curr.savings || 0;
+      const rawPocket = curr.pocketMoney || 0;
+      const living = curr.livingExpense || 0;
+
+      // 비상금: 시트에 값이 있으면 시트값, 없으면 해당 월 저장값 또는 전체 비상금 잔액
+      const savedMonthlyEmergency = getMonthlyEmergencyAmount(curr.year, curr.month);
+      const emergency = (curr.emergencyFund && curr.emergencyFund > 0) 
+        ? curr.emergencyFund 
+        : savedMonthlyEmergency;
+
+      // 잔금 배분 항목 조정:
+      // 시트에서 rawPocket에 잔금 전체가 들어가 있는 경우 자동 배분 지원
+      let displayPocket = rawPocket;
+      let netRemain = 0;
+
+      if (savings === 0 && living === 0 && emergency === 0 && rawPocket === remainBalance) {
+        // 단독으로 rawPocket만 잔금 전체일 때
+        displayPocket = rawPocket;
+        netRemain = 0;
+      } else if (rawPocket === remainBalance && (savings > 0 || living > 0 || emergency > 0)) {
+        displayPocket = Math.max(0, remainBalance - (savings + living + emergency));
+        netRemain = Math.max(0, remainBalance - (savings + displayPocket + living + emergency));
+      } else {
+        netRemain = Math.max(0, remainBalance - (savings + rawPocket + living + emergency));
+      }
+
+      const allocSavingsEl = document.getElementById("allocSavings");
+      if (allocSavingsEl) allocSavingsEl.innerText = savings.toLocaleString() + "원";
+
+      const allocPocketEl = document.getElementById("allocPocket");
+      if (allocPocketEl) allocPocketEl.innerText = displayPocket.toLocaleString() + "원";
+
+      const allocLivingEl = document.getElementById("allocLiving");
+      if (allocLivingEl) allocLivingEl.innerText = living.toLocaleString() + "원";
+
+      const allocEmergencyEl = document.getElementById("allocEmergency");
+      if (allocEmergencyEl) allocEmergencyEl.innerText = emergency.toLocaleString() + "원";
+
+      const allocNetRemainEl = document.getElementById("allocNetRemain");
+      if (allocNetRemainEl) allocNetRemainEl.innerText = netRemain.toLocaleString() + "원";
+
+      // 비율 계산 및 프로그레스 바 갱신
+      const baseVal = remainBalance > 0 ? remainBalance : 1;
+      const savPct = Math.min(100, Math.round((savings / baseVal) * 100));
+      const pocPct = Math.min(100, Math.round((displayPocket / baseVal) * 100));
+      const livPct = Math.min(100, Math.round((living / baseVal) * 100));
+      const emgPct = Math.min(100, Math.round((emergency / baseVal) * 100));
+      const netPct = Math.max(0, 100 - (savPct + pocPct + livPct + emgPct));
+
+      const savRatEl = document.getElementById("allocSavingsRatio");
+      if (savRatEl) savRatEl.innerText = `잔금의 ${savPct}%`;
+      const pocRatEl = document.getElementById("allocPocketRatio");
+      if (pocRatEl) pocRatEl.innerText = `잔금의 ${pocPct}%`;
+      const livRatEl = document.getElementById("allocLivingRatio");
+      if (livRatEl) livRatEl.innerText = `잔금의 ${livPct}%`;
+      const emgRatEl = document.getElementById("allocEmergencyRatio");
+      if (emgRatEl) emgRatEl.innerText = `잔금의 ${emgPct}%`;
+      const netRatEl = document.getElementById("allocNetRemainRatio");
+      if (netRatEl) netRatEl.innerText = `잔여 ${netPct}%`;
+
+      const barSav = document.getElementById("barSavings");
+      if (barSav) barSav.style.width = savPct + "%";
+      const barPoc = document.getElementById("barPocket");
+      if (barPoc) barPoc.style.width = pocPct + "%";
+      const barLiv = document.getElementById("barLiving");
+      if (barLiv) barLiv.style.width = livPct + "%";
+      const barEmg = document.getElementById("barEmergency");
+      if (barEmg) barEmg.style.width = emgPct + "%";
+      const barNet = document.getElementById("barNetRemain");
+      if (barNet) barNet.style.width = netPct + "%";
+
+      const summaryProgEl = document.getElementById("allocProgressSummary");
+      if (summaryProgEl) {
+        summaryProgEl.innerText = `적금 ${savPct}% · 용돈 ${pocPct}% · 생활비 ${livPct}% · 비상금 ${emgPct}% · 순잔여 ${netPct}%`;
+      }
+
+      // [섹션 3 비상금 타겟 월 & 안내 텍스트]
       const monthLabel = `${curr.year ? curr.year + ' ' : ''}${curr.month}`;
-      document.getElementById("summaryMonthNotice").innerText = `${monthLabel} 기준 데이터 표시 중`;
+      const targetMonthEl = document.getElementById("emergencyTargetMonthText");
+      if (targetMonthEl) targetMonthEl.innerText = monthLabel;
+
+      const monthAllocTextEl = document.getElementById("monthEmergencyAllocationText");
+      if (monthAllocTextEl) monthAllocTextEl.innerText = emergency.toLocaleString() + "원";
+
+      const noticeEl = document.getElementById("summaryMonthNotice");
+      if (noticeEl) noticeEl.innerText = `${monthLabel} 기준 데이터 표시 중`;
+
+      // 비상금 금고 UI 갱신
+      renderEmergencyFundUI();
     }
 
     function renderSummaryTable() {
       const list = getValidSummaryList();
       const tbody = document.getElementById("summaryTableBody");
+      if (!tbody) return;
       tbody.innerHTML = "";
 
-      document.getElementById("summaryCountText").innerText = `총 ${list.length}개월 데이터`;
+      const countTextEl = document.getElementById("summaryCountText");
+      if (countTextEl) countTextEl.innerText = `총 ${list.length}개월 데이터`;
 
       [...list].reverse().forEach(row => {
         const tr = document.createElement("tr");
         tr.className = "hover:bg-indigo-50/40 transition cursor-pointer";
         const rowLabel = `${row.year ? row.year + ' ' : ''}${row.month}`;
         
+        const salary = row.salary || 0;
+        const salaryMinusCard = row.salaryMinusCard || 0;
+        const dajeongRemain = row.dajeongRemain || 0;
+        const totalCost = row.totalCost || (salaryMinusCard + dajeongRemain);
+        const remain = Math.max(0, salary - salaryMinusCard);
+        
+        const savings = row.savings || 0;
+        const pocket = row.pocketMoney || 0;
+        const living = row.livingExpense || 0;
+
+        const savedEmergency = getMonthlyEmergencyAmount(row.year, row.month);
+        const emergency = (row.emergencyFund && row.emergencyFund > 0) ? row.emergencyFund : savedEmergency;
+
         tr.innerHTML = `
           <td class="py-3 px-3 sm:px-4 font-bold text-slate-800 flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
             ${rowLabel}
           </td>
-          <td class="py-3 px-3 sm:px-4 text-right font-semibold text-emerald-600">${(row.salary || 0).toLocaleString()}원</td>
-          <td class="py-3 px-3 sm:px-4 text-right font-semibold text-rose-500">${(row.cardTotal || 0).toLocaleString()}원</td>
-          <td class="py-3 px-3 sm:px-4 text-right font-semibold text-violet-600">${(row.totalCost || 0).toLocaleString()}원</td>
-          <td class="py-3 px-3 sm:px-4 text-right text-blue-600">${(row.salaryMinusCard || 0).toLocaleString()}원</td>
-          <td class="py-3 px-3 sm:px-4 text-right text-emerald-700">${(row.savings || 0).toLocaleString()}원</td>
-          <td class="py-3 px-3 sm:px-4 text-right text-indigo-600 font-semibold">${(row.pocketMoney || 0).toLocaleString()}원</td>
-          <td class="py-3 px-3 sm:px-4 text-right text-slate-500">${(row.dajeongRemain || 0).toLocaleString()}원</td>
+          <td class="py-3 px-3 sm:px-4 text-right font-semibold text-emerald-600">${salary.toLocaleString()}원</td>
+          <td class="py-3 px-3 sm:px-4 text-right text-blue-600 font-semibold">${salaryMinusCard.toLocaleString()}원</td>
+          <td class="py-3 px-3 sm:px-4 text-right text-purple-600">${dajeongRemain.toLocaleString()}원</td>
+          <td class="py-3 px-3 sm:px-4 text-right font-bold text-rose-600">${totalCost.toLocaleString()}원</td>
+          <td class="py-3 px-3 sm:px-4 text-right font-bold text-amber-700">${remain.toLocaleString()}원</td>
+          <td class="py-3 px-3 sm:px-4 text-right text-emerald-700">${savings > 0 ? savings.toLocaleString() + '원' : '-'}</td>
+          <td class="py-3 px-3 sm:px-4 text-right text-indigo-600">${pocket > 0 ? pocket.toLocaleString() + '원' : '-'}</td>
+          <td class="py-3 px-3 sm:px-4 text-right text-sky-600">${living > 0 ? living.toLocaleString() + '원' : '-'}</td>
+          <td class="py-3 px-3 sm:px-4 text-right font-bold text-amber-600">${emergency > 0 ? emergency.toLocaleString() + '원' : '-'}</td>
         `;
 
         // 행 클릭 시 해당 월로 상단 카드 변경
@@ -1299,7 +1869,6 @@
         tbody.appendChild(tr);
       });
     }
-
     // ==========================================
     // 2. 다정 카드값 로직
     // ==========================================
