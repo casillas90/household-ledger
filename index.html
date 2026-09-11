@@ -384,9 +384,9 @@
                 <i class="fa-solid fa-shield-halved text-xs text-amber-600"></i>
                 <span class="text-xs font-bold">4. 비상금 (최종 잔여액)</span>
               </div>
-              <button onclick="openAllocEditModal('emergencyFund')" class="text-[11px] font-semibold text-slate-500 hover:text-amber-700 transition flex items-center gap-0.5 bg-white px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs cursor-pointer">
-                <i class="fa-solid fa-pen text-[10px]"></i> 수정
-              </button>
+              <span class="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md flex items-center gap-1">
+                <i class="fa-solid fa-lock text-[9px]"></i> 자동계산
+              </span>
             </div>
             <span id="allocEmergency" class="text-lg sm:text-xl font-black text-amber-700 block tracking-tight">0원</span>
             <div class="flex items-center justify-between mt-1.5 text-[11px]">
@@ -1708,7 +1708,7 @@
       { year: '2026년', month: '6월',  remain: 3016017, savings: 2400000, pocketMoney: 151122, livingExpense: 300000, emergencyFund: 164895 },
       { year: '2026년', month: '7월',  remain: 2215661, savings: 1500000, pocketMoney: 159954, livingExpense: 268500, emergencyFund: 287207 },
       { year: '2026년', month: '8월',  remain: 1025473, savings: 1100000, pocketMoney: 41586,  livingExpense: 186240, emergencyFund: -302353 },
-      { year: '2026년', month: '9월',  remain: 1366167, savings: 950000,  pocketMoney: 135734, livingExpense: 252000, emergencyFund: 28433 },
+      { year: '2026년', month: '9월',  remain: 1366167, savings: 950000,  pocketMoney: 251000, livingExpense: 135734, emergencyFund: 29433 },
       { year: '2026년', month: '10월', remain: 0,       savings: 0,       pocketMoney: 400000, livingExpense: 400000, emergencyFund: -800000 },
       { year: '2026년', month: '11월', remain: 0,       savings: 0,       pocketMoney: 400000, livingExpense: 400000, emergencyFund: -800000 },
       { year: '2026년', month: '12월', remain: 0,       savings: 0,       pocketMoney: 400000, livingExpense: 400000, emergencyFund: -800000 }
@@ -1735,9 +1735,22 @@
     function getAllocOverrides() {
       try {
         const data = JSON.parse(localStorage.getItem(STORAGE_KEY_ALLOC_OVERRIDES) || "{}");
-        // 과거 잘못 저장되었을 수 있는 구버전 2026년 9월 임시 오버라이드 정제
-        if (data["2026년_9월"] && (data["2026년_9월"].savings === 0 || data["2026년_9월"].pocketMoney === 450000)) {
-          delete data["2026년_9월"];
+        let changed = false;
+        // 비상금은 잔금-적금-용돈-생활비로 고정이므로 비상금 오버라이드 제거
+        Object.keys(data).forEach(k => {
+          if (data[k] && data[k].emergencyFund !== undefined) {
+            delete data[k].emergencyFund;
+            changed = true;
+          }
+        });
+        // 과거 잘못 저장되었을 수 있는 구버전 2026년 9월 임시 오버라이드 정제 (용돈 135734, 450000 등)
+        if (data["2026년_9월"]) {
+          if (data["2026년_9월"].savings === 0 || data["2026년_9월"].pocketMoney === 450000 || data["2026년_9월"].pocketMoney === 135734) {
+            delete data["2026년_9월"].pocketMoney;
+            changed = true;
+          }
+        }
+        if (changed) {
           localStorage.setItem(STORAGE_KEY_ALLOC_OVERRIDES, JSON.stringify(data));
         }
         return data;
@@ -1973,19 +1986,8 @@
         livingExpense = 0;
       }
 
-      // D. 비상금 (공식: 잔금 - (적금+용돈+생활비))
-      let emergencyFund = 0;
-      if (overrides.emergencyFund !== undefined) {
-        emergencyFund = overrides.emergencyFund;
-      } else if (overrides.savings !== undefined || overrides.pocketMoney !== undefined || overrides.livingExpense !== undefined || overrides.remain !== undefined || overrides.totalCost !== undefined) {
-        emergencyFund = remainBalance - (savings + pocketMoney + livingExpense);
-      } else if (sheetExp && sheetExp.emergencyFund !== undefined && sheetExp.emergencyFund !== 0) {
-        emergencyFund = sheetExp.emergencyFund;
-      } else if (row.emergencyFund !== undefined && row.emergencyFund !== 0) {
-        emergencyFund = row.emergencyFund;
-      } else {
-        emergencyFund = remainBalance - (savings + pocketMoney + livingExpense);
-      }
+      // D. 비상금 (고정 공식: 잔금 - 적금 - 용돈 - 생활비)
+      const emergencyFund = remainBalance - (savings + pocketMoney + livingExpense);
 
       return {
         year,
@@ -2112,24 +2114,10 @@
       const amount = parseInt(raw, 10) || 0;
       const memo = (memoInput?.value || "").trim();
 
-      // 1. 전체 잔액 영구 저장
+      // 1. 비상금 금고 잔액 영구 저장 (상단 월별 비상금과 완전 분리)
       localStorage.setItem(STORAGE_KEY_EMERGENCY_BALANCE, String(amount));
 
-      // 2. 현재 선택된 월의 비상금 기록에도 동기화
-      const list = getValidSummaryList();
-      const idx = selectedSummaryIndex >= 0 && selectedSummaryIndex < list.length 
-        ? selectedSummaryIndex 
-        : list.length - 1;
-      const curr = list[idx];
-      if (curr) {
-        setAllocOverride(curr.year, curr.month, 'emergencyFund', amount);
-        const map = getMonthlyEmergencyMap();
-        const key = `${curr.year}_${curr.month}`;
-        map[key] = { amount, memo, updatedAt: new Date().toISOString() };
-        localStorage.setItem(STORAGE_KEY_EMERGENCY_BY_MONTH, JSON.stringify(map));
-      }
-
-      // 3. 히스토리 기록
+      // 2. 금고 히스토리 기록
       const history = getEmergencyHistoryList();
       const now = new Date();
       const dateStr = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -2143,9 +2131,9 @@
 
       if (memoInput) memoInput.value = "";
 
-      renderSummaryCardsOnly();
-      renderSummaryTable();
-      showToast(`비상금 잔액이 ${amount.toLocaleString()}원으로 저장되었습니다!`);
+      // 3. 비상금 금고 UI만 갱신 (상단 월별 배분 비상금은 건드리지 않음)
+      renderEmergencyFundUI();
+      showToast(`비상금 금고 잔액이 ${amount.toLocaleString()}원으로 안전하게 저장되었습니다!`);
     }
 
     function clearEmergencyHistory() {
@@ -2476,6 +2464,10 @@
     let currentEditingAllocKey = null;
 
     function openAllocEditModal(key) {
+      if (key === 'emergencyFund') {
+        alert("비상금은 [잔금 − 적금 − 용돈 − 생활비]로 자동 고정 계산됩니다.\n적금, 용돈, 생활비 금액을 수정하시면 비상금이 자동으로 계산됩니다.");
+        return;
+      }
       const list = getValidSummaryList();
       if (list.length === 0) return;
       const idx = selectedSummaryIndex >= 0 && selectedSummaryIndex < list.length 
