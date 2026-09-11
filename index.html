@@ -598,6 +598,34 @@
               </div>
             </div>
 
+            <!-- 구글 시트 작성 월 지정 및 과거 월 영구 보존 안내 바 -->
+            <div class="bg-rose-50/80 border border-rose-200/70 rounded-2xl p-2.5 mb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                <span class="text-[11px] font-bold text-rose-900">시트 작성 월:</span>
+                <select id="dajeongSyncMonthSelect" onchange="onDajeongSyncMonthChange()" class="px-2 py-0.5 bg-white border border-rose-300 rounded-lg text-xs font-bold text-rose-700 outline-none cursor-pointer">
+                  <option value="9월">9월</option>
+                  <option value="10월">10월</option>
+                  <option value="11월">11월</option>
+                  <option value="12월">12월</option>
+                  <option value="1월">1월</option>
+                  <option value="2월">2월</option>
+                  <option value="3월">3월</option>
+                  <option value="4월">4월</option>
+                  <option value="5월">5월</option>
+                  <option value="6월">6월</option>
+                  <option value="7월">7월</option>
+                  <option value="8월">8월</option>
+                </select>
+                <button type="button" onclick="archiveCurrentDajeongData()" class="px-2 py-0.5 bg-white hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold rounded-lg transition flex items-center gap-1 cursor-pointer">
+                  <i class="fa-solid fa-box-archive"></i> 현재 월 보관
+                </button>
+              </div>
+              <span class="text-[10px] text-rose-600 font-medium">
+                <i class="fa-solid fa-shield-halved"></i> 시트에서 지워도 대시보드에 영구 보존
+              </span>
+            </div>
+
             <!-- 월 선택 필터 & 검색 & 정렬 -->
             <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-3">
               <div class="sm:col-span-4">
@@ -655,6 +683,20 @@
                   <span class="text-xs text-slate-400">선택 합계:</span>
                   <span id="seonjunTotalText" class="text-lg font-black text-indigo-600">0원</span>
                 </div>
+              </div>
+            </div>
+
+            <!-- 💳 카드사 원클릭 빠른 선택 칩 바 -->
+            <div class="mb-3 bg-indigo-50/50 p-2.5 rounded-2xl border border-indigo-100/70">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-[11px] font-bold text-indigo-900 flex items-center gap-1">
+                  <i class="fa-regular fa-credit-card text-indigo-600"></i>
+                  카드 골라보기 (원클릭 필터):
+                </span>
+                <span id="seonjunActiveCardLabel" class="text-[11px] text-indigo-600 font-bold">전체 카드</span>
+              </div>
+              <div id="seonjunCardChipsContainer" class="flex flex-wrap items-center gap-1.5">
+                <!-- Dynamically filled with chips: 전체 카드, 하나카드, 신한카드, 롯데카드, 기업카드 등 -->
               </div>
             </div>
 
@@ -1443,9 +1485,15 @@
       if (refreshIcon) refreshIcon.classList.add("fa-spin");
 
       try {
-        const res = await fetch(APPS_SCRIPT_URL);
+        const fetchUrl = APPS_SCRIPT_URL + (APPS_SCRIPT_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+        const res = await fetch(fetchUrl);
         rawData = await res.json();
         
+        // 다정 카드값 영구 보관소와 자동 동기화 (구글 시트에서 행을 지워도 대시보드에는 영구 보존)
+        if (rawData && rawData.dajeong) {
+          syncDajeongDataToArchive(rawData.dajeong);
+        }
+
         const now = new Date();
         document.getElementById("lastUpdated").innerText = 
           `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
@@ -1490,8 +1538,6 @@
     // ==========================================
     // 1. 월별 가계부 & 저축 로직
     // ==========================================
-    // 1. 월별 가계부 & 저축 로직
-    // ==========================================
     function formatMoneyDisplay(amount, withUnit = true) {
       if (amount === null || amount === undefined || isNaN(amount)) {
         return withUnit ? "0원" : "0";
@@ -1513,27 +1559,64 @@
         salaryMinusCard: 0,
         dajeongRemain: 0,
         cardTotal: 0,
+        remain: e.remain,
         savings: e.savings,
         pocketMoney: e.pocketMoney,
         livingExpense: e.livingExpense,
         emergencyFund: e.emergencyFund
       }));
 
-      // 2. rawData.summary 데이터 매핑 병합
+      // 2. rawData.monthlyExpenses 우선 매핑 (구글 시트 '월별 비용' 탭의 실제 사용자 입력 데이터)
+      if (rawData && rawData.monthlyExpenses && Array.isArray(rawData.monthlyExpenses)) {
+        rawData.monthlyExpenses.forEach(exp => {
+          const y = exp.year || '2024년';
+          const m = exp.month;
+          const idx = baseMonths.findIndex(b => (b.year === y || !exp.year) && b.month === m);
+          if (idx >= 0) {
+            if (exp.remain !== undefined && exp.remain !== null) baseMonths[idx].remain = exp.remain;
+            if (exp.savings !== undefined && exp.savings !== null) baseMonths[idx].savings = exp.savings;
+            if (exp.pocketMoney !== undefined && exp.pocketMoney !== null) baseMonths[idx].pocketMoney = exp.pocketMoney;
+            if (exp.livingExpense !== undefined && exp.livingExpense !== null) baseMonths[idx].livingExpense = exp.livingExpense;
+            if (exp.emergencyFund !== undefined && exp.emergencyFund !== null) baseMonths[idx].emergencyFund = exp.emergencyFund;
+          } else {
+            baseMonths.push({
+              year: y,
+              month: m,
+              salary: 0,
+              totalCost: 0,
+              salaryMinusCard: 0,
+              dajeongRemain: 0,
+              cardTotal: 0,
+              remain: exp.remain || 0,
+              savings: exp.savings || 0,
+              pocketMoney: exp.pocketMoney || 0,
+              livingExpense: exp.livingExpense || 0,
+              emergencyFund: exp.emergencyFund || 0
+            });
+          }
+        });
+      }
+
+      // 3. rawData.summary 데이터 매핑 병합 (월별 요약 시트: salary, totalCost, salaryMinusCard, dajeongRemain, cardTotal)
       if (rawData && rawData.summary && Array.isArray(rawData.summary)) {
         rawData.summary.forEach(item => {
           const y = item.year || '2024년';
           const m = item.month;
           const idx = baseMonths.findIndex(b => b.year === y && b.month === m);
           if (idx >= 0) {
-            baseMonths[idx] = { ...baseMonths[idx], ...item };
+            if (item.salary !== undefined) baseMonths[idx].salary = item.salary;
+            if (item.totalCost !== undefined) baseMonths[idx].totalCost = item.totalCost;
+            if (item.salaryMinusCard !== undefined) baseMonths[idx].salaryMinusCard = item.salaryMinusCard;
+            if (item.dajeongRemain !== undefined) baseMonths[idx].dajeongRemain = item.dajeongRemain;
+            if (item.cardTotal !== undefined) baseMonths[idx].cardTotal = item.cardTotal;
+            if (!baseMonths[idx].remain && item.remain) baseMonths[idx].remain = item.remain;
           } else if ((item.salary && item.salary > 0) || (item.cardTotal && item.cardTotal > 0) || (item.totalCost && item.totalCost > 0)) {
             baseMonths.push(item);
           }
         });
       }
 
-      // 3. 사용자 추가 커스텀 월 병합
+      // 4. 사용자 추가 커스텀 월 병합
       const customMonths = getCustomMonths();
       customMonths.forEach(cm => {
         const idx = baseMonths.findIndex(b => b.year === cm.year && b.month === cm.month);
@@ -1625,7 +1708,7 @@
       { year: '2026년', month: '6월',  remain: 3016017, savings: 2400000, pocketMoney: 151122, livingExpense: 300000, emergencyFund: 164895 },
       { year: '2026년', month: '7월',  remain: 2215661, savings: 1500000, pocketMoney: 159954, livingExpense: 268500, emergencyFund: 287207 },
       { year: '2026년', month: '8월',  remain: 1025473, savings: 1100000, pocketMoney: 41586,  livingExpense: 186240, emergencyFund: -302353 },
-      { year: '2026년', month: '9월',  remain: 1366167, savings: 950000,  pocketMoney: 135734, livingExpense: 251000, emergencyFund: 29433 },
+      { year: '2026년', month: '9월',  remain: 1366167, savings: 950000,  pocketMoney: 135734, livingExpense: 252000, emergencyFund: 28433 },
       { year: '2026년', month: '10월', remain: 0,       savings: 0,       pocketMoney: 400000, livingExpense: 400000, emergencyFund: -800000 },
       { year: '2026년', month: '11월', remain: 0,       savings: 0,       pocketMoney: 400000, livingExpense: 400000, emergencyFund: -800000 },
       { year: '2026년', month: '12월', remain: 0,       savings: 0,       pocketMoney: 400000, livingExpense: 400000, emergencyFund: -800000 }
@@ -1841,14 +1924,16 @@
       let remainBalance = 0;
       if (overrides.remain !== undefined) {
         remainBalance = overrides.remain;
+      } else if (sheetExp && sheetExp.remain !== undefined && sheetExp.remain !== 0) {
+        remainBalance = sheetExp.remain;
+      } else if (row.remain !== undefined && row.remain !== 0) {
+        remainBalance = row.remain;
+      } else if (salaryMinusCard !== 0 || dajeongRemain !== 0) {
+        remainBalance = salaryMinusCard + dajeongRemain;
       } else if (sheetExp && sheetExp.remain !== undefined) {
         remainBalance = sheetExp.remain;
-      } else if (totalCost > 0 || salary > 0) {
-        remainBalance = salaryMinusCard + dajeongRemain;
-      } else if (row.totalCost > 0) {
-        remainBalance = row.totalCost;
       } else {
-        remainBalance = salaryMinusCard + dajeongRemain;
+        remainBalance = row.remain || 0;
       }
 
       // --- [4대 배분 항목: 적금, 용돈, 생활비, 비상금] ---
@@ -1858,7 +1943,7 @@
         savings = overrides.savings;
       } else if (sheetExp && sheetExp.savings !== undefined) {
         savings = sheetExp.savings;
-      } else if (row.savings > 0) {
+      } else if (row.savings !== undefined) {
         savings = row.savings;
       } else {
         savings = 0;
@@ -1870,6 +1955,8 @@
         pocketMoney = overrides.pocketMoney;
       } else if (sheetExp && sheetExp.pocketMoney !== undefined) {
         pocketMoney = sheetExp.pocketMoney;
+      } else if (row.pocketMoney !== undefined) {
+        pocketMoney = row.pocketMoney;
       } else {
         pocketMoney = 0;
       }
@@ -1880,18 +1967,22 @@
         livingExpense = overrides.livingExpense;
       } else if (sheetExp && sheetExp.livingExpense !== undefined) {
         livingExpense = sheetExp.livingExpense;
+      } else if (row.livingExpense !== undefined) {
+        livingExpense = row.livingExpense;
       } else {
         livingExpense = 0;
       }
 
-      // D. 비상금 (음수 손실액 보존: 잔금 - (적금+용돈+생활비))
+      // D. 비상금 (공식: 잔금 - (적금+용돈+생활비))
       let emergencyFund = 0;
       if (overrides.emergencyFund !== undefined) {
         emergencyFund = overrides.emergencyFund;
       } else if (overrides.savings !== undefined || overrides.pocketMoney !== undefined || overrides.livingExpense !== undefined || overrides.remain !== undefined || overrides.totalCost !== undefined) {
         emergencyFund = remainBalance - (savings + pocketMoney + livingExpense);
-      } else if (sheetExp && sheetExp.emergencyFund !== undefined) {
+      } else if (sheetExp && sheetExp.emergencyFund !== undefined && sheetExp.emergencyFund !== 0) {
         emergencyFund = sheetExp.emergencyFund;
+      } else if (row.emergencyFund !== undefined && row.emergencyFund !== 0) {
+        emergencyFund = row.emergencyFund;
       } else {
         emergencyFund = remainBalance - (savings + pocketMoney + livingExpense);
       }
@@ -2532,8 +2623,161 @@
     }
 
     // ==========================================
-    // 2. 다정 카드값 로직 (월별 관리 지원)
+    // 2. 다정 카드값 로직 (월별 영구 보관 & 시트 동기화)
     // ==========================================
+    const STORAGE_KEY_DAJEONG_MONTHLY_ARCHIVE = "household_dajeong_monthly_archive";
+    const STORAGE_KEY_DAJEONG_SYNC_MONTH = "household_dajeong_sync_month";
+
+    function getDajeongArchiveMap() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY_DAJEONG_MONTHLY_ARCHIVE) || "{}");
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveDajeongArchiveMap(map) {
+      localStorage.setItem(STORAGE_KEY_DAJEONG_MONTHLY_ARCHIVE, JSON.stringify(map));
+    }
+
+    function getActiveDajeongSyncMonth() {
+      return localStorage.getItem(STORAGE_KEY_DAJEONG_SYNC_MONTH) || "9월";
+    }
+
+    function setActiveDajeongSyncMonth(m) {
+      localStorage.setItem(STORAGE_KEY_DAJEONG_SYNC_MONTH, m);
+    }
+
+    /**
+     * 구글 시트에서 넘어온 다정 데이터를 아카이브에 영구 저장 (시트에서 행을 지워도 대시보드에 영구 보존)
+     */
+    function syncDajeongDataToArchive(dajeongData) {
+      if (!dajeongData) return;
+      const archiveMap = getDajeongArchiveMap();
+      const activeMonth = getActiveDajeongSyncMonth();
+
+      // 1. Google Sheets '다정_기록보관' 시트에서 가져온 데이터가 있다면 병합
+      if (dajeongData.archivedItems && Array.isArray(dajeongData.archivedItems)) {
+        dajeongData.archivedItems.forEach(item => {
+          const m = item.month || '9월';
+          if (!archiveMap[m]) archiveMap[m] = [];
+          const exists = archiveMap[m].some(it => it.item === item.item && it.amount === item.amount);
+          if (!exists) {
+            archiveMap[m].push(item);
+          }
+        });
+      }
+
+      // 2. 현재 시트의 데이터가 있다면 현재 활성 월(activeMonth)에 저장
+      if (dajeongData.items && Array.isArray(dajeongData.items) && dajeongData.items.length > 0) {
+        archiveMap[activeMonth] = dajeongData.items.map(it => ({
+          ...it,
+          month: it.month || activeMonth,
+          source: 'sheet'
+        }));
+      }
+
+      saveDajeongArchiveMap(archiveMap);
+
+      const syncSelect = document.getElementById("dajeongSyncMonthSelect");
+      if (syncSelect) {
+        syncSelect.value = activeMonth;
+      }
+    }
+
+    function onDajeongSyncMonthChange() {
+      const syncSelect = document.getElementById("dajeongSyncMonthSelect");
+      if (!syncSelect) return;
+      const newMonth = syncSelect.value;
+      setActiveDajeongSyncMonth(newMonth);
+
+      if (rawData && rawData.dajeong && rawData.dajeong.items && rawData.dajeong.items.length > 0) {
+        const archiveMap = getDajeongArchiveMap();
+        archiveMap[newMonth] = rawData.dajeong.items.map(it => ({
+          ...it,
+          month: newMonth,
+          source: 'sheet'
+        }));
+        saveDajeongArchiveMap(archiveMap);
+      }
+
+      setupDajeongFilters();
+      const filterSelect = document.getElementById("dajeongMonthFilter");
+      if (filterSelect) {
+        filterSelect.value = newMonth;
+      }
+      renderDajeong();
+      showToast(`시트 작성 월이 [${newMonth}]로 설정되었습니다. 앞으로 시트에 입력하는 내역은 [${newMonth}]로 보관됩니다.`);
+    }
+
+    async function archiveCurrentDajeongData() {
+      const activeMonth = getActiveDajeongSyncMonth();
+      const items = (rawData && rawData.dajeong && rawData.dajeong.items) ? rawData.dajeong.items : [];
+      if (items.length === 0) {
+        alert("현재 보관할 시트 데이터가 없습니다. 구글 시트 '다정' 탭에 내역을 작성해 주세요.");
+        return;
+      }
+
+      const totalAmount = items.reduce((sum, it) => sum + (it.amount || 0), 0);
+      const archiveMap = getDajeongArchiveMap();
+      archiveMap[activeMonth] = items.map(it => ({
+        ...it,
+        month: activeMonth,
+        source: 'sheet'
+      }));
+      saveDajeongArchiveMap(archiveMap);
+
+      // 구글 시트 백엔드에도 '다정_기록보관' 시트 추가/저장 요청
+      if (APPS_SCRIPT_URL) {
+        try {
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'archiveDajeongMonth',
+              month: activeMonth,
+              items: archiveMap[activeMonth]
+            })
+          });
+        } catch (e) {
+          console.warn("아카이브 서버 전송 알림:", e);
+        }
+      }
+
+      setupDajeongFilters();
+      renderDajeong();
+      alert(`[${activeMonth} 다정 카드값 영구 보관 완료]\n\n• 총 금액: ${totalAmount.toLocaleString()}원\n• 건수: ${items.length}건\n\n이제 구글 시트에서 ${activeMonth} 내역을 모두 지우고 다음 달 내역을 작성하셔도, 이 홈페이지에서는 ${activeMonth} 내역이 안전하게 영구 보존됩니다!`);
+    }
+
+    function getAllDajeongItems() {
+      const archiveMap = getDajeongArchiveMap();
+      const customList = getCustomDajeongItems();
+      const allItems = [];
+
+      // 1. 아카이브 맵의 모든 월 내역 수집
+      Object.keys(archiveMap).forEach(m => {
+        (archiveMap[m] || []).forEach(it => {
+          allItems.push({ ...it, month: it.month || m });
+        });
+      });
+
+      // 만약 아카이브가 아직 비어있다면 rawData에서 로드
+      if (allItems.length === 0 && rawData && rawData.dajeong && rawData.dajeong.items) {
+        const activeM = getActiveDajeongSyncMonth();
+        rawData.dajeong.items.forEach(it => {
+          allItems.push({ ...it, month: it.month || activeM });
+        });
+      }
+
+      // 2. 직접 추가한 커스텀 내역 수집
+      customList.forEach(it => {
+        allItems.push({ ...it, isCustom: true });
+      });
+
+      return allItems;
+    }
+
     function toggleDajeongSort() {
       dajeongSortDesc = !dajeongSortDesc;
       document.getElementById("dajeongSortText").innerText = dajeongSortDesc ? "금액 높은순" : "금액 낮은순";
@@ -2541,42 +2785,46 @@
     }
 
     function setupDajeongFilters() {
-      const customList = getCustomDajeongItems();
-      const rawList = (rawData && rawData.dajeong && rawData.dajeong.items) ? rawData.dajeong.items : [];
-      const combined = [...rawList, ...customList];
-
+      const allItems = getAllDajeongItems();
       const months = [];
+
       // 1. 전체 요약 리스트의 월들 기본 추가
       getValidSummaryList().forEach(m => {
         if (!months.includes(m.month)) months.push(m.month);
       });
-      // 2. 다정 카드 내역에 존재하는 월 추가
-      combined.forEach(it => {
+      // 2. 다정 아카이브에 존재하는 월 추가
+      allItems.forEach(it => {
         if (it.month && !months.includes(it.month)) months.push(it.month);
       });
 
       const monthSelect = document.getElementById("dajeongMonthFilter");
       if (!monthSelect) return;
       const currentVal = monthSelect.value;
-      monthSelect.innerHTML = `<option value="ALL">전체 월</option>`;
+      monthSelect.innerHTML = `<option value="ALL">전체 월 (${months.length}개월)</option>`;
       months.forEach(m => {
         const opt = document.createElement("option");
         opt.value = m;
         opt.innerText = m;
-        if (m === "9월") opt.selected = true; // 최근 9월 기본 선택
         monthSelect.appendChild(opt);
       });
 
+      const activeMonth = getActiveDajeongSyncMonth();
       if (currentVal && currentVal !== "ALL" && months.includes(currentVal)) {
         monthSelect.value = currentVal;
+      } else if (months.includes(activeMonth)) {
+        monthSelect.value = activeMonth;
+      } else if (months.includes("9월")) {
+        monthSelect.value = "9월";
+      }
+
+      const syncSelect = document.getElementById("dajeongSyncMonthSelect");
+      if (syncSelect) {
+        syncSelect.value = activeMonth;
       }
     }
 
     function renderDajeong() {
-      const customList = getCustomDajeongItems();
-      const rawItems = (rawData && rawData.dajeong && rawData.dajeong.items) ? rawData.dajeong.items : [];
-      const allItems = [...rawItems, ...customList];
-
+      const allItems = getAllDajeongItems();
       const monthSelect = document.getElementById("dajeongMonthFilter");
       const selectedMonth = monthSelect ? monthSelect.value : "ALL";
       const search = (document.getElementById("dajeongSearchInput")?.value || "").trim().toLowerCase();
@@ -2601,10 +2849,10 @@
       filtered.sort((a, b) => dajeongSortDesc ? (b.amount || 0) - (a.amount || 0) : (a.amount || 0) - (b.amount || 0));
 
       const countEl = document.getElementById("dajeongCountText");
-      if (countEl) countEl.innerText = `총 ${filtered.length}건 (전체 ${allItems.length}건)`;
+      if (countEl) countEl.innerText = `총 ${filtered.length}건 (선택: ${selectedMonth === "ALL" ? "전체" : selectedMonth})`;
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400">지출 내역이 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400">지출 내역이 없습니다. (시트 작성 후 [현재 월 보관]을 눌러두면 영구 보존됩니다)</td></tr>`;
         return;
       }
 
@@ -2621,14 +2869,14 @@
           <td class="py-2.5 px-3 font-medium text-slate-800">
             <div class="flex items-center gap-1.5">
               <span>${it.item || '(항목 미기재)'}</span>
-              ${isCustom ? '<span class="text-[9px] bg-amber-100 text-amber-700 px-1 rounded font-bold">직접추가</span>' : ''}
+              ${isCustom ? '<span class="text-[9px] bg-amber-100 text-amber-700 px-1 rounded font-bold">직접추가</span>' : '<span class="text-[9px] bg-slate-100 text-slate-500 px-1 rounded">시트보관</span>'}
             </div>
           </td>
           <td class="py-2.5 px-3 text-right font-bold text-slate-700 whitespace-nowrap">
             ${(it.amount || 0).toLocaleString()}<span class="text-[11px] font-normal text-slate-400">원</span>
           </td>
           <td class="py-2.5 px-2 text-center whitespace-nowrap">
-            ${isCustom ? `<button onclick="deleteCustomCardItem('dajeong', '${it.id}')" title="삭제" class="text-slate-400 hover:text-rose-600 p-1 transition cursor-pointer"><i class="fa-solid fa-trash-can text-xs"></i></button>` : ''}
+            ${isCustom ? `<button onclick="deleteCustomCardItem('dajeong', '${it.id}')" title="삭제" class="text-slate-400 hover:text-rose-600 p-1 transition cursor-pointer"><i class="fa-solid fa-trash-can text-xs"></i></button>` : '<i class="fa-solid fa-shield-halved text-[11px] text-emerald-500" title="안전 보존됨"></i>'}
           </td>
         `;
         tbody.appendChild(tr);
@@ -2636,8 +2884,52 @@
     }
 
     // ==========================================
-    // 3. 선준 카드값 로직
+    // 3. 선준 카드값 로직 (카드 원클릭 칩 선택 & 상세 필터)
     // ==========================================
+    function renderSeonjunCardChips(cardList) {
+      const container = document.getElementById("seonjunCardChipsContainer");
+      const activeLabel = document.getElementById("seonjunActiveCardLabel");
+      const select = document.getElementById("seonjunCardFilter");
+      if (!container) return;
+
+      const currentVal = select ? select.value : "ALL";
+      container.innerHTML = "";
+
+      const allCards = ["ALL", ...cardList];
+      allCards.forEach(card => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        const isAll = card === "ALL";
+        const label = isAll ? "전체 카드" : card;
+        const isActive = (currentVal === card) || (isAll && currentVal === "ALL");
+
+        btn.className = isActive
+          ? "px-3 py-1 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-xs transition cursor-pointer flex items-center gap-1"
+          : "px-3 py-1 rounded-xl text-xs font-semibold bg-white text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 border border-slate-200 transition cursor-pointer flex items-center gap-1";
+
+        btn.innerHTML = isAll 
+          ? `<i class="fa-solid fa-layer-group text-[10px]"></i><span>${label}</span>` 
+          : `<i class="fa-regular fa-credit-card text-[10px]"></i><span>${label}</span>`;
+
+        btn.onclick = () => {
+          if (select) {
+            select.value = card;
+          }
+          if (activeLabel) {
+            activeLabel.innerText = label;
+          }
+          renderSeonjunCardChips(cardList);
+          renderSeonjunList();
+        };
+
+        container.appendChild(btn);
+      });
+
+      if (activeLabel) {
+        activeLabel.innerText = currentVal === "ALL" ? "전체 카드" : currentVal;
+      }
+    }
+
     function setupSeonjunFilters() {
       const customList = getCustomSeonjunItems();
       const rawList = (rawData && rawData.seonjun) ? rawData.seonjun : [];
@@ -2650,24 +2942,31 @@
       });
 
       const monthSelect = document.getElementById("seonjunMonthFilter");
-      if (!monthSelect) return;
-      const currentVal = monthSelect.value;
-      monthSelect.innerHTML = `<option value="ALL">전체 월 (${months.length}개월)</option>`;
-      months.forEach(m => {
-        const opt = document.createElement("option");
-        opt.value = m;
-        opt.innerText = m;
-        if (m === "9월") opt.selected = true;
-        monthSelect.appendChild(opt);
-      });
-      if (currentVal && currentVal !== "ALL" && months.includes(currentVal)) {
-        monthSelect.value = currentVal;
+      if (monthSelect) {
+        const currentVal = monthSelect.value;
+        monthSelect.innerHTML = `<option value="ALL">전체 월 (${months.length}개월)</option>`;
+        months.forEach(m => {
+          const opt = document.createElement("option");
+          opt.value = m;
+          opt.innerText = m;
+          if (m === "9월") opt.selected = true;
+          monthSelect.appendChild(opt);
+        });
+        if (currentVal && currentVal !== "ALL" && months.includes(currentVal)) {
+          monthSelect.value = currentVal;
+        }
       }
 
       // 카드사 필터 목록
       const cards = [...new Set(combined.map(it => it.card).filter(Boolean))];
+      // 주요 카드 보장 (하나카드, 신한카드, 롯데카드, 기업카드)
+      ['신한카드', '하나카드', '롯데카드', '기업카드'].forEach(c => {
+        if (!cards.includes(c)) cards.push(c);
+      });
+
       const cardSelect = document.getElementById("seonjunCardFilter");
       if (cardSelect) {
+        const prevCard = cardSelect.value || "ALL";
         cardSelect.innerHTML = `<option value="ALL">전체 카드</option>`;
         cards.forEach(c => {
           const opt = document.createElement("option");
@@ -2675,7 +2974,16 @@
           opt.innerText = c;
           cardSelect.appendChild(opt);
         });
+        if (cards.includes(prevCard)) {
+          cardSelect.value = prevCard;
+        }
+        cardSelect.onchange = () => {
+          renderSeonjunCardChips(cards);
+          renderSeonjunList();
+        };
       }
+
+      renderSeonjunCardChips(cards);
     }
 
     function renderSeonjunList() {
@@ -2687,6 +2995,10 @@
       const selectedType = document.getElementById("seonjunTypeFilter") ? document.getElementById("seonjunTypeFilter").value : "ALL";
       const selectedNote = document.getElementById("seonjunNoteFilter") ? document.getElementById("seonjunNoteFilter").value : "ALL";
       const selectedCard = document.getElementById("seonjunCardFilter") ? document.getElementById("seonjunCardFilter").value : "ALL";
+      const activeLabel = document.getElementById("seonjunActiveCardLabel");
+      if (activeLabel) {
+        activeLabel.innerText = selectedCard === "ALL" ? "전체 카드" : selectedCard;
+      }
       const search = (document.getElementById("seonjunSearchInput")?.value || "").trim().toLowerCase();
 
       const tbody = document.getElementById("seonjunTableBody");
@@ -4307,8 +4619,18 @@ function doGet(e) {
       <div id="seonjunSpecificFields" class="hidden space-y-3 pt-2 border-t border-slate-100">
         <div class="grid grid-cols-3 gap-2">
           <div>
-            <label class="text-[11px] font-bold text-slate-600 block mb-1">카드사</label>
-            <input type="text" id="cardItemCompany" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none" value="신한카드" />
+            <label class="text-[11px] font-bold text-slate-600 block mb-1">카드사 선택</label>
+            <select id="cardItemCompany" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none">
+              <option value="신한카드">신한카드</option>
+              <option value="하나카드">하나카드</option>
+              <option value="롯데카드">롯데카드</option>
+              <option value="기업카드">기업카드</option>
+              <option value="현대카드">현대카드</option>
+              <option value="삼성카드">삼성카드</option>
+              <option value="KB국민카드">KB국민카드</option>
+              <option value="우리카드">우리카드</option>
+              <option value="기타카드">기타카드</option>
+            </select>
           </div>
           <div>
             <label class="text-[11px] font-bold text-slate-600 block mb-1">구분</label>

@@ -208,6 +208,7 @@ function getMonthlyExpensesData(ss) {
         var remain = colRemain !== -1 ? parseNumeric(row[colRemain]) : 0;
         var savings = colSavings !== -1 ? parseNumeric(row[colSavings]) : 0;
         var pocket = colPocket !== -1 ? parseNumeric(row[colPocket]) : 0;
+        var living = colLiving !== -1 ? parseNumeric(row[colLiving]) : 0;
         var rawEmergency = colEmergency !== -1 ? row[colEmergency] : null;
         var emergency = 0;
         if (rawEmergency !== null && rawEmergency !== undefined && String(rawEmergency).trim() !== '') {
@@ -284,43 +285,73 @@ function getSummaryData(ss) {
 }
 
 /**
- * 다정 시트 추출 함수 (월별 지원)
+ * 다정 시트 추출 함수 (월별 지원 및 과거 월 영구 보존)
  */
 function getDajeongData(ss) {
   var sheet = ss.getSheetByName('다정');
-  if (!sheet) return { items: [], total: 0 };
-  var values = sheet.getDataRange().getValues();
+  var archiveSheet = ss.getSheetByName('다정_기록보관') || ss.getSheetByName('다정히스토리');
+  if (!sheet && !archiveSheet) return { items: [], total: 0 };
+
   var items = [];
   var total = 0;
 
-  var colMonth = -1, colItem = 0, colAmount = 1, colCard = -1;
-  if (values.length > 0) {
-    var header = values[0].map(function(h) { return String(h).trim(); });
-    for (var c = 0; c < header.length; c++) {
-      if (header[c].indexOf('월') !== -1) colMonth = c;
-      else if (header[c].indexOf('항목') !== -1 || header[c].indexOf('내역') !== -1) colItem = c;
-      else if (header[c].indexOf('금액') !== -1 || header[c].indexOf('가격') !== -1) colAmount = c;
-      else if (header[c].indexOf('카드') !== -1) colCard = c;
+  // 1. 현재 '다정' 시트 읽기
+  if (sheet) {
+    var values = sheet.getDataRange().getValues();
+    if (values && values.length > 0) {
+      var colMonth = -1, colItem = 0, colAmount = 1, colCard = -1;
+      var header = values[0].map(function(h) { return String(h || '').trim(); });
+      for (var c = 0; c < header.length; c++) {
+        if (header[c].indexOf('월') !== -1) colMonth = c;
+        else if (header[c].indexOf('항목') !== -1 || header[c].indexOf('내역') !== -1) colItem = c;
+        else if (header[c].indexOf('금액') !== -1 || header[c].indexOf('가격') !== -1) colAmount = c;
+        else if (header[c].indexOf('카드') !== -1) colCard = c;
+      }
+
+      for (var r = 1; r < values.length; r++) {
+        var item = String(values[r][colItem] || '').trim();
+        var amount = parseNumeric(values[r][colAmount]);
+        var month = colMonth !== -1 ? String(values[r][colMonth] || '').trim() : '';
+        var card = colCard !== -1 ? String(values[r][colCard] || '').trim() : '다정카드';
+        
+        if (item && amount > 0) {
+          items.push({ 
+            item: item, 
+            amount: amount, 
+            month: month || '', 
+            card: card 
+          });
+          total += amount;
+        }
+      }
     }
   }
 
-  for (var r = 1; r < values.length; r++) {
-    var item = String(values[r][colItem] || '').trim();
-    var amount = parseNumeric(values[r][colAmount]);
-    var month = colMonth !== -1 ? String(values[r][colMonth] || '').trim() : '';
-    var card = colCard !== -1 ? String(values[r][colCard] || '').trim() : '다정카드';
-    
-    if (item && amount > 0) {
-      items.push({ 
-        item: item, 
-        amount: amount, 
-        month: month || '9월', 
-        card: card 
-      });
-      total += amount;
+  // 2. '다정_기록보관' 시트가 있으면 과거 월 보존 데이터도 함께 불러옴
+  var archiveItems = [];
+  if (archiveSheet) {
+    var aValues = archiveSheet.getDataRange().getValues();
+    if (aValues && aValues.length > 1) {
+      for (var ar = 1; ar < aValues.length; ar++) {
+        var aRow = aValues[ar];
+        var aMonth = String(aRow[0] || '').trim();
+        var aItem = String(aRow[1] || '').trim();
+        var aAmount = parseNumeric(aRow[2]);
+        var aCard = String(aRow[3] || '다정카드').trim();
+        if (aItem && aAmount > 0) {
+          archiveItems.push({
+            month: aMonth,
+            item: aItem,
+            amount: aAmount,
+            card: aCard,
+            isArchive: true
+          });
+        }
+      }
     }
   }
-  return { items: items, total: total };
+
+  return { items: items, archive: archiveItems, total: total };
 }
 
 /**
@@ -473,6 +504,26 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
         message: "월 항목 수정 완료: " + targetYear + " " + targetMonth + " (" + field + "=" + amount + ")"
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 4. 다정 카드 특정 월 보존 저장 (archiveDajeongMonth)
+    if (action === 'archiveDajeongMonth') {
+      var targetMonth = postData.month;
+      var itemsToArchive = postData.items || [];
+      var archiveSheet = ss.getSheetByName('다정_기록보관');
+      if (!archiveSheet) {
+        archiveSheet = ss.insertSheet('다정_기록보관');
+        archiveSheet.appendRow(['월', '항목', '금액', '카드', '저장일시']);
+      }
+      var nowStr = new Date().toISOString();
+      for (var k = 0; k < itemsToArchive.length; k++) {
+        var it = itemsToArchive[k];
+        archiveSheet.appendRow([targetMonth, it.item, it.amount, it.card || '다정카드', nowStr]);
+      }
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        message: "다정 " + targetMonth + " " + itemsToArchive.length + "건 영구보관 완료"
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
