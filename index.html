@@ -139,11 +139,15 @@
       
       <!-- 상단 컨트롤: 월 선택 & 빠른 정보 -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl border border-slate-200/70 shadow-xs">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">조회 기준 월</span>
           <select id="summaryMonthSelect" onchange="onSummaryMonthChange()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl px-3 py-1.5 border border-slate-300/80 outline-none transition cursor-pointer">
             <!-- Dynamic Options -->
           </select>
+          <button type="button" onclick="openAddMonthModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-calendar-plus"></i>
+            <span>월 추가</span>
+          </button>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
           <span class="text-xs text-slate-500 font-medium" id="summaryMonthNotice">
@@ -151,7 +155,7 @@
           </span>
           <span id="quickEmergencyBadge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-xs font-semibold border border-amber-200/60">
             <i class="fa-solid fa-vault text-amber-500"></i>
-            비상금 잔액: <strong id="quickEmergencyText">0원</strong>
+            비상금: <strong id="quickEmergencyText">0원</strong>
           </span>
         </div>
       </div>
@@ -190,63 +194,89 @@
         <!-- 5대 핵심 지표 카드 -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           <!-- 1. 급여 -->
-          <div class="bg-gradient-to-b from-white to-emerald-50/20 p-4 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-emerald-300 transition shadow-xs">
-            <div class="flex justify-between items-center text-slate-400">
-              <span class="text-xs font-semibold text-slate-600">1. 총 급여 수입</span>
-              <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
-                <i class="fa-solid fa-money-bill-wave"></i>
-              </span>
+          <div class="bg-gradient-to-b from-white to-emerald-50/20 p-4 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-emerald-300 transition shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-center text-slate-400">
+                <span class="text-xs font-semibold text-slate-600">1. 총 급여 수입</span>
+                <button type="button" onclick="openAllocEditModal('salary')" title="급여 수정" class="w-6 h-6 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] transition cursor-pointer">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+              </div>
+              <span id="summarySalary" class="text-lg sm:text-xl font-extrabold text-slate-900 mt-2 block tracking-tight">-</span>
             </div>
-            <span id="summarySalary" class="text-lg sm:text-xl font-extrabold text-slate-900 mt-2 block tracking-tight">-</span>
-            <span class="text-[10px] text-emerald-600 font-medium mt-1 inline-block bg-emerald-50 px-2 py-0.5 rounded-md" id="summarySalaryDiff">-</span>
+            <div class="flex items-center justify-between mt-2 pt-1 border-t border-slate-100">
+              <span class="text-[10px] text-emerald-600 font-medium inline-block bg-emerald-50 px-2 py-0.5 rounded-md" id="summarySalaryDiff">-</span>
+              <button type="button" onclick="openAllocEditModal('salary')" class="text-[10px] font-bold text-emerald-700 hover:underline cursor-pointer">수정</button>
+            </div>
           </div>
 
           <!-- 2. 월 전체비용 (카드값 총합계) -->
-          <div class="bg-gradient-to-b from-white to-rose-50/20 p-4 sm:p-5 rounded-2xl border border-rose-200/80 hover:border-rose-300 transition shadow-xs">
-            <div class="flex justify-between items-center text-slate-400">
-              <span class="text-xs font-bold text-rose-800">2. 월 전체비용</span>
-              <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-xs">
-                <i class="fa-solid fa-receipt"></i>
-              </span>
+          <div class="bg-gradient-to-b from-white to-rose-50/20 p-4 sm:p-5 rounded-2xl border border-rose-200/80 hover:border-rose-300 transition shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-center text-slate-400">
+                <span class="text-xs font-bold text-rose-800">2. 월 전체비용</span>
+                <button type="button" onclick="openAllocEditModal('totalCost')" title="카드값 수정" class="w-6 h-6 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center text-[10px] transition cursor-pointer">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+              </div>
+              <span id="summaryTotalCost" class="text-lg sm:text-xl font-extrabold text-rose-600 mt-2 block tracking-tight">-</span>
             </div>
-            <span id="summaryTotalCost" class="text-lg sm:text-xl font-extrabold text-rose-600 mt-2 block tracking-tight">-</span>
-            <span class="text-[10px] text-rose-600 font-medium mt-1 inline-block bg-rose-50 px-2 py-0.5 rounded-md" id="summaryTotalCostSub">한 달 카드결제 총합계</span>
+            <div class="flex items-center justify-between mt-2 pt-1 border-t border-rose-100/60">
+              <span class="text-[10px] text-rose-600 font-medium" id="summaryTotalCostSub">한 달 카드값 합계</span>
+              <button type="button" onclick="openAllocEditModal('totalCost')" class="text-[10px] font-bold text-rose-700 hover:underline flex items-center gap-0.5 cursor-pointer">
+                <i class="fa-solid fa-pen-to-square"></i> 카드값 수정
+              </button>
+            </div>
           </div>
 
           <!-- 3. 급여 - 카드결제금액 -->
-          <div class="bg-gradient-to-b from-white to-blue-50/20 p-4 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-blue-300 transition shadow-xs">
-            <div class="flex justify-between items-center text-slate-400">
-              <span class="text-xs font-semibold text-blue-900">3. 급여 − 카드결제</span>
-              <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
-                <i class="fa-solid fa-scale-balanced"></i>
-              </span>
+          <div class="bg-gradient-to-b from-white to-blue-50/20 p-4 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-blue-300 transition shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-center text-slate-400">
+                <span class="text-xs font-semibold text-blue-900">3. 급여 − 카드결제</span>
+                <span class="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-[10px]">
+                  <i class="fa-solid fa-scale-balanced"></i>
+                </span>
+              </div>
+              <span id="summarySalaryMinusCard" class="text-lg sm:text-xl font-extrabold text-blue-700 mt-2 block tracking-tight">-</span>
             </div>
-            <span id="summarySalaryMinusCard" class="text-lg sm:text-xl font-extrabold text-blue-700 mt-2 block tracking-tight">-</span>
-            <span class="text-[10px] text-blue-600 font-medium mt-1 inline-block bg-blue-50 px-2 py-0.5 rounded-md" id="summarySalaryMinusCardSub">급여 − 전체비용 차액</span>
+            <div class="mt-2 pt-1 border-t border-blue-50">
+              <span class="text-[10px] text-blue-600 font-medium inline-block bg-blue-50 px-2 py-0.5 rounded-md" id="summarySalaryMinusCardSub">급여 − 전체비용 차액</span>
+            </div>
           </div>
 
           <!-- 4. 다정 남은금액 -->
-          <div class="bg-gradient-to-b from-white to-purple-50/20 p-4 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-purple-300 transition shadow-xs">
-            <div class="flex justify-between items-center text-slate-400">
-              <span class="text-xs font-semibold text-purple-900">4. 다정 남은금액</span>
-              <span class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xs">
-                <i class="fa-solid fa-coins"></i>
-              </span>
+          <div class="bg-gradient-to-b from-white to-purple-50/20 p-4 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-purple-300 transition shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-center text-slate-400">
+                <span class="text-xs font-semibold text-purple-900">4. 다정 남은금액</span>
+                <button type="button" onclick="openAllocEditModal('dajeongRemain')" title="다정금액 수정" class="w-6 h-6 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-600 flex items-center justify-center text-[10px] transition cursor-pointer">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+              </div>
+              <span id="summaryDajeongRemain" class="text-lg sm:text-xl font-extrabold text-purple-700 mt-2 block tracking-tight">-</span>
             </div>
-            <span id="summaryDajeongRemain" class="text-lg sm:text-xl font-extrabold text-purple-700 mt-2 block tracking-tight">-</span>
-            <span class="text-[10px] text-purple-600 font-medium mt-1 inline-block bg-purple-50 px-2 py-0.5 rounded-md">다정 잔여 예산</span>
+            <div class="flex items-center justify-between mt-2 pt-1 border-t border-purple-50">
+              <span class="text-[10px] text-purple-600 font-medium inline-block bg-purple-50 px-2 py-0.5 rounded-md">다정 잔여 예산</span>
+              <button type="button" onclick="openAllocEditModal('dajeongRemain')" class="text-[10px] font-bold text-purple-700 hover:underline cursor-pointer">수정</button>
+            </div>
           </div>
 
           <!-- 5. 잔금 (남은 자금) -->
-          <div class="col-span-2 md:col-span-1 bg-gradient-to-b from-white to-amber-50/30 p-4 sm:p-5 rounded-2xl border border-amber-200/80 hover:border-amber-400 transition shadow-xs">
-            <div class="flex justify-between items-center text-slate-400">
-              <span class="text-xs font-bold text-amber-900">5. 월 잔금 (배분 기준)</span>
-              <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
-                <i class="fa-solid fa-sack-dollar"></i>
-              </span>
+          <div class="col-span-2 md:col-span-1 bg-gradient-to-b from-white to-amber-50/30 p-4 sm:p-5 rounded-2xl border border-amber-200/80 hover:border-amber-400 transition shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-center text-slate-400">
+                <span class="text-xs font-bold text-amber-900">5. 월 잔금 (배분 기준)</span>
+                <button type="button" onclick="openAllocEditModal('remain')" title="잔금 직접 수정" class="w-6 h-6 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 flex items-center justify-center text-[10px] transition cursor-pointer">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+              </div>
+              <span id="summaryRemainBalance" class="text-lg sm:text-xl font-extrabold text-amber-700 mt-2 block tracking-tight">-</span>
             </div>
-            <span id="summaryRemainBalance" class="text-lg sm:text-xl font-extrabold text-amber-700 mt-2 block tracking-tight">-</span>
-            <span class="text-[10px] text-amber-700 font-medium mt-1 inline-block bg-amber-100/60 px-2 py-0.5 rounded-md" id="summaryRemainRatio">(급여-카드) + 다정남은금액</span>
+            <div class="flex items-center justify-between mt-2 pt-1 border-t border-amber-100">
+              <span class="text-[10px] text-amber-700 font-medium inline-block bg-amber-100/60 px-2 py-0.5 rounded-md" id="summaryRemainRatio">(급여-카드) + 다정</span>
+              <button type="button" onclick="openAllocEditModal('remain')" class="text-[10px] font-bold text-amber-800 hover:underline cursor-pointer">직접수정</button>
+            </div>
           </div>
         </div>
       </div>
@@ -509,7 +539,11 @@
             </p>
           </div>
           
-          <div class="flex items-center gap-2 self-stretch sm:self-auto justify-between sm:justify-end">
+          <div class="flex items-center gap-2 self-stretch sm:self-auto justify-between sm:justify-end flex-wrap">
+            <button type="button" onclick="openAddMonthModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-calendar-plus"></i>
+              <span>월 추가</span>
+            </button>
             <!-- 뷰 모드 전환 버튼 -->
             <div class="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-bold">
               <button type="button" id="btnModeCosts" onclick="setSummaryTableMode('costs')" class="px-3 py-1.5 rounded-lg bg-white text-indigo-700 shadow-2xs transition">
@@ -545,7 +579,7 @@
       
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- 왼쪽: 다정 카드값 (4컬럼) -->
+        <!-- 왼쪽: 다정 카드값 (5컬럼) -->
         <div class="lg:col-span-5 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
           <div>
             <div class="flex justify-between items-center mb-3">
@@ -553,22 +587,34 @@
                 <span class="w-3 h-3 rounded-full bg-rose-500 ring-4 ring-rose-100"></span>
                 <h3 class="text-base font-bold text-slate-900">다정 카드값 내역</h3>
               </div>
-              <div class="text-right">
-                <span class="text-[10px] text-slate-400 block font-medium">청구 총합계</span>
-                <span id="dajeongTotalText" class="text-lg font-black text-rose-600">총 0원</span>
+              <div class="text-right flex items-center gap-2 flex-wrap">
+                <button type="button" onclick="openAddCardItemModal('dajeong')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                  <i class="fa-solid fa-plus"></i> 카드값 추가
+                </button>
+                <div class="text-right">
+                  <span class="text-[10px] text-slate-400 block font-medium">청구 총합계</span>
+                  <span id="dajeongTotalText" class="text-lg font-black text-rose-600">총 0원</span>
+                </div>
               </div>
             </div>
 
-            <!-- 검색 & 정렬 -->
-            <div class="flex items-center gap-2 mb-3">
-              <div class="relative flex-1">
+            <!-- 월 선택 필터 & 검색 & 정렬 -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-3">
+              <div class="sm:col-span-4">
+                <select id="dajeongMonthFilter" onchange="renderDajeong()" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-rose-400 transition cursor-pointer">
+                  <option value="ALL">전체 월</option>
+                </select>
+              </div>
+              <div class="sm:col-span-5 relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
                 <input type="text" id="dajeongSearchInput" oninput="renderDajeong()" placeholder="항목명 검색..." class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-rose-400 focus:bg-white transition" />
               </div>
-              <button onclick="toggleDajeongSort()" id="btnDajeongSort" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1">
-                <i class="fa-solid fa-arrow-down-wide-short"></i>
-                <span id="dajeongSortText">금액순</span>
-              </button>
+              <div class="sm:col-span-3">
+                <button onclick="toggleDajeongSort()" id="btnDajeongSort" class="w-full px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center justify-center gap-1 cursor-pointer">
+                  <i class="fa-solid fa-arrow-down-wide-short"></i>
+                  <span id="dajeongSortText">금액순</span>
+                </button>
+              </div>
             </div>
 
             <!-- 항목 건수 -->
@@ -581,8 +627,10 @@
               <table class="w-full text-xs text-left">
                 <thead class="bg-slate-50 text-slate-400 font-semibold border-b sticky top-0 bg-slate-50 z-10">
                   <tr>
+                    <th class="py-2.5 px-3 w-16">월</th>
                     <th class="py-2.5 px-3">항목</th>
                     <th class="py-2.5 px-3 text-right">금액</th>
+                    <th class="py-2.5 px-2 text-center w-8"></th>
                   </tr>
                 </thead>
                 <tbody id="dajeongTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
@@ -599,9 +647,14 @@
                 <span class="w-3 h-3 rounded-full bg-indigo-600 ring-4 ring-indigo-100"></span>
                 <h3 class="text-base font-bold text-slate-900">선준 카드값 내역</h3>
               </div>
-              <div class="text-right flex items-center gap-2">
-                <span class="text-xs text-slate-400">선택 조건 합계:</span>
-                <span id="seonjunTotalText" class="text-lg font-black text-indigo-600">0원</span>
+              <div class="text-right flex items-center gap-2 flex-wrap">
+                <button type="button" onclick="openAddCardItemModal('seonjun')" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                  <i class="fa-solid fa-plus"></i> 카드값 추가
+                </button>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-slate-400">선택 합계:</span>
+                  <span id="seonjunTotalText" class="text-lg font-black text-indigo-600">0원</span>
+                </div>
               </div>
             </div>
 
@@ -1399,6 +1452,7 @@
 
         setupSummaryMonths();
         renderSummary();
+        setupDajeongFilters();
         renderDajeong();
         setupSeonjunFilters();
         renderSeonjunList();
@@ -1436,19 +1490,67 @@
     // ==========================================
     // 1. 월별 가계부 & 저축 로직
     // ==========================================
+    // 1. 월별 가계부 & 저축 로직
+    // ==========================================
+    function formatMoneyDisplay(amount, withUnit = true) {
+      if (amount === null || amount === undefined || isNaN(amount)) {
+        return withUnit ? "0원" : "0";
+      }
+      const unit = withUnit ? "원" : "";
+      if (amount < 0) {
+        return `(${Math.abs(amount).toLocaleString()}${unit})`;
+      }
+      return `${amount.toLocaleString()}${unit}`;
+    }
+
     function getValidSummaryList() {
-      if (!rawData || !rawData.summary) return [];
-      // salary나 cardTotal, totalCost 중 하나라도 0 초과인 유효 월 필터
-      return rawData.summary.filter(item => 
-        (item.salary && item.salary > 0) || 
-        (item.cardTotal && item.cardTotal > 0) || 
-        (item.totalCost && item.totalCost > 0)
-      );
+      // 1. 기본 27개월 데이터셋(2024년 10월 ~ 2026년 12월)을 베이스로 구축
+      const baseMonths = DEFAULT_MONTHLY_EXPENSES.map(e => ({
+        year: e.year,
+        month: e.month,
+        salary: 0,
+        totalCost: 0,
+        salaryMinusCard: 0,
+        dajeongRemain: 0,
+        cardTotal: 0,
+        savings: e.savings,
+        pocketMoney: e.pocketMoney,
+        livingExpense: e.livingExpense,
+        emergencyFund: e.emergencyFund
+      }));
+
+      // 2. rawData.summary 데이터 매핑 병합
+      if (rawData && rawData.summary && Array.isArray(rawData.summary)) {
+        rawData.summary.forEach(item => {
+          const y = item.year || '2024년';
+          const m = item.month;
+          const idx = baseMonths.findIndex(b => b.year === y && b.month === m);
+          if (idx >= 0) {
+            baseMonths[idx] = { ...baseMonths[idx], ...item };
+          } else if ((item.salary && item.salary > 0) || (item.cardTotal && item.cardTotal > 0) || (item.totalCost && item.totalCost > 0)) {
+            baseMonths.push(item);
+          }
+        });
+      }
+
+      // 3. 사용자 추가 커스텀 월 병합
+      const customMonths = getCustomMonths();
+      customMonths.forEach(cm => {
+        const idx = baseMonths.findIndex(b => b.year === cm.year && b.month === cm.month);
+        if (idx >= 0) {
+          baseMonths[idx] = { ...baseMonths[idx], ...cm };
+        } else {
+          baseMonths.push(cm);
+        }
+      });
+
+      return baseMonths;
     }
 
     function setupSummaryMonths() {
       const list = getValidSummaryList();
       const select = document.getElementById("summaryMonthSelect");
+      if (!select) return;
       select.innerHTML = "";
 
       list.forEach((item, index) => {
@@ -1459,10 +1561,18 @@
         select.appendChild(opt);
       });
 
-      // 기본적으로 가장 최신 월 선택
-      if (list.length > 0) {
-        select.value = list.length - 1;
-        selectedSummaryIndex = list.length - 1;
+      // 2026년 9월 또는 기존 선택값 복원
+      if (selectedSummaryIndex < 0 || selectedSummaryIndex >= list.length) {
+        const sep26Idx = list.findIndex(item => item.year === '2026년' && item.month === '9월');
+        if (sep26Idx >= 0) {
+          select.value = sep26Idx;
+          selectedSummaryIndex = sep26Idx;
+        } else if (list.length > 0) {
+          select.value = list.length - 1;
+          selectedSummaryIndex = list.length - 1;
+        }
+      } else {
+        select.value = selectedSummaryIndex;
       }
     }
 
@@ -1485,32 +1595,40 @@
     const STORAGE_KEY_EMERGENCY_HISTORY = "household_emergency_history";
     const STORAGE_KEY_EMERGENCY_BY_MONTH = "household_emergency_by_month";
 
-    // 구글 스프레드시트 '월별 비용' 시트의 원본 데이터셋 (스크린샷 100% 일치 기본값)
+    // 구글 스프레드시트 '월별 비용' 시트의 원본 데이터셋 (스크린샷 100% 일치: 2024년 10월 ~ 2026년 12월)
     const DEFAULT_MONTHLY_EXPENSES = [
+      // 2024년
       { year: '2024년', month: '10월', remain: 3320924, savings: 2000000, pocketMoney: 450000, livingExpense: 450000, emergencyFund: 420924 },
       { year: '2024년', month: '11월', remain: 3198975, savings: 2000000, pocketMoney: 298975, livingExpense: 450000, emergencyFund: 450000 },
       { year: '2024년', month: '12월', remain: 3149467, savings: 2000000, pocketMoney: 349467, livingExpense: 400000, emergencyFund: 400000 },
+
+      // 2025년
       { year: '2025년', month: '1월',  remain: 3127458, savings: 2000000, pocketMoney: 204763, livingExpense: 472695, emergencyFund: 450000 },
       { year: '2025년', month: '2월',  remain: 3072434, savings: 2000000, pocketMoney: 294343, livingExpense: 481377, emergencyFund: 296714 },
       { year: '2025년', month: '3월',  remain: 3622378, savings: 2000000, pocketMoney: 569464, livingExpense: 482914, emergencyFund: 570000 },
-      { year: '2025년', month: '4월',  remain: 3061543, savings: 2000000, pocketMoney: 350000, livingExpense: 400000, emergencyFund: 311543 },
-      { year: '2025년', month: '5월',  remain: 3175292, savings: 2000000, pocketMoney: 400000, livingExpense: 450000, emergencyFund: 325292 },
-      { year: '2025년', month: '6월',  remain: 3247924, savings: 2000000, pocketMoney: 400000, livingExpense: 450000, emergencyFund: 397924 },
-      { year: '2025년', month: '7월',  remain: 2912467, savings: 2000000, pocketMoney: 400000, livingExpense: 450000, emergencyFund: 62467 },
-      { year: '2025년', month: '8월',  remain: 3185032, savings: 2000000, pocketMoney: 400000, livingExpense: 450000, emergencyFund: 335032 },
-      { year: '2025년', month: '9월',  remain: 3308756, savings: 2000000, pocketMoney: 400000, livingExpense: 450000, emergencyFund: 458756 },
-      { year: '2025년', month: '10월', remain: 3446183, savings: 2000000, pocketMoney: 400000, livingExpense: 450000, emergencyFund: 596183 },
-      { year: '2025년', month: '11월', remain: 2666798, savings: 2000000, pocketMoney: 300000, livingExpense: 300000, emergencyFund: 66798 },
-      { year: '2025년', month: '12월', remain: 2239954, savings: 2000000, pocketMoney: 100000, livingExpense: 100000, emergencyFund: 39954 },
-      { year: '2026년', month: '1월',  remain: 3210615, savings: 2000000, pocketMoney: 400000, livingExpense: 400000, emergencyFund: 410615 },
-      { year: '2026년', month: '2월',  remain: 5017806, savings: 2000000, pocketMoney: 500000, livingExpense: 500000, emergencyFund: 2017806 },
-      { year: '2026년', month: '3월',  remain: 4352638, savings: 2000000, pocketMoney: 500000, livingExpense: 500000, emergencyFund: 1352638 },
-      { year: '2026년', month: '4월',  remain: 3363067, savings: 2000000, pocketMoney: 450000, livingExpense: 450000, emergencyFund: 463067 },
-      { year: '2026년', month: '5월',  remain: 2885673, savings: 2000000, pocketMoney: 450000, livingExpense: 400000, emergencyFund: 35673 },
-      { year: '2026년', month: '6월',  remain: 3016017, savings: 2000000, pocketMoney: 450000, livingExpense: 400000, emergencyFund: 166017 },
-      { year: '2026년', month: '7월',  remain: 2215661, savings: 2000000, pocketMoney: 100000, livingExpense: 100000, emergencyFund: 15661 },
-      { year: '2026년', month: '8월',  remain: 1025473, savings: 600000,  pocketMoney: 200000, livingExpense: 200000, emergencyFund: 25473 },
-      { year: '2026년', month: '9월',  remain: 1366167, savings: 950000,  pocketMoney: 135734, livingExpense: 252000, emergencyFund: 28433 }
+      { year: '2025년', month: '4월',  remain: 3069506, savings: 2300000, pocketMoney: 157598, livingExpense: 407963, emergencyFund: 203945 },
+      { year: '2025년', month: '5월',  remain: 3178516, savings: 2300000, pocketMoney: 124680, livingExpense: 439914, emergencyFund: 313922 },
+      { year: '2025년', month: '6월',  remain: 3257113, savings: 2300000, pocketMoney: 180355, livingExpense: 331879, emergencyFund: 444879 },
+      { year: '2025년', month: '7월',  remain: 2912467, savings: 2300000, pocketMoney: 175670, livingExpense: 379457, emergencyFund: 57340 },
+      { year: '2025년', month: '8월',  remain: 3267201, savings: 1700000, pocketMoney: 220421, livingExpense: 346780, emergencyFund: 1000000 },
+      { year: '2025년', month: '9월',  remain: 3309226, savings: 2400000, pocketMoney: 201253, livingExpense: 317073, emergencyFund: 190000 },
+      { year: '2025년', month: '10월', remain: 3451687, savings: 2000000, pocketMoney: 206142, livingExpense: 186645, emergencyFund: 1058000 },
+      { year: '2025년', month: '11월', remain: 1782887, savings: 0,       pocketMoney: 159440, livingExpense: 223447, emergencyFund: 1400000 },
+      { year: '2025년', month: '12월', remain: 5711461, savings: 4000000, pocketMoney: 152848, livingExpense: 350000, emergencyFund: 1208613 },
+
+      // 2026년
+      { year: '2026년', month: '1월',  remain: 3210615, savings: 2000000, pocketMoney: 236100, livingExpense: 400000, emergencyFund: 574515 },
+      { year: '2026년', month: '2월',  remain: 5017806, savings: 2300000, pocketMoney: 185780, livingExpense: 357449, emergencyFund: 2174577 },
+      { year: '2026년', month: '3월',  remain: 4352638, savings: 2300000, pocketMoney: 230800, livingExpense: 349035, emergencyFund: 1322803 },
+      { year: '2026년', month: '4월',  remain: 3363067, savings: 2500000, pocketMoney: 190482, livingExpense: 400000, emergencyFund: 272585 },
+      { year: '2026년', month: '5월',  remain: 2885673, savings: 2400000, pocketMoney: 118074, livingExpense: 336760, emergencyFund: 30839 },
+      { year: '2026년', month: '6월',  remain: 3016017, savings: 2400000, pocketMoney: 151122, livingExpense: 300000, emergencyFund: 164895 },
+      { year: '2026년', month: '7월',  remain: 2215661, savings: 1500000, pocketMoney: 159954, livingExpense: 268500, emergencyFund: 287207 },
+      { year: '2026년', month: '8월',  remain: 1025473, savings: 1100000, pocketMoney: 41586,  livingExpense: 186240, emergencyFund: -302353 },
+      { year: '2026년', month: '9월',  remain: 1366167, savings: 950000,  pocketMoney: 135734, livingExpense: 251000, emergencyFund: 29433 },
+      { year: '2026년', month: '10월', remain: 0,       savings: 0,       pocketMoney: 400000, livingExpense: 400000, emergencyFund: -800000 },
+      { year: '2026년', month: '11월', remain: 0,       savings: 0,       pocketMoney: 400000, livingExpense: 400000, emergencyFund: -800000 },
+      { year: '2026년', month: '12월', remain: 0,       savings: 0,       pocketMoney: 400000, livingExpense: 400000, emergencyFund: -800000 }
     ];
 
     let currentSummaryTableMode = 'costs'; // 'costs' | 'flow'
@@ -1562,6 +1680,71 @@
       }
     }
 
+    // 커스텀 월 및 카드 항목 로컬 관리 키
+    const STORAGE_KEY_CUSTOM_MONTHS = "household_custom_months";
+    const STORAGE_KEY_DAJEONG_CARD_ITEMS = "household_dajeong_card_items";
+    const STORAGE_KEY_SEONJUN_CARD_ITEMS = "household_seonjun_card_items";
+
+    function getCustomMonths() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY_CUSTOM_MONTHS) || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveCustomMonth(monthObj) {
+      const list = getCustomMonths();
+      const idx = list.findIndex(m => m.year === monthObj.year && m.month === monthObj.month);
+      if (idx >= 0) {
+        list[idx] = monthObj;
+      } else {
+        list.push(monthObj);
+      }
+      localStorage.setItem(STORAGE_KEY_CUSTOM_MONTHS, JSON.stringify(list));
+    }
+
+    function getCustomDajeongItems() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY_DAJEONG_CARD_ITEMS) || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function addCustomDajeongItem(item) {
+      const list = getCustomDajeongItems();
+      list.push(item);
+      localStorage.setItem(STORAGE_KEY_DAJEONG_CARD_ITEMS, JSON.stringify(list));
+    }
+
+    function deleteCustomCardItem(target, id) {
+      if (target === 'dajeong') {
+        const list = getCustomDajeongItems().filter(it => it.id !== id);
+        localStorage.setItem(STORAGE_KEY_DAJEONG_CARD_ITEMS, JSON.stringify(list));
+        renderDajeong();
+      } else {
+        const list = getCustomSeonjunItems().filter(it => it.id !== id);
+        localStorage.setItem(STORAGE_KEY_SEONJUN_CARD_ITEMS, JSON.stringify(list));
+        renderSeonjunList();
+      }
+      showToast("카드 지출 내역이 삭제되었습니다.");
+    }
+
+    function getCustomSeonjunItems() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY_SEONJUN_CARD_ITEMS) || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function addCustomSeonjunItem(item) {
+      const list = getCustomSeonjunItems();
+      list.push(item);
+      localStorage.setItem(STORAGE_KEY_SEONJUN_CARD_ITEMS, JSON.stringify(list));
+    }
+
     function getStoredEmergencyBalance() {
       const val = localStorage.getItem(STORAGE_KEY_EMERGENCY_BALANCE);
       if (val !== null && val !== "") {
@@ -1594,11 +1777,6 @@
 
     /**
      * 월별 핵심 지표 통합 산출 함수
-     * 
-     * [규칙]
-     * 1. 구글 시트 '월별 비용' 시트의 잔금, 적금, 용돈, 생활비, 비상금 데이터와 100% 동기화
-     * 2. 순잔금은 별도로 두지 않으며, 잔금에서 (적금 + 용돈 + 생활비)를 차감한 잔여액이 바로 '비상금'!
-     *    잔금 = 적금 + 용돈 + 생활비 + 비상금
      */
     function getMonthMetrics(row) {
       const year = row.year || '';
@@ -1607,25 +1785,14 @@
       const overrides = getAllocOverrides()[mKey] || {};
 
       // 1. 수입 (급여)
-      const salary = row.salary || 0;
-
-      // 2. 월 전체비용 (한 달 카드결제 총비용)
-      let totalCost = row.pocketMoney || 0;
-      if (totalCost === 0 && salary > 0 && row.salaryMinusCard > 0) {
-        totalCost = Math.max(0, salary - row.salaryMinusCard);
+      let salary = 0;
+      if (overrides.salary !== undefined) {
+        salary = overrides.salary;
+      } else if (row.salary !== undefined) {
+        salary = row.salary;
       }
-
-      // 3. 급여 - 카드결제금액
-      let salaryMinusCard = row.salaryMinusCard || 0;
-      if (salaryMinusCard === 0 && salary > 0 && totalCost > 0) {
-        salaryMinusCard = Math.max(0, salary - totalCost);
-      }
-
-      // 4. 다정 남은금액
-      const dajeongRemain = row.dajeongRemain || 0;
 
       // --- [월별 비용 시트 데이터 매핑] ---
-      // 구글 시트 '월별 비용' 연동 데이터 또는 기본 데이터셋 찾기
       let sheetExp = null;
       if (rawData && rawData.monthlyExpenses && Array.isArray(rawData.monthlyExpenses)) {
         sheetExp = rawData.monthlyExpenses.find(e => 
@@ -1638,12 +1805,46 @@
         );
       }
 
+      // 2. 월 전체비용 (한 달 카드결제 총비용)
+      let totalCost = 0;
+      if (overrides.totalCost !== undefined) {
+        totalCost = overrides.totalCost;
+      } else if (row.cardTotal && row.cardTotal > 0) {
+        totalCost = row.cardTotal;
+      } else if (row.totalCost && row.totalCost > 0) {
+        totalCost = row.totalCost;
+      } else if (salary > 0 && row.salaryMinusCard > 0) {
+        totalCost = Math.max(0, salary - row.salaryMinusCard);
+      } else if (row.pocketMoney > 0 && !sheetExp) {
+        totalCost = row.pocketMoney;
+      }
+
+      // 3. 급여 - 카드결제금액
+      let salaryMinusCard = 0;
+      if (overrides.salaryMinusCard !== undefined) {
+        salaryMinusCard = overrides.salaryMinusCard;
+      } else if (salary > 0 && totalCost > 0) {
+        salaryMinusCard = salary - totalCost;
+      } else if (row.salaryMinusCard !== undefined) {
+        salaryMinusCard = row.salaryMinusCard;
+      }
+
+      // 4. 다정 남은금액
+      let dajeongRemain = 0;
+      if (overrides.dajeongRemain !== undefined) {
+        dajeongRemain = overrides.dajeongRemain;
+      } else if (row.dajeongRemain !== undefined) {
+        dajeongRemain = row.dajeongRemain;
+      }
+
       // 5. 잔금
       let remainBalance = 0;
       if (overrides.remain !== undefined) {
         remainBalance = overrides.remain;
-      } else if (sheetExp && sheetExp.remain > 0) {
+      } else if (sheetExp && sheetExp.remain !== undefined) {
         remainBalance = sheetExp.remain;
+      } else if (totalCost > 0 || salary > 0) {
+        remainBalance = salaryMinusCard + dajeongRemain;
       } else if (row.totalCost > 0) {
         remainBalance = row.totalCost;
       } else {
@@ -1663,7 +1864,7 @@
         savings = 0;
       }
 
-      // B. 용돈 (수식 배제: 카드 합산 수식 제거, 순수 시트 입력 숫자만 반영)
+      // B. 용돈
       let pocketMoney = 0;
       if (overrides.pocketMoney !== undefined) {
         pocketMoney = overrides.pocketMoney;
@@ -1673,7 +1874,7 @@
         pocketMoney = 0;
       }
 
-      // C. 생활비 (수식 배제: 카드 합산 수식 제거, 순수 시트 입력 숫자만 반영)
+      // C. 생활비
       let livingExpense = 0;
       if (overrides.livingExpense !== undefined) {
         livingExpense = overrides.livingExpense;
@@ -1683,17 +1884,16 @@
         livingExpense = 0;
       }
 
-      // D. 비상금 (수식 배제: 시트 기재 숫자 우선, 공란이거나 적금/용돈/생활비 수정 시 잔금 - (적금+용돈+생활비) 잔여액 산출)
+      // D. 비상금 (음수 손실액 보존: 잔금 - (적금+용돈+생활비))
       let emergencyFund = 0;
       if (overrides.emergencyFund !== undefined) {
         emergencyFund = overrides.emergencyFund;
-      } else if (overrides.savings !== undefined || overrides.pocketMoney !== undefined || overrides.livingExpense !== undefined) {
-        // 적금/용돈/생활비 수정 시 비상금은 잔금 잔여액으로 자동 연동
-        emergencyFund = Math.max(0, remainBalance - (savings + pocketMoney + livingExpense));
-      } else if (sheetExp && sheetExp.emergencyFund !== undefined && sheetExp.emergencyFund > 0) {
+      } else if (overrides.savings !== undefined || overrides.pocketMoney !== undefined || overrides.livingExpense !== undefined || overrides.remain !== undefined || overrides.totalCost !== undefined) {
+        emergencyFund = remainBalance - (savings + pocketMoney + livingExpense);
+      } else if (sheetExp && sheetExp.emergencyFund !== undefined) {
         emergencyFund = sheetExp.emergencyFund;
       } else {
-        emergencyFund = Math.max(0, remainBalance - (savings + pocketMoney + livingExpense));
+        emergencyFund = remainBalance - (savings + pocketMoney + livingExpense);
       }
 
       return {
@@ -1709,6 +1909,10 @@
         livingExpense,
         emergencyFund,
         isOverridden: {
+          salary: overrides.salary !== undefined,
+          totalCost: overrides.totalCost !== undefined,
+          dajeongRemain: overrides.dajeongRemain !== undefined,
+          remain: overrides.remain !== undefined,
           savings: overrides.savings !== undefined,
           pocketMoney: overrides.pocketMoney !== undefined,
           livingExpense: overrides.livingExpense !== undefined,
@@ -1960,7 +2164,15 @@
 
       // 4. 비상금 (잔금에서 적금+용돈+생활비를 뺀 최종 잔여액!)
       const allocEmergencyEl = document.getElementById("allocEmergency");
-      if (allocEmergencyEl) allocEmergencyEl.innerText = metrics.emergencyFund.toLocaleString() + "원";
+      if (allocEmergencyEl) {
+        if (metrics.emergencyFund < 0) {
+          allocEmergencyEl.innerText = `(${Math.abs(metrics.emergencyFund).toLocaleString()}원)`;
+          allocEmergencyEl.className = "text-xl font-black text-rose-600 tracking-tight";
+        } else {
+          allocEmergencyEl.innerText = metrics.emergencyFund.toLocaleString() + "원";
+          allocEmergencyEl.className = "text-xl font-black text-amber-700 tracking-tight";
+        }
+      }
       const allocEmergencySubEl = document.getElementById("allocEmergencySub");
       if (allocEmergencySubEl) {
         allocEmergencySubEl.innerText = metrics.isOverridden.emergencyFund ? "✏️ 직접수정" : "잔금−(적금+용돈+생활비)";
@@ -1968,10 +2180,10 @@
 
       // 비율 계산 및 프로그레스 바 갱신 (합계 = 잔금 100%)
       const baseVal = metrics.remainBalance > 0 ? metrics.remainBalance : 1;
-      const savPct = Math.min(100, Math.round((metrics.savings / baseVal) * 100));
-      const pocPct = Math.min(100, Math.round((metrics.pocketMoney / baseVal) * 100));
-      const livPct = Math.min(100, Math.round((metrics.livingExpense / baseVal) * 100));
-      const emgPct = Math.max(0, 100 - (savPct + pocPct + livPct));
+      const savPct = metrics.remainBalance > 0 ? Math.min(100, Math.round((metrics.savings / baseVal) * 100)) : 0;
+      const pocPct = metrics.remainBalance > 0 ? Math.min(100, Math.round((metrics.pocketMoney / baseVal) * 100)) : 0;
+      const livPct = metrics.remainBalance > 0 ? Math.min(100, Math.round((metrics.livingExpense / baseVal) * 100)) : 0;
+      const emgPct = metrics.emergencyFund > 0 && metrics.remainBalance > 0 ? Math.max(0, 100 - (savPct + pocPct + livPct)) : 0;
 
       const savRatEl = document.getElementById("allocSavingsRatio");
       if (savRatEl) savRatEl.innerText = `잔금의 ${savPct}%`;
@@ -1980,7 +2192,9 @@
       const livRatEl = document.getElementById("allocLivingRatio");
       if (livRatEl) livRatEl.innerText = `잔금의 ${livPct}%`;
       const emgRatEl = document.getElementById("allocEmergencyRatio");
-      if (emgRatEl) emgRatEl.innerText = `잔금의 ${emgPct}%`;
+      if (emgRatEl) {
+        emgRatEl.innerText = metrics.emergencyFund < 0 ? `초과지출` : `잔금의 ${emgPct}%`;
+      }
 
       const barSav = document.getElementById("barSavings");
       if (barSav) barSav.style.width = savPct + "%";
@@ -1993,7 +2207,11 @@
 
       const summaryProgEl = document.getElementById("allocProgressSummary");
       if (summaryProgEl) {
-        summaryProgEl.innerText = `적금 ${savPct}% · 용돈 ${pocPct}% · 생활비 ${livPct}% · 비상금 ${emgPct}% (잔금 100%)`;
+        if (metrics.emergencyFund < 0) {
+          summaryProgEl.innerText = `⚠️ 지출 배분액이 잔금을 ${Math.abs(metrics.emergencyFund).toLocaleString()}원 초과하여 비상금이 마이너스 상태입니다.`;
+        } else {
+          summaryProgEl.innerText = `적금 ${savPct}% · 용돈 ${pocPct}% · 생활비 ${livPct}% · 비상금 ${emgPct}% (잔금 100%)`;
+        }
       }
 
       // [섹션 3 비상금 타겟 월 & 안내 텍스트]
@@ -2002,7 +2220,15 @@
       if (targetMonthEl) targetMonthEl.innerText = monthLabel;
 
       const monthAllocTextEl = document.getElementById("monthEmergencyAllocationText");
-      if (monthAllocTextEl) monthAllocTextEl.innerText = metrics.emergencyFund.toLocaleString() + "원";
+      if (monthAllocTextEl) {
+        if (metrics.emergencyFund < 0) {
+          monthAllocTextEl.innerText = `(${Math.abs(metrics.emergencyFund).toLocaleString()}원)`;
+          monthAllocTextEl.className = "text-sm font-black text-rose-600";
+        } else {
+          monthAllocTextEl.innerText = metrics.emergencyFund.toLocaleString() + "원";
+          monthAllocTextEl.className = "text-sm font-black text-amber-800";
+        }
+      }
 
       const noticeEl = document.getElementById("summaryMonthNotice");
       if (noticeEl) noticeEl.innerText = `${monthLabel} 기준 데이터 표시 중`;
@@ -2058,14 +2284,19 @@
               yearCellHtml = `<td rowspan="${yearItems.length}" class="py-3 px-3 border border-slate-300 font-black text-center text-slate-900 bg-slate-50/90 align-middle text-sm sm:text-base whitespace-nowrap">${yearKey}</td>`;
             }
 
+            const savingsDisplay = metrics.savings > 0 ? metrics.savings.toLocaleString() : '';
+            const emergencyDisplay = metrics.emergencyFund < 0 
+              ? `<span class="text-rose-600 font-bold">(${Math.abs(metrics.emergencyFund).toLocaleString()})</span>`
+              : `<span class="text-amber-800 font-bold">${metrics.emergencyFund.toLocaleString()}</span>`;
+
             tr.innerHTML = `
               ${yearCellHtml}
               <td class="py-2.5 px-3 border border-slate-200 text-center font-bold text-slate-800 bg-white whitespace-nowrap">${metrics.month}</td>
               <td class="py-2.5 px-3 border border-slate-200 text-right font-bold text-slate-900 whitespace-nowrap">${metrics.remainBalance.toLocaleString()}</td>
-              <td class="py-2.5 px-3 border border-slate-200 text-right text-emerald-700 font-bold whitespace-nowrap">${metrics.savings.toLocaleString()}</td>
+              <td class="py-2.5 px-3 border border-slate-200 text-right text-emerald-700 font-bold whitespace-nowrap">${savingsDisplay}</td>
               <td class="py-2.5 px-3 border border-slate-200 text-right text-indigo-700 font-bold whitespace-nowrap">${metrics.pocketMoney.toLocaleString()}</td>
               <td class="py-2.5 px-3 border border-slate-200 text-right text-sky-700 font-bold whitespace-nowrap">${metrics.livingExpense.toLocaleString()}</td>
-              <td class="py-2.5 px-3 border border-slate-200 text-right font-black text-amber-800 bg-amber-50/40 whitespace-nowrap">${metrics.emergencyFund.toLocaleString()}</td>
+              <td class="py-2.5 px-3 border border-slate-200 text-right font-black bg-amber-50/40 whitespace-nowrap">${emergencyDisplay}</td>
             `;
 
             tr.onclick = () => {
@@ -2107,6 +2338,15 @@
           const metrics = getMonthMetrics(row);
           const rowLabel = `${metrics.year ? metrics.year + ' ' : ''}${metrics.month}`;
 
+          let emgDisplayMode2 = '-';
+          if (metrics.emergencyFund < 0) {
+            emgDisplayMode2 = `<span class="text-rose-600 font-bold">(${Math.abs(metrics.emergencyFund).toLocaleString()}원)</span>`;
+          } else if (metrics.emergencyFund > 0) {
+            emgDisplayMode2 = `<span class="text-amber-700 font-black">${metrics.emergencyFund.toLocaleString()}원</span>`;
+          } else {
+            emgDisplayMode2 = '0원';
+          }
+
           tr.innerHTML = `
             <td class="py-2.5 px-3 font-bold text-slate-800 flex items-center gap-1.5 whitespace-nowrap">
               <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
@@ -2120,7 +2360,7 @@
             <td class="py-2.5 px-3 text-right text-emerald-700 whitespace-nowrap">${metrics.savings > 0 ? metrics.savings.toLocaleString() + '원' : '-'}</td>
             <td class="py-2.5 px-3 text-right text-indigo-600 whitespace-nowrap">${metrics.pocketMoney > 0 ? metrics.pocketMoney.toLocaleString() + '원' : '-'}</td>
             <td class="py-2.5 px-3 text-right text-sky-600 whitespace-nowrap">${metrics.livingExpense > 0 ? metrics.livingExpense.toLocaleString() + '원' : '-'}</td>
-            <td class="py-2.5 px-3 text-right font-black text-amber-700 whitespace-nowrap">${metrics.emergencyFund > 0 ? metrics.emergencyFund.toLocaleString() + '원' : '-'}</td>
+            <td class="py-2.5 px-3 text-right font-black whitespace-nowrap">${emgDisplayMode2}</td>
           `;
 
           tr.onclick = () => {
@@ -2139,7 +2379,8 @@
     }
 
     // ==========================================
-    // 잔금 세부 배분 항목 (적금/용돈/생활비/비상금) 모달 관리 로직
+    // ==========================================
+    // 잔금 세부 배분 및 카드값/급여 모달 관리 로직
     // ==========================================
     let currentEditingAllocKey = null;
 
@@ -2160,6 +2401,10 @@
       const hintEl = document.getElementById("allocModalAutoHint");
 
       const titles = {
+        totalCost: "월 전체 카드비용 수정",
+        salary: "총 급여 (수입) 수정",
+        dajeongRemain: "다정 남은금액 수정",
+        remain: "월 잔금 직접 지정",
         savings: "적금 (저축) 금액 수정",
         pocketMoney: "용돈 금액 수정",
         livingExpense: "생활비 금액 수정",
@@ -2167,6 +2412,10 @@
       };
 
       const autoHints = {
+        totalCost: `한 달 총 카드 결제 금액입니다. (수정 시 월 잔금 및 비상금에 자동 연동)`,
+        salary: `월 급여 수입입니다. (수정 시 잔금에 자동 연동)`,
+        dajeongRemain: `다정 남은금액입니다. (수정 시 잔금에 자동 연동)`,
+        remain: `월 잔금을 직접 지정합니다. (비상금 = 잔금 − 적금 − 용돈 − 생활비)`,
         savings: `기준 잔금: ${metrics.remainBalance.toLocaleString()}원 중 적금 배분액`,
         pocketMoney: `기준 잔금: ${metrics.remainBalance.toLocaleString()}원 중 용돈 배분액`,
         livingExpense: `기준 잔금: ${metrics.remainBalance.toLocaleString()}원 중 생활비 배분액`,
@@ -2174,8 +2423,16 @@
       };
 
       if (monthBadge) monthBadge.innerText = `${metrics.year} ${metrics.month}`;
-      if (titleEl) titleEl.innerText = titles[key] || "배분 항목 금액 수정";
-      if (input) input.value = (metrics[key] || 0).toLocaleString();
+      if (titleEl) titleEl.innerText = titles[key] || "금액 수정";
+      
+      let currVal = 0;
+      if (key === 'remain') currVal = metrics.remainBalance;
+      else if (key === 'totalCost') currVal = metrics.totalCost;
+      else if (key === 'salary') currVal = metrics.salary;
+      else if (key === 'dajeongRemain') currVal = metrics.dajeongRemain;
+      else currVal = metrics[key] || 0;
+
+      if (input) input.value = currVal.toLocaleString();
       if (hintEl) hintEl.innerText = autoHints[key] || "";
 
       modal.classList.remove("hidden");
@@ -2222,7 +2479,7 @@
       closeAllocEditModal();
       renderSummaryCardsOnly();
       renderSummaryTable();
-      showToast(`${curr.month} 항목이 시트 기본값으로 복원되었습니다.`);
+      showToast(`${curr.month} 항목이 기본값으로 복원되었습니다.`);
     }
 
     function saveAllocEditModal() {
@@ -2246,14 +2503,36 @@
         localStorage.setItem(STORAGE_KEY_EMERGENCY_BY_MONTH, JSON.stringify(map));
       }
 
+      // 구글 시트 웹 앱 백엔드 동기화 (POST 요청 전송)
+      if (APPS_SCRIPT_URL) {
+        try {
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'updateMonthField',
+              data: {
+                year: curr.year,
+                month: curr.month,
+                field: currentEditingAllocKey,
+                amount: amount
+              }
+            })
+          });
+        } catch (e) {
+          console.log('Apps Script update error:', e);
+        }
+      }
+
       closeAllocEditModal();
       renderSummaryCardsOnly();
       renderSummaryTable();
-      showToast(`${curr.month} 금액이 ${amount.toLocaleString()}원으로 저장되었습니다!`);
+      showToast(`${curr.month} ${currentEditingAllocKey === 'totalCost' ? '카드값' : '금액'}이 ${amount.toLocaleString()}원으로 저장되었습니다!`);
     }
 
     // ==========================================
-    // 2. 다정 카드값 로직
+    // 2. 다정 카드값 로직 (월별 관리 지원)
     // ==========================================
     function toggleDajeongSort() {
       dajeongSortDesc = !dajeongSortDesc;
@@ -2261,40 +2540,95 @@
       renderDajeong();
     }
 
-    function renderDajeong() {
-      if (!rawData || !rawData.dajeong) return;
-      const { items, total } = rawData.dajeong;
-      document.getElementById("dajeongTotalText").innerText = `총 ${total.toLocaleString()}원`;
+    function setupDajeongFilters() {
+      const customList = getCustomDajeongItems();
+      const rawList = (rawData && rawData.dajeong && rawData.dajeong.items) ? rawData.dajeong.items : [];
+      const combined = [...rawList, ...customList];
 
-      const search = (document.getElementById("dajeongSearchInput").value || "").trim().toLowerCase();
+      const months = [];
+      // 1. 전체 요약 리스트의 월들 기본 추가
+      getValidSummaryList().forEach(m => {
+        if (!months.includes(m.month)) months.push(m.month);
+      });
+      // 2. 다정 카드 내역에 존재하는 월 추가
+      combined.forEach(it => {
+        if (it.month && !months.includes(it.month)) months.push(it.month);
+      });
+
+      const monthSelect = document.getElementById("dajeongMonthFilter");
+      if (!monthSelect) return;
+      const currentVal = monthSelect.value;
+      monthSelect.innerHTML = `<option value="ALL">전체 월</option>`;
+      months.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.innerText = m;
+        if (m === "9월") opt.selected = true; // 최근 9월 기본 선택
+        monthSelect.appendChild(opt);
+      });
+
+      if (currentVal && currentVal !== "ALL" && months.includes(currentVal)) {
+        monthSelect.value = currentVal;
+      }
+    }
+
+    function renderDajeong() {
+      const customList = getCustomDajeongItems();
+      const rawItems = (rawData && rawData.dajeong && rawData.dajeong.items) ? rawData.dajeong.items : [];
+      const allItems = [...rawItems, ...customList];
+
+      const monthSelect = document.getElementById("dajeongMonthFilter");
+      const selectedMonth = monthSelect ? monthSelect.value : "ALL";
+      const search = (document.getElementById("dajeongSearchInput")?.value || "").trim().toLowerCase();
       const tbody = document.getElementById("dajeongTableBody");
+      if (!tbody) return;
       tbody.innerHTML = "";
 
-      let filtered = [...items];
-      if (search) {
-        filtered = filtered.filter(it => it.item.toLowerCase().includes(search));
-      }
+      let filtered = allItems.filter(it => {
+        if (selectedMonth !== "ALL") {
+          const itemMonth = it.month || '9월';
+          if (itemMonth !== selectedMonth) return false;
+        }
+        if (search && !((it.item || '').toLowerCase().includes(search))) return false;
+        return true;
+      });
 
-      filtered.sort((a, b) => dajeongSortDesc ? b.amount - a.amount : a.amount - b.amount);
+      // 합계 계산
+      const totalAmount = filtered.reduce((acc, cur) => acc + (cur.amount || 0), 0);
+      const totalEl = document.getElementById("dajeongTotalText");
+      if (totalEl) totalEl.innerText = `총 ${totalAmount.toLocaleString()}원`;
 
-      document.getElementById("dajeongCountText").innerText = `총 ${filtered.length}건 (전체 ${items.length}건)`;
+      filtered.sort((a, b) => dajeongSortDesc ? (b.amount || 0) - (a.amount || 0) : (a.amount || 0) - (b.amount || 0));
+
+      const countEl = document.getElementById("dajeongCountText");
+      if (countEl) countEl.innerText = `총 ${filtered.length}건 (전체 ${allItems.length}건)`;
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="2" class="text-center py-8 text-slate-400">검색 결과가 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400">지출 내역이 없습니다.</td></tr>`;
         return;
       }
 
       filtered.forEach((it, idx) => {
         const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-50/80 transition";
-        const isTop = idx < 3 && dajeongSortDesc && !search;
+        tr.className = "hover:bg-slate-50/80 transition border-b border-slate-100 last:border-none";
+        const isCustom = !!it.isCustom;
+        const monthBadge = it.month || '9월';
+
         tr.innerHTML = `
-          <td class="py-2.5 px-3 font-medium text-slate-800 flex items-center gap-2">
-            ${isTop ? `<span class="w-4 h-4 rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold flex items-center justify-center">${idx + 1}</span>` : `<span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>`}
-            <span>${it.item}</span>
+          <td class="py-2.5 px-3 text-slate-500 whitespace-nowrap">
+            <span class="inline-block px-1.5 py-0.5 bg-rose-50 rounded text-[10px] font-semibold text-rose-700">${monthBadge}</span>
           </td>
-          <td class="py-2.5 px-3 text-right font-bold text-slate-700">
-            ${it.amount.toLocaleString()}<span class="text-[11px] font-normal text-slate-400">원</span>
+          <td class="py-2.5 px-3 font-medium text-slate-800">
+            <div class="flex items-center gap-1.5">
+              <span>${it.item || '(항목 미기재)'}</span>
+              ${isCustom ? '<span class="text-[9px] bg-amber-100 text-amber-700 px-1 rounded font-bold">직접추가</span>' : ''}
+            </div>
+          </td>
+          <td class="py-2.5 px-3 text-right font-bold text-slate-700 whitespace-nowrap">
+            ${(it.amount || 0).toLocaleString()}<span class="text-[11px] font-normal text-slate-400">원</span>
+          </td>
+          <td class="py-2.5 px-2 text-center whitespace-nowrap">
+            ${isCustom ? `<button onclick="deleteCustomCardItem('dajeong', '${it.id}')" title="삭제" class="text-slate-400 hover:text-rose-600 p-1 transition cursor-pointer"><i class="fa-solid fa-trash-can text-xs"></i></button>` : ''}
           </td>
         `;
         tbody.appendChild(tr);
@@ -2305,45 +2639,61 @@
     // 3. 선준 카드값 로직
     // ==========================================
     function setupSeonjunFilters() {
-      if (!rawData || !rawData.seonjun) return;
+      const customList = getCustomSeonjunItems();
+      const rawList = (rawData && rawData.seonjun) ? rawData.seonjun : [];
+      const combined = [...rawList, ...customList];
       
       // 월 필터 목록 (중복 제거)
-      const months = [...new Set(rawData.seonjun.map(it => it.month).filter(Boolean))];
+      const months = [...new Set(combined.map(it => it.month).filter(Boolean))];
+      getValidSummaryList().forEach(m => {
+        if (!months.includes(m.month)) months.push(m.month);
+      });
+
       const monthSelect = document.getElementById("seonjunMonthFilter");
+      if (!monthSelect) return;
+      const currentVal = monthSelect.value;
       monthSelect.innerHTML = `<option value="ALL">전체 월 (${months.length}개월)</option>`;
       months.forEach(m => {
         const opt = document.createElement("option");
         opt.value = m;
         opt.innerText = m;
-        if (m === "9월") opt.selected = true; // 최근 9월 기본
+        if (m === "9월") opt.selected = true;
         monthSelect.appendChild(opt);
       });
+      if (currentVal && currentVal !== "ALL" && months.includes(currentVal)) {
+        monthSelect.value = currentVal;
+      }
 
       // 카드사 필터 목록
-      const cards = [...new Set(rawData.seonjun.map(it => it.card).filter(Boolean))];
+      const cards = [...new Set(combined.map(it => it.card).filter(Boolean))];
       const cardSelect = document.getElementById("seonjunCardFilter");
-      cardSelect.innerHTML = `<option value="ALL">전체 카드</option>`;
-      cards.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.innerText = c;
-        cardSelect.appendChild(opt);
-      });
+      if (cardSelect) {
+        cardSelect.innerHTML = `<option value="ALL">전체 카드</option>`;
+        cards.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.innerText = c;
+          cardSelect.appendChild(opt);
+        });
+      }
     }
 
     function renderSeonjunList() {
-      if (!rawData || !rawData.seonjun) return;
+      const customList = getCustomSeonjunItems();
+      const rawList = (rawData && rawData.seonjun) ? rawData.seonjun : [];
+      const allSeonjun = [...rawList, ...customList];
 
-      const selectedMonth = document.getElementById("seonjunMonthFilter").value;
-      const selectedType = document.getElementById("seonjunTypeFilter").value;
-      const selectedNote = document.getElementById("seonjunNoteFilter").value;
-      const selectedCard = document.getElementById("seonjunCardFilter").value;
-      const search = (document.getElementById("seonjunSearchInput").value || "").trim().toLowerCase();
+      const selectedMonth = document.getElementById("seonjunMonthFilter") ? document.getElementById("seonjunMonthFilter").value : "ALL";
+      const selectedType = document.getElementById("seonjunTypeFilter") ? document.getElementById("seonjunTypeFilter").value : "ALL";
+      const selectedNote = document.getElementById("seonjunNoteFilter") ? document.getElementById("seonjunNoteFilter").value : "ALL";
+      const selectedCard = document.getElementById("seonjunCardFilter") ? document.getElementById("seonjunCardFilter").value : "ALL";
+      const search = (document.getElementById("seonjunSearchInput")?.value || "").trim().toLowerCase();
 
       const tbody = document.getElementById("seonjunTableBody");
+      if (!tbody) return;
       tbody.innerHTML = "";
 
-      let filtered = rawData.seonjun.filter(it => {
+      let filtered = allSeonjun.filter(it => {
         if (selectedMonth !== "ALL" && it.month !== selectedMonth) return false;
         if (selectedType !== "ALL" && it.type !== selectedType) return false;
         if (selectedNote !== "ALL" && it.note !== selectedNote) return false;
@@ -2354,7 +2704,8 @@
 
       // 합계 계산
       const totalAmount = filtered.reduce((acc, cur) => acc + (cur.amount || 0), 0);
-      document.getElementById("seonjunTotalText").innerText = `총 ${totalAmount.toLocaleString()}원`;
+      const totalEl = document.getElementById("seonjunTotalText");
+      if (totalEl) totalEl.innerText = `총 ${totalAmount.toLocaleString()}원`;
 
       // 서브 브레이크다운 (공통 / 선준 / 생활비)
       const typeTotals = {};
@@ -2364,17 +2715,19 @@
       });
 
       const breakdownContainer = document.getElementById("seonjunSubBreakdown");
-      breakdownContainer.innerHTML = "";
-      for (const [key, val] of Object.entries(typeTotals)) {
-        const badge = document.createElement("span");
-        let badgeColor = "bg-slate-100 text-slate-700";
-        if (key === "공통") badgeColor = "bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200/50";
-        else if (key === "선준") badgeColor = "bg-amber-50 text-amber-700 font-semibold border border-amber-200/50";
-        else if (key === "생활비") badgeColor = "bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200/50";
+      if (breakdownContainer) {
+        breakdownContainer.innerHTML = "";
+        for (const [key, val] of Object.entries(typeTotals)) {
+          const badge = document.createElement("span");
+          let badgeColor = "bg-slate-100 text-slate-700";
+          if (key === "공통") badgeColor = "bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200/50";
+          else if (key === "선준") badgeColor = "bg-amber-50 text-amber-700 font-semibold border border-amber-200/50";
+          else if (key === "생활비") badgeColor = "bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200/50";
 
-        badge.className = `px-2 py-0.5 rounded-lg text-[11px] ${badgeColor}`;
-        badge.innerText = `${key}: ${val.toLocaleString()}원`;
-        breakdownContainer.appendChild(badge);
+          badge.className = `px-2 py-0.5 rounded-lg text-[11px] ${badgeColor}`;
+          badge.innerText = `${key}: ${val.toLocaleString()}원`;
+          breakdownContainer.appendChild(badge);
+        }
       }
 
       if (filtered.length === 0) {
@@ -2384,7 +2737,8 @@
 
       filtered.forEach(it => {
         const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-50 transition";
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100 last:border-none";
+        const isCustom = !!it.isCustom;
 
         // 구분 배지
         let typeBadge = "";
@@ -2413,11 +2767,19 @@
             <span class="inline-block px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-semibold text-slate-600">${it.month}</span>
             <span class="font-medium text-slate-700 ml-1">${it.card}</span>
           </td>
-          <td class="py-2.5 px-3 font-semibold text-slate-800">${it.item || '(항목 미기재)'}</td>
+          <td class="py-2.5 px-3 font-semibold text-slate-800">
+            <div class="flex items-center gap-1.5">
+              <span>${it.item || '(항목 미기재)'}</span>
+              ${isCustom ? '<span class="text-[9px] bg-amber-100 text-amber-700 px-1 rounded font-bold">직접추가</span>' : ''}
+            </div>
+          </td>
           <td class="py-2.5 px-3 text-center">${typeBadge}</td>
           <td class="py-2.5 px-3 text-center">${noteBadge}</td>
-          <td class="py-2.5 px-3 text-right font-bold text-slate-700">
-            ${(it.amount || 0).toLocaleString()}<span class="text-[11px] font-normal text-slate-400">원</span>
+          <td class="py-2.5 px-3 text-right font-bold text-slate-700 whitespace-nowrap">
+            <div class="flex items-center justify-end gap-1.5">
+              <span>${(it.amount || 0).toLocaleString()}<span class="text-[11px] font-normal text-slate-400">원</span></span>
+              ${isCustom ? `<button onclick="deleteCustomCardItem('seonjun', '${it.id}')" title="삭제" class="text-slate-400 hover:text-rose-600 p-1 transition cursor-pointer ml-1"><i class="fa-solid fa-trash-can text-xs"></i></button>` : ''}
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
@@ -2427,6 +2789,275 @@
       if (!document.getElementById("tab-charts").classList.contains("hidden")) {
         renderCharts();
       }
+    }
+
+    // ==========================================
+    // 4. 모달 헬퍼 및 월 추가 / 카드값 추가 핸들러
+    // ==========================================
+    function onNumberOnlyInput(el) {
+      const raw = el.value.replace(/[^0-9]/g, '');
+      if (!raw) {
+        el.value = '';
+        return;
+      }
+      el.value = parseInt(raw, 10).toLocaleString();
+    }
+
+    function parseNumberInput(el) {
+      if (!el || !el.value) return 0;
+      return parseInt(el.value.replace(/[^0-9-]/g, ''), 10) || 0;
+    }
+
+    // --- 월 추가 모달 ---
+    function openAddMonthModal() {
+      const modal = document.getElementById("addMonthModal");
+      if (!modal) return;
+      
+      const list = getValidSummaryList();
+      const last = list[list.length - 1];
+      if (last) {
+        let lastM = parseInt(last.month.replace(/[^0-9]/g, ''), 10) || 12;
+        let nextM = lastM + 1;
+        let nextYear = last.year || "2026년";
+        if (nextM > 12) {
+          nextM = 1;
+          const yNum = parseInt(nextYear.replace(/[^0-9]/g, ''), 10) || 2026;
+          nextYear = `${yNum + 1}년`;
+        }
+        const yInput = document.getElementById("newMonthYear");
+        if (yInput) yInput.value = nextYear;
+        const mSelect = document.getElementById("newMonthMonth");
+        if (mSelect) mSelect.value = `${nextM}월`;
+      }
+
+      document.getElementById("newMonthSalary").value = "";
+      document.getElementById("newMonthTotalCost").value = "";
+      document.getElementById("newMonthDajeongRemain").value = "";
+      document.getElementById("newMonthSavings").value = "";
+      document.getElementById("newMonthPocket").value = "";
+      document.getElementById("newMonthLiving").value = "";
+
+      onAddMonthFieldChange();
+
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      document.getElementById("newMonthSalary").focus();
+    }
+
+    function closeAddMonthModal() {
+      const modal = document.getElementById("addMonthModal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    function onAddMonthFieldChange() {
+      const salary = parseNumberInput(document.getElementById("newMonthSalary"));
+      const totalCost = parseNumberInput(document.getElementById("newMonthTotalCost"));
+      const dajeongRemain = parseNumberInput(document.getElementById("newMonthDajeongRemain"));
+      
+      const salaryMinusCard = salary - totalCost;
+      const remain = salaryMinusCard + dajeongRemain;
+      
+      const remainPreviewEl = document.getElementById("newMonthRemainPreview");
+      if (remainPreviewEl) {
+        remainPreviewEl.innerText = remain.toLocaleString() + "원";
+      }
+
+      const savings = parseNumberInput(document.getElementById("newMonthSavings"));
+      const pocket = parseNumberInput(document.getElementById("newMonthPocket"));
+      const living = parseNumberInput(document.getElementById("newMonthLiving"));
+      
+      const emergencyFund = remain - (savings + pocket + living);
+      const emgPreviewEl = document.getElementById("newMonthEmergencyPreview");
+      if (emgPreviewEl) {
+        emgPreviewEl.innerText = formatMoneyDisplay(emergencyFund, true);
+        if (emergencyFund < 0) {
+          emgPreviewEl.className = "text-sm font-black text-rose-600";
+        } else {
+          emgPreviewEl.className = "text-sm font-black text-amber-800";
+        }
+      }
+    }
+
+    async function submitAddMonth() {
+      const yearInput = document.getElementById("newMonthYear");
+      const monthInput = document.getElementById("newMonthMonth");
+      
+      const year = (yearInput?.value || "").trim() || "2026년";
+      const month = (monthInput?.value || "").trim() || "10월";
+
+      const salary = parseNumberInput(document.getElementById("newMonthSalary"));
+      const totalCost = parseNumberInput(document.getElementById("newMonthTotalCost"));
+      const dajeongRemain = parseNumberInput(document.getElementById("newMonthDajeongRemain"));
+      const salaryMinusCard = salary - totalCost;
+      const remain = salaryMinusCard + dajeongRemain;
+
+      const savings = parseNumberInput(document.getElementById("newMonthSavings"));
+      const pocketMoney = parseNumberInput(document.getElementById("newMonthPocket"));
+      const livingExpense = parseNumberInput(document.getElementById("newMonthLiving"));
+      const emergencyFund = remain - (savings + pocketMoney + livingExpense);
+
+      const monthObj = {
+        year,
+        month,
+        remain,
+        savings,
+        pocketMoney,
+        livingExpense,
+        emergencyFund,
+        salary,
+        totalCost,
+        cardTotal: totalCost,
+        salaryMinusCard,
+        dajeongRemain,
+        isCustom: true
+      };
+
+      // 1. 로컬 저장
+      saveCustomMonth(monthObj);
+
+      // 2. 구글 시트 웹 앱 POST 전송 (동기화)
+      if (APPS_SCRIPT_URL) {
+        try {
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'addMonth',
+              data: monthObj
+            })
+          });
+        } catch (e) {
+          console.warn("구글시트 전송 알림:", e);
+        }
+      }
+
+      // 3. UI 갱신 및 자동 선택
+      closeAddMonthModal();
+      setupSummaryMonths();
+      const list = getValidSummaryList();
+      const newIdx = list.findIndex(m => m.year === year && m.month === month);
+      if (newIdx >= 0) {
+        selectedSummaryIndex = newIdx;
+        const sel = document.getElementById("summaryMonthSelect");
+        if (sel) sel.value = newIdx;
+      }
+
+      setupDajeongFilters();
+      setupSeonjunFilters();
+      renderSummary();
+      renderDajeong();
+      renderSeonjunList();
+
+      showToast(`${year} ${month} 데이터 및 카드값이 성공적으로 추가되었습니다! (구글 시트 연동 완료)`);
+    }
+
+    // --- 카드 지출 항목 추가 모달 (다정 & 선준) ---
+    function openAddCardItemModal(target) {
+      const modal = document.getElementById("addCardItemModal");
+      if (!modal) return;
+      const targetSelect = document.getElementById("cardItemTarget");
+      if (targetSelect && target) {
+        targetSelect.value = target;
+      }
+      onCardTargetChange();
+
+      // 현재 선택된 요약 월 기본 세팅
+      const list = getValidSummaryList();
+      const curr = list[selectedSummaryIndex >= 0 ? selectedSummaryIndex : list.length - 1];
+      const monthSelect = document.getElementById("cardItemMonth");
+      if (monthSelect && curr && curr.month) {
+        monthSelect.value = curr.month;
+      }
+
+      document.getElementById("cardItemName").value = "";
+      document.getElementById("cardItemAmount").value = "";
+
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      document.getElementById("cardItemName").focus();
+    }
+
+    function closeAddCardItemModal() {
+      const modal = document.getElementById("addCardItemModal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    function onCardTargetChange() {
+      const target = document.getElementById("cardItemTarget").value;
+      const isSeonjun = target === 'seonjun';
+      const seonjunFields = document.getElementById("seonjunSpecificFields");
+      const badge = document.getElementById("cardModalTargetBadge");
+      if (seonjunFields) seonjunFields.classList.toggle("hidden", !isSeonjun);
+      if (badge) {
+        badge.innerText = isSeonjun ? "선준 카드값 추가" : "다정 카드값 추가";
+        badge.className = isSeonjun ? "text-xs font-bold text-indigo-600 uppercase" : "text-xs font-bold text-rose-600 uppercase";
+      }
+    }
+
+    async function submitAddCardItem() {
+      const target = document.getElementById("cardItemTarget").value;
+      const month = document.getElementById("cardItemMonth").value;
+      const item = (document.getElementById("cardItemName").value || "").trim();
+      const amount = parseNumberInput(document.getElementById("cardItemAmount"));
+
+      if (!item) {
+        alert("사용처/항목명을 입력해주세요.");
+        return;
+      }
+      if (amount <= 0) {
+        alert("금액을 0원보다 크게 입력해주세요.");
+        return;
+      }
+
+      const newItem = {
+        id: 'custom_' + Date.now(),
+        month,
+        item,
+        amount,
+        isCustom: true
+      };
+
+      if (target === 'seonjun') {
+        newItem.card = (document.getElementById("cardItemCompany")?.value || "신한카드").trim();
+        newItem.type = document.getElementById("cardItemType")?.value || "공통";
+        newItem.note = document.getElementById("cardItemNote")?.value || "일반";
+        addCustomSeonjunItem(newItem);
+        setupSeonjunFilters();
+        renderSeonjunList();
+      } else {
+        newItem.card = "다정카드";
+        addCustomDajeongItem(newItem);
+        setupDajeongFilters();
+        renderDajeong();
+      }
+
+      // 구글 시트 웹 앱 동기화
+      if (APPS_SCRIPT_URL) {
+        try {
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'addCardItem',
+              target,
+              item: newItem
+            })
+          });
+        } catch (e) {
+          console.warn("구글시트 전송 실패:", e);
+        }
+      }
+
+      closeAddCardItemModal();
+      showToast(`${month} ${target === 'dajeong' ? '다정' : '선준'} 카드값 [${item}: ${amount.toLocaleString()}원] 등록 완료!`);
     }
 
     // ==========================================
@@ -3199,6 +3830,9 @@ function doGet(e) {
       if (e.key === "Escape") {
         closeShareModal();
         closeStockModal();
+        closeAllocEditModal();
+        closeAddMonthModal();
+        closeAddCardItemModal();
       }
     });
     document.addEventListener("click", (e) => {
@@ -3206,9 +3840,21 @@ function doGet(e) {
       if (shareM && e.target === shareM) closeShareModal();
       const stockM = document.getElementById("stockModal");
       if (stockM && e.target === stockM) closeStockModal();
+      const allocM = document.getElementById("allocEditModal");
+      if (allocM && e.target === allocM) closeAllocEditModal();
+      const monthM = document.getElementById("addMonthModal");
+      if (monthM && e.target === monthM) closeAddMonthModal();
+      const cardM = document.getElementById("addCardItemModal");
+      if (cardM && e.target === cardM) closeAddCardItemModal();
     });
 
-    // 초기 데이터 로딩 시작
+    // 초기 데이터 즉시 렌더링 (구글 시트 로딩 전에도 기본 27개월 데이터 즉시 표시)
+    setupSummaryMonths();
+    renderSummary();
+    setupDajeongFilters();
+    renderDajeong();
+    setupSeonjunFilters();
+    renderSeonjunList();
     renderHouseTab();
     loadData();
   </script>
@@ -3500,6 +4146,196 @@ function doGet(e) {
         </button>
         <button type="button" onclick="saveAllocEditModal()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm shadow-indigo-200 transition cursor-pointer">
           저장하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- 📅 월 추가 (+ 월 데이터 & 카드값 자동 등록) 모달 -->
+  <!-- ============================================== -->
+  <div id="addMonthModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <span class="text-xs font-bold text-indigo-600 uppercase">월별 요약 및 비용 추가</span>
+          <h3 class="text-base sm:text-lg font-black text-slate-900">새로운 월 추가</h3>
+        </div>
+        <button onclick="closeAddMonthModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-sm transition cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs font-bold text-slate-600 block mb-1">연도</label>
+          <input type="text" id="newMonthYear" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500" value="2026년" placeholder="예: 2026년" />
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-600 block mb-1">월</label>
+          <select id="newMonthMonth" onchange="onAddMonthFieldChange()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+            <option value="1월">1월</option>
+            <option value="2월">2월</option>
+            <option value="3월">3월</option>
+            <option value="4월">4월</option>
+            <option value="5월">5월</option>
+            <option value="6월">6월</option>
+            <option value="7월">7월</option>
+            <option value="8월">8월</option>
+            <option value="9월">9월</option>
+            <option value="10월" selected>10월</option>
+            <option value="11월">11월</option>
+            <option value="12월">12월</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="space-y-3 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100">
+        <span class="text-xs font-black text-indigo-700 block mb-1">💳 수입 및 카드 결제금액</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 block mb-1">급여 (수입)</label>
+            <input type="text" id="newMonthSalary" oninput="onNumberOnlyInput(this); onAddMonthFieldChange();" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 text-right" placeholder="0" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-rose-600 block mb-1">카드값 (월 전체비용)</label>
+            <input type="text" id="newMonthTotalCost" oninput="onNumberOnlyInput(this); onAddMonthFieldChange();" class="w-full px-3 py-2 bg-white border border-rose-200 rounded-xl text-xs font-bold text-rose-600 outline-none focus:border-rose-500 text-right" placeholder="0" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-[11px] font-bold text-purple-600 block mb-1">다정 남은금액</label>
+            <input type="text" id="newMonthDajeongRemain" oninput="onNumberOnlyInput(this); onAddMonthFieldChange();" class="w-full px-3 py-2 bg-white border border-purple-200 rounded-xl text-xs font-bold text-purple-600 outline-none focus:border-purple-500 text-right" placeholder="0" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-amber-700 block mb-1">계산된 월 잔금</label>
+            <div id="newMonthRemainPreview" class="px-3 py-2 bg-amber-50/80 border border-amber-200 rounded-xl text-xs font-black text-amber-900 text-right">0원</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3 bg-indigo-50/40 p-3.5 rounded-2xl border border-indigo-100">
+        <span class="text-xs font-black text-indigo-900 block mb-1">📊 잔금 세부 배분 항목</span>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-[11px] font-bold text-emerald-700 block mb-1">적금</label>
+            <input type="text" id="newMonthSavings" oninput="onNumberOnlyInput(this); onAddMonthFieldChange();" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-emerald-700 outline-none focus:border-emerald-500 text-right" placeholder="0" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-indigo-700 block mb-1">용돈</label>
+            <input type="text" id="newMonthPocket" oninput="onNumberOnlyInput(this); onAddMonthFieldChange();" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-indigo-700 outline-none focus:border-indigo-500 text-right" placeholder="0" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-sky-700 block mb-1">생활비</label>
+            <input type="text" id="newMonthLiving" oninput="onNumberOnlyInput(this); onAddMonthFieldChange();" class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-sky-700 outline-none focus:border-sky-500 text-right" placeholder="0" />
+          </div>
+        </div>
+        <div class="flex items-center justify-between pt-2 border-t border-indigo-100">
+          <span class="text-xs font-bold text-slate-600">최종 비상금 <span class="text-[10px] text-slate-400 font-normal">(잔금 − 적금 − 용돈 − 생활비)</span>:</span>
+          <span id="newMonthEmergencyPreview" class="text-sm font-black text-amber-800">0원</span>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeAddMonthModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition cursor-pointer">
+          취소
+        </button>
+        <button type="button" onclick="submitAddMonth()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm shadow-indigo-200 transition cursor-pointer flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          추가 및 구글시트 연동
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- 💳 카드값 지출 항목 추가 모달 (다정 & 선준) -->
+  <!-- ============================================== -->
+  <div id="addCardItemModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-100 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <span class="text-xs font-bold text-rose-600 uppercase" id="cardModalTargetBadge">다정 카드값 추가</span>
+          <h3 class="text-base sm:text-lg font-black text-slate-900" id="cardModalTitle">지출 내역 등록</h3>
+        </div>
+        <button onclick="closeAddCardItemModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-sm transition cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs font-bold text-slate-600 block mb-1">대상</label>
+          <select id="cardItemTarget" onchange="onCardTargetChange()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+            <option value="dajeong">다정 카드</option>
+            <option value="seonjun">선준 카드</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-600 block mb-1">해당 월</label>
+          <select id="cardItemMonth" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
+            <option value="1월">1월</option>
+            <option value="2월">2월</option>
+            <option value="3월">3월</option>
+            <option value="4월">4월</option>
+            <option value="5월">5월</option>
+            <option value="6월">6월</option>
+            <option value="7월">7월</option>
+            <option value="8월">8월</option>
+            <option value="9월" selected>9월</option>
+            <option value="10월">10월</option>
+            <option value="11월">11월</option>
+            <option value="12월">12월</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="text-xs font-bold text-slate-600 block mb-1">사용처 / 항목명</label>
+        <input type="text" id="cardItemName" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-500" placeholder="예: 쿠팡, 스타벅스, 식비 등" />
+      </div>
+
+      <div>
+        <label class="text-xs font-bold text-slate-600 block mb-1">금액</label>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₩</span>
+          <input type="text" id="cardItemAmount" oninput="onNumberOnlyInput(this)" class="w-full pl-7 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-500 text-right" placeholder="0" />
+        </div>
+      </div>
+
+      <!-- 선준 카드 전용 필드 -->
+      <div id="seonjunSpecificFields" class="hidden space-y-3 pt-2 border-t border-slate-100">
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 block mb-1">카드사</label>
+            <input type="text" id="cardItemCompany" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none" value="신한카드" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 block mb-1">구분</label>
+            <select id="cardItemType" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none">
+              <option value="공통">공통</option>
+              <option value="선준">선준</option>
+              <option value="생활비">생활비</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 block mb-1">비고</label>
+            <select id="cardItemNote" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none">
+              <option value="일반">일반</option>
+              <option value="할부">할부</option>
+              <option value="고정">고정</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeAddCardItemModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition cursor-pointer">
+          취소
+        </button>
+        <button type="button" onclick="submitAddCardItem()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm shadow-rose-200 transition cursor-pointer flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-check"></i>
+          등록하기
         </button>
       </div>
     </div>

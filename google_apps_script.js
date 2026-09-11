@@ -208,15 +208,15 @@ function getMonthlyExpensesData(ss) {
         var remain = colRemain !== -1 ? parseNumeric(row[colRemain]) : 0;
         var savings = colSavings !== -1 ? parseNumeric(row[colSavings]) : 0;
         var pocket = colPocket !== -1 ? parseNumeric(row[colPocket]) : 0;
-        var living = colLiving !== -1 ? parseNumeric(row[colLiving]) : 0;
-        var emergency = colEmergency !== -1 ? parseNumeric(row[colEmergency]) : 0;
-
-        // 비상금 셀이 비어있거나 0일 경우: 잔금 - (적금 + 용돈 + 생활비)
-        if (emergency === 0 && remain > 0 && (savings > 0 || pocket > 0 || living > 0)) {
-          emergency = Math.max(0, remain - (savings + pocket + living));
+        var rawEmergency = colEmergency !== -1 ? row[colEmergency] : null;
+        var emergency = 0;
+        if (rawEmergency !== null && rawEmergency !== undefined && String(rawEmergency).trim() !== '') {
+          emergency = parseNumeric(rawEmergency);
+        } else {
+          emergency = remain - (savings + pocket + living);
         }
 
-        if (remain > 0 || savings > 0 || pocket > 0 || living > 0) {
+        if (remain > 0 || savings > 0 || pocket > 0 || living > 0 || emergency !== 0) {
           results.push({
             year: currentYear || '2024년',
             month: monthStr,
@@ -241,13 +241,20 @@ function getMonthlyExpensesData(ss) {
 function parseNumeric(val) {
   if (typeof val === 'number') return val;
   if (!val) return 0;
-  var str = String(val).replace(/[^0-9.-]/g, '');
-  var num = parseFloat(str);
-  return isNaN(num) ? 0 : num;
+  var str = String(val).trim();
+  // 회계 음수 표기 (1,000) 또는 -1,000 감지
+  var isNegative = false;
+  if (str.indexOf('-') !== -1 || (str.indexOf('(') !== -1 && str.indexOf(')') !== -1)) {
+    isNegative = true;
+  }
+  var clean = str.replace(/[^0-9.]/g, '');
+  var num = parseFloat(clean);
+  if (isNaN(num)) return 0;
+  return isNegative ? -num : num;
 }
 
 /**
- * 기존 시트 추출 함수 유지 (요약 시트)
+ * 기존 시트 추출 함수 (요약 시트)
  */
 function getSummaryData(ss) {
   var sheet = ss.getSheetByName('월별 요약') || ss.getSheetByName('요약') || ss.getSheets()[0];
@@ -277,7 +284,7 @@ function getSummaryData(ss) {
 }
 
 /**
- * 다정 시트 추출 함수
+ * 다정 시트 추출 함수 (월별 지원)
  */
 function getDajeongData(ss) {
   var sheet = ss.getSheetByName('다정');
@@ -285,11 +292,31 @@ function getDajeongData(ss) {
   var values = sheet.getDataRange().getValues();
   var items = [];
   var total = 0;
+
+  var colMonth = -1, colItem = 0, colAmount = 1, colCard = -1;
+  if (values.length > 0) {
+    var header = values[0].map(function(h) { return String(h).trim(); });
+    for (var c = 0; c < header.length; c++) {
+      if (header[c].indexOf('월') !== -1) colMonth = c;
+      else if (header[c].indexOf('항목') !== -1 || header[c].indexOf('내역') !== -1) colItem = c;
+      else if (header[c].indexOf('금액') !== -1 || header[c].indexOf('가격') !== -1) colAmount = c;
+      else if (header[c].indexOf('카드') !== -1) colCard = c;
+    }
+  }
+
   for (var r = 1; r < values.length; r++) {
-    var item = String(values[r][0] || '').trim();
-    var amount = parseNumeric(values[r][1]);
+    var item = String(values[r][colItem] || '').trim();
+    var amount = parseNumeric(values[r][colAmount]);
+    var month = colMonth !== -1 ? String(values[r][colMonth] || '').trim() : '';
+    var card = colCard !== -1 ? String(values[r][colCard] || '').trim() : '다정카드';
+    
     if (item && amount > 0) {
-      items.push({ item: item, amount: amount });
+      items.push({ 
+        item: item, 
+        amount: amount, 
+        month: month || '9월', 
+        card: card 
+      });
       total += amount;
     }
   }
@@ -316,4 +343,148 @@ function getSeonjunData(ss) {
     }
   }
   return result;
+}
+
+/**
+ * 웹 대시보드 -> 구글 시트 양방향 데이터 저장 (doPost)
+ */
+function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var postData = {};
+    if (e && e.postData && e.postData.contents) {
+      postData = JSON.parse(e.postData.contents);
+    } else if (e && e.parameter) {
+      postData = e.parameter;
+    }
+
+    var action = postData.action;
+
+    // 1. 새로운 월 추가 (addMonth)
+    if (action === 'addMonth') {
+      var d = postData.data;
+      var sheetCosts = ss.getSheetByName('월별 비용') || ss.getSheetByName('월별비용');
+      if (sheetCosts) {
+        sheetCosts.appendRow([
+          d.year,
+          d.month,
+          d.remain,
+          d.savings,
+          d.pocketMoney,
+          d.livingExpense,
+          d.emergencyFund
+        ]);
+      }
+
+      var sheetSummary = ss.getSheetByName('월별 요약') || ss.getSheetByName('요약');
+      if (sheetSummary) {
+        sheetSummary.appendRow([
+          d.year,
+          d.month,
+          d.salary || 0,
+          d.salaryMinusCard || 0,
+          d.dajeongRemain || 0,
+          d.totalCost || 0,
+          d.cardTotal || d.totalCost || 0,
+          d.savings || 0,
+          d.pocketMoney || 0,
+          d.livingExpense || 0,
+          d.emergencyFund || 0
+        ]);
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        message: "월 추가 완료: " + d.year + " " + d.month
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 2. 카드 지출 항목 추가 (addCardItem)
+    if (action === 'addCardItem') {
+      var target = postData.target; // 'dajeong' | 'seonjun'
+      var it = postData.item;
+      var cardSheet = ss.getSheetByName(target === 'dajeong' ? '다정' : '선준');
+      if (cardSheet) {
+        if (target === 'dajeong') {
+          cardSheet.appendRow([it.item, it.amount, it.month || '', it.card || '다정카드']);
+        } else {
+          cardSheet.appendRow([
+            it.card || '신용카드',
+            it.item,
+            it.amount,
+            it.type || '공통',
+            it.note || '일반',
+            it.month
+          ]);
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        message: "카드 항목 추가 완료"
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 3. 월 항목 개별 금액 수정 (updateMonthField)
+    if (action === 'updateMonthField') {
+      var d = postData.data;
+      var targetYear = d.year;
+      var targetMonth = d.month;
+      var field = d.field;
+      var amount = d.amount;
+
+      var sheetCosts = ss.getSheetByName('월별 비용') || ss.getSheetByName('월별비용');
+      if (sheetCosts) {
+        var values = sheetCosts.getDataRange().getValues();
+        var currentYear = '';
+        for (var r = 1; r < values.length; r++) {
+          var rowYear = String(values[r][0] || '').trim();
+          if (rowYear && rowYear.indexOf('년') !== -1) currentYear = rowYear;
+          var rowMonth = String(values[r][1] || '').trim();
+          if ((currentYear === targetYear || !targetYear) && rowMonth === targetMonth) {
+            var colIdx = -1;
+            if (field === 'remain') colIdx = 3;
+            else if (field === 'savings') colIdx = 4;
+            else if (field === 'pocketMoney') colIdx = 5;
+            else if (field === 'livingExpense') colIdx = 6;
+            else if (field === 'emergencyFund') colIdx = 7;
+            if (colIdx !== -1) {
+              sheetCosts.getRange(r + 1, colIdx).setValue(amount);
+            }
+            break;
+          }
+        }
+      }
+
+      var sheetSummary = ss.getSheetByName('월별 요약') || ss.getSheetByName('요약');
+      if (sheetSummary) {
+        var sValues = sheetSummary.getDataRange().getValues();
+        for (var sr = 1; sr < sValues.length; sr++) {
+          var sYear = String(sValues[sr][0] || '').trim();
+          var sMonth = String(sValues[sr][1] || '').trim();
+          if ((sYear === targetYear || !targetYear) && sMonth === targetMonth) {
+            if (field === 'salary') sheetSummary.getRange(sr + 1, 3).setValue(amount);
+            else if (field === 'totalCost') sheetSummary.getRange(sr + 1, 7).setValue(amount);
+            else if (field === 'dajeongRemain') sheetSummary.getRange(sr + 1, 5).setValue(amount);
+            break;
+          }
+        }
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        message: "월 항목 수정 완료: " + targetYear + " " + targetMonth + " (" + field + "=" + amount + ")"
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "success",
+      received: postData
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
 }
