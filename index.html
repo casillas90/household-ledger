@@ -1494,11 +1494,11 @@
       { year: '2025년', month: '2월',  remain: 3072434, savings: 2000000, pocketMoney: 294343, livingExpense: 481377, emergencyFund: 296714 },
       { year: '2025년', month: '3월',  remain: 3622378, savings: 2000000, pocketMoney: 569464, livingExpense: 482914, emergencyFund: 570000 },
       { year: '2025년', month: '4월',  remain: 3061543, savings: 2000000, pocketMoney: 350000, livingExpense: 400000, emergencyFund: 311543 },
-      { year: '2025년', month: '5월',  remain: 3175292, savings: 2000000, pocketMoney: 281926, livingExpense: 63240,  emergencyFund: 830126 },
-      { year: '2025년', month: '6월',  remain: 3247924, savings: 2000000, pocketMoney: 148878, livingExpense: 0,      emergencyFund: 1099046 },
-      { year: '2025년', month: '7월',  remain: 2912467, savings: 2000000, pocketMoney: 140046, livingExpense: 31500,  emergencyFund: 740921 },
-      { year: '2025년', month: '8월',  remain: 3185032, savings: 2000000, pocketMoney: 258414, livingExpense: 113760, emergencyFund: 812858 },
-      { year: '2025년', month: '9월',  remain: 3308756, savings: 2000000, pocketMoney: 164266, livingExpense: 49000,  emergencyFund: 1095490 },
+      { year: '2025년', month: '5월',  remain: 3175292, savings: 2000000, pocketMoney: 400000, livingExpense: 450000, emergencyFund: 325292 },
+      { year: '2025년', month: '6월',  remain: 3247924, savings: 2000000, pocketMoney: 400000, livingExpense: 450000, emergencyFund: 397924 },
+      { year: '2025년', month: '7월',  remain: 2912467, savings: 2000000, pocketMoney: 400000, livingExpense: 450000, emergencyFund: 62467 },
+      { year: '2025년', month: '8월',  remain: 3185032, savings: 2000000, pocketMoney: 400000, livingExpense: 450000, emergencyFund: 335032 },
+      { year: '2025년', month: '9월',  remain: 3308756, savings: 2000000, pocketMoney: 400000, livingExpense: 450000, emergencyFund: 458756 },
       { year: '2025년', month: '10월', remain: 3446183, savings: 2000000, pocketMoney: 400000, livingExpense: 450000, emergencyFund: 596183 },
       { year: '2025년', month: '11월', remain: 2666798, savings: 2000000, pocketMoney: 300000, livingExpense: 300000, emergencyFund: 66798 },
       { year: '2025년', month: '12월', remain: 2239954, savings: 2000000, pocketMoney: 100000, livingExpense: 100000, emergencyFund: 39954 },
@@ -1506,11 +1506,11 @@
       { year: '2026년', month: '2월',  remain: 5017806, savings: 2000000, pocketMoney: 500000, livingExpense: 500000, emergencyFund: 2017806 },
       { year: '2026년', month: '3월',  remain: 4352638, savings: 2000000, pocketMoney: 500000, livingExpense: 500000, emergencyFund: 1352638 },
       { year: '2026년', month: '4월',  remain: 3363067, savings: 2000000, pocketMoney: 450000, livingExpense: 450000, emergencyFund: 463067 },
-      { year: '2026년', month: '5월',  remain: 2885673, savings: 2000000, pocketMoney: 281926, livingExpense: 63240,  emergencyFund: 540507 },
-      { year: '2026년', month: '6월',  remain: 3016017, savings: 2000000, pocketMoney: 148878, livingExpense: 0,      emergencyFund: 867139 },
-      { year: '2026년', month: '7월',  remain: 2215661, savings: 2000000, pocketMoney: 140046, livingExpense: 31500,  emergencyFund: 44115 },
-      { year: '2026년', month: '8월',  remain: 1025473, savings: 600000,  pocketMoney: 258414, livingExpense: 113760, emergencyFund: 53299 },
-      { year: '2026년', month: '9월',  remain: 1366167, savings: 0,       pocketMoney: 442900, livingExpense: 49000,  emergencyFund: 874267 }
+      { year: '2026년', month: '5월',  remain: 2885673, savings: 2000000, pocketMoney: 450000, livingExpense: 400000, emergencyFund: 35673 },
+      { year: '2026년', month: '6월',  remain: 3016017, savings: 2000000, pocketMoney: 450000, livingExpense: 400000, emergencyFund: 166017 },
+      { year: '2026년', month: '7월',  remain: 2215661, savings: 2000000, pocketMoney: 100000, livingExpense: 100000, emergencyFund: 15661 },
+      { year: '2026년', month: '8월',  remain: 1025473, savings: 600000,  pocketMoney: 200000, livingExpense: 200000, emergencyFund: 25473 },
+      { year: '2026년', month: '9월',  remain: 1366167, savings: 0,       pocketMoney: 450000, livingExpense: 450000, emergencyFund: 466167 }
     ];
 
     let currentSummaryTableMode = 'costs'; // 'costs' | 'flow'
@@ -1657,50 +1657,31 @@
         savings = 0;
       }
 
-      // B. 용돈
+      // B. 용돈 (수식 배제: 카드 합산 수식 제거, 순수 시트 입력 숫자만 반영)
       let pocketMoney = 0;
       if (overrides.pocketMoney !== undefined) {
         pocketMoney = overrides.pocketMoney;
       } else if (sheetExp && sheetExp.pocketMoney !== undefined) {
         pocketMoney = sheetExp.pocketMoney;
       } else {
-        // 자동집계 (선준 개인 용돈 + 다정 용돈)
-        let autoSeonjun = 0;
-        if (rawData && rawData.seonjun) {
-          autoSeonjun = rawData.seonjun
-            .filter(r => r.month === month && r.type === '선준')
-            .reduce((sum, r) => sum + (r.amount || 0), 0);
-        }
-        let autoDajeong = 0;
-        if (rawData && rawData.dajeong && rawData.dajeong.items) {
-          autoDajeong = rawData.dajeong.items
-            .filter(r => r.item && r.item.includes('용돈'))
-            .reduce((sum, r) => sum + (r.amount || 0), 0);
-        }
-        pocketMoney = autoSeonjun + autoDajeong;
+        pocketMoney = 0;
       }
 
-      // C. 생활비
+      // C. 생활비 (수식 배제: 카드 합산 수식 제거, 순수 시트 입력 숫자만 반영)
       let livingExpense = 0;
       if (overrides.livingExpense !== undefined) {
         livingExpense = overrides.livingExpense;
       } else if (sheetExp && sheetExp.livingExpense !== undefined) {
         livingExpense = sheetExp.livingExpense;
       } else {
-        let autoLiving = 0;
-        if (rawData && rawData.seonjun) {
-          autoLiving = rawData.seonjun
-            .filter(r => r.month === month && r.type === '생활비')
-            .reduce((sum, r) => sum + (r.amount || 0), 0);
-        }
-        livingExpense = autoLiving;
+        livingExpense = 0;
       }
 
-      // D. 비상금 (잔금에서 적금, 용돈, 생활비를 뺀 최종 잔여액이 곧 비상금!)
+      // D. 비상금 (수식 배제: 시트 기재 숫자 우선, 공란일 경우 잔금 - (적금+용돈+생활비) 산출)
       let emergencyFund = 0;
       if (overrides.emergencyFund !== undefined) {
         emergencyFund = overrides.emergencyFund;
-      } else if (sheetExp && sheetExp.emergencyFund !== undefined) {
+      } else if (sheetExp && sheetExp.emergencyFund !== undefined && sheetExp.emergencyFund > 0) {
         emergencyFund = sheetExp.emergencyFund;
       } else {
         emergencyFund = Math.max(0, remainBalance - (savings + pocketMoney + livingExpense));

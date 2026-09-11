@@ -186,6 +186,12 @@ function getMonthlyExpensesData(ss) {
       var results = [];
       var currentYear = '';
 
+      // 잔금 열 위치를 기준으로 이전 열이 월, 그 앞 열이 연도
+      if (colRemain > 1) {
+        colMonth = colRemain - 1;
+        colYear = colRemain - 2;
+      }
+
       for (var r = headerRowIdx + 1; r < values.length; r++) {
         var row = values[r];
         var yVal = String(row[colYear] || '').trim();
@@ -198,13 +204,15 @@ function getMonthlyExpensesData(ss) {
         if (!mVal || (mVal.indexOf('월') === -1 && isNaN(parseInt(mVal, 10)))) continue;
         var monthStr = mVal.indexOf('월') === -1 ? mVal + '월' : mVal;
 
+        // 수식 없이 시트 셀에 입력된 순수 숫자만 추출
         var remain = colRemain !== -1 ? parseNumeric(row[colRemain]) : 0;
         var savings = colSavings !== -1 ? parseNumeric(row[colSavings]) : 0;
         var pocket = colPocket !== -1 ? parseNumeric(row[colPocket]) : 0;
         var living = colLiving !== -1 ? parseNumeric(row[colLiving]) : 0;
         var emergency = colEmergency !== -1 ? parseNumeric(row[colEmergency]) : 0;
 
-        if (emergency === 0 && remain > 0) {
+        // 비상금 셀이 비어있거나 0일 경우: 잔금 - (적금 + 용돈 + 생활비)
+        if (emergency === 0 && remain > 0 && (savings > 0 || pocket > 0 || living > 0)) {
           emergency = Math.max(0, remain - (savings + pocket + living));
         }
 
