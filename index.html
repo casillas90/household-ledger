@@ -2013,13 +2013,14 @@
     }
 
     // ==============================================
-    // 아이폰 공유 모달 제어 로직 (swdjsj 지원)
+    // 아이폰 공유 모달 제어 로직 (GitHub Pages & swdjsj)
     // ==============================================
+    const GITHUB_PAGES_URL = "https://casillas90.github.io/household-ledger/";
     const SWDJSJ_URL = "http://swdjsj.local:8080";
     const MAC_HOST_URL = "http://gimseonjun-ui-MacBookAir.local:8080";
     const MACBOOK_LOCAL_IP_URL = "http://192.168.20.34:8080";
 
-    let activeShareUrl = SWDJSJ_URL;
+    let activeShareUrl = GITHUB_PAGES_URL;
 
     function setShareUrl(url) {
       activeShareUrl = url;
@@ -2304,14 +2305,14 @@ function doGet(e) {
           <div>
             <label class="text-xs font-bold text-slate-700 block mb-1.5">접속 주소 선택 (아이폰용)</label>
             <div class="flex flex-wrap gap-1.5">
-              <button type="button" onclick="setShareUrl('http://swdjsj.local:8080')" data-url="http://swdjsj.local:8080" class="share-url-chip px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition">
-                ✨ swdjsj.local:8080 (추천)
+              <button type="button" onclick="setShareUrl('https://casillas90.github.io/household-ledger/')" data-url="https://casillas90.github.io/household-ledger/" class="share-url-chip px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition">
+                🌐 인터넷 웹링크 (언제 어디서나 접속 가능)
+              </button>
+              <button type="button" onclick="setShareUrl('http://swdjsj.local:8080')" data-url="http://swdjsj.local:8080" class="share-url-chip px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+                ✨ swdjsj.local:8080
               </button>
               <button type="button" onclick="setShareUrl('http://gimseonjun-ui-MacBookAir.local:8080')" data-url="http://gimseonjun-ui-MacBookAir.local:8080" class="share-url-chip px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
-                💻 맥북 기본 호스트
-              </button>
-              <button type="button" onclick="setShareUrl('http://192.168.20.34:8080')" data-url="http://192.168.20.34:8080" class="share-url-chip px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
-                🔢 숫자 IP 주소
+                💻 맥북 호스트
               </button>
             </div>
           </div>
