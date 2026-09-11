@@ -172,18 +172,18 @@
               전체비용 및 잔금 계산 흐름
             </h3>
             <p class="text-xs text-slate-500 mt-0.5">
-              급여에서 <strong class="text-rose-600">월 전체비용</strong>(카드값 합계)을 차감하고, 다정 남은금액과 합산하여 <strong class="text-amber-600">월 잔금</strong>을 산출합니다.
+              급여에서 <strong class="text-rose-600">선준 카드값</strong>을 차감하고, 다정 남은금액과 합산하여 <strong class="text-amber-600">월 잔금</strong>을 산출합니다.
             </p>
           </div>
           <!-- 공식 비주얼 배너 -->
           <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-medium text-slate-600 overflow-x-auto whitespace-nowrap">
             <span class="px-2 py-1 bg-emerald-100/70 text-emerald-800 rounded-lg font-bold">1. 급여</span>
             <span class="text-slate-400 font-bold">−</span>
-            <span class="px-2 py-1 bg-rose-100/70 text-rose-800 rounded-lg font-bold">2. 월 전체비용</span>
+            <span class="px-2 py-1 bg-rose-100/70 text-rose-800 rounded-lg font-bold">2. 선준 카드값</span>
             <span class="text-slate-400 font-bold">=</span>
-            <span class="px-2 py-1 bg-blue-100/70 text-blue-800 rounded-lg font-bold">3. 급여−카드결제</span>
+            <span class="px-2 py-1 bg-blue-100/70 text-blue-800 rounded-lg font-bold">3. 급여−선준카드값</span>
             <span class="text-slate-300 mx-1">|</span>
-            <span class="px-2 py-1 bg-blue-100/70 text-blue-800 rounded-lg font-bold">3. 급여−카드결제</span>
+            <span class="px-2 py-1 bg-blue-100/70 text-blue-800 rounded-lg font-bold">3. 급여−선준카드값</span>
             <span class="text-slate-400 font-bold">+</span>
             <span class="px-2 py-1 bg-purple-100/70 text-purple-800 rounded-lg font-bold">4. 다정남은금액</span>
             <span class="text-slate-400 font-bold">=</span>
@@ -210,30 +210,30 @@
             </div>
           </div>
 
-          <!-- 2. 월 전체비용 (카드값 총합계) -->
+          <!-- 2. 선준 카드값 -->
           <div class="bg-gradient-to-b from-white to-rose-50/20 p-4 sm:p-5 rounded-2xl border border-rose-200/80 hover:border-rose-300 transition shadow-xs flex flex-col justify-between">
             <div>
               <div class="flex justify-between items-center text-slate-400">
-                <span class="text-xs font-bold text-rose-800">2. 월 전체비용</span>
-                <button type="button" onclick="openAllocEditModal('totalCost')" title="카드값 수정" class="w-6 h-6 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center text-[10px] transition cursor-pointer">
+                <span class="text-xs font-bold text-rose-800">2. 선준 카드값</span>
+                <button type="button" onclick="openAllocEditModal('totalCost')" title="선준 카드값 수정" class="w-6 h-6 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center text-[10px] transition cursor-pointer">
                   <i class="fa-solid fa-pen-to-square"></i>
                 </button>
               </div>
               <span id="summaryTotalCost" class="text-lg sm:text-xl font-extrabold text-rose-600 mt-2 block tracking-tight">-</span>
             </div>
             <div class="flex items-center justify-between mt-2 pt-1 border-t border-rose-100/60">
-              <span class="text-[10px] text-rose-600 font-medium" id="summaryTotalCostSub">한 달 카드값 합계</span>
+              <span class="text-[10px] text-rose-600 font-medium" id="summaryTotalCostSub">선준 카드 청구금액</span>
               <button type="button" onclick="openAllocEditModal('totalCost')" class="text-[10px] font-bold text-rose-700 hover:underline flex items-center gap-0.5 cursor-pointer">
                 <i class="fa-solid fa-pen-to-square"></i> 카드값 수정
               </button>
             </div>
           </div>
 
-          <!-- 3. 급여 - 카드결제금액 -->
+          <!-- 3. 급여 - 선준 카드값 -->
           <div class="bg-gradient-to-b from-white to-blue-50/20 p-4 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-blue-300 transition shadow-xs flex flex-col justify-between">
             <div>
               <div class="flex justify-between items-center text-slate-400">
-                <span class="text-xs font-semibold text-blue-900">3. 급여 − 카드결제</span>
+                <span class="text-xs font-semibold text-blue-900">3. 급여 − 선준 카드값</span>
                 <span class="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-[10px]">
                   <i class="fa-solid fa-scale-balanced"></i>
                 </span>
@@ -241,7 +241,7 @@
               <span id="summarySalaryMinusCard" class="text-lg sm:text-xl font-extrabold text-blue-700 mt-2 block tracking-tight">-</span>
             </div>
             <div class="mt-2 pt-1 border-t border-blue-50">
-              <span class="text-[10px] text-blue-600 font-medium inline-block bg-blue-50 px-2 py-0.5 rounded-md" id="summarySalaryMinusCardSub">급여 − 전체비용 차액</span>
+              <span class="text-[10px] text-blue-600 font-medium inline-block bg-blue-50 px-2 py-0.5 rounded-md" id="summarySalaryMinusCardSub">급여 − 선준카드값 차액</span>
             </div>
           </div>
 
@@ -274,7 +274,7 @@
               <span id="summaryRemainBalance" class="text-lg sm:text-xl font-extrabold text-amber-700 mt-2 block tracking-tight">-</span>
             </div>
             <div class="flex items-center justify-between mt-2 pt-1 border-t border-amber-100">
-              <span class="text-[10px] text-amber-700 font-medium inline-block bg-amber-100/60 px-2 py-0.5 rounded-md" id="summaryRemainRatio">(급여-카드) + 다정</span>
+              <span class="text-[10px] text-amber-700 font-medium inline-block bg-amber-100/60 px-2 py-0.5 rounded-md" id="summaryRemainRatio">(급여-선준카드) + 다정</span>
               <button type="button" onclick="openAllocEditModal('remain')" class="text-[10px] font-bold text-amber-800 hover:underline cursor-pointer">직접수정</button>
             </div>
           </div>
@@ -550,7 +550,7 @@
                 📋 월별 비용표
               </button>
               <button type="button" id="btnModeFlow" onclick="setSummaryTableMode('flow')" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition">
-                📊 급여/카드 흐름
+                📊 급여 / 선준카드 흐름
               </button>
             </div>
             <span class="text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl font-medium" id="summaryCountText">
@@ -800,9 +800,9 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
           <div>
             <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-              <i class="fa-solid fa-chart-line text-indigo-500"></i> 월별 급여 vs 카드결제 vs 총비용 추이
+              <i class="fa-solid fa-chart-line text-indigo-500"></i> 월별 급여 vs 선준 카드값 vs 월 잔금 추이
             </h3>
-            <p class="text-xs text-slate-400 mt-0.5">수입과 지출의 변동성을 시각적으로 확인합니다</p>
+            <p class="text-xs text-slate-400 mt-0.5">수입(급여)과 선준 카드값 지출, 그리고 남은 월 잔금의 변동성을 시각적으로 확인합니다</p>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="updateTrendChartRange(6)" id="btnRange6" class="px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 transition">최근 6개월</button>
@@ -1923,21 +1923,35 @@
         );
       }
 
-      // 2. 월 전체비용 (한 달 카드결제 총비용)
+      // 2. 선준 카드값 (구: 월 전체비용)
       let totalCost = 0;
       if (overrides.totalCost !== undefined) {
         totalCost = overrides.totalCost;
-      } else if (row.cardTotal && row.cardTotal > 0) {
-        totalCost = row.cardTotal;
-      } else if (row.totalCost && row.totalCost > 0) {
-        totalCost = row.totalCost;
-      } else if (salary > 0 && row.salaryMinusCard > 0) {
-        totalCost = Math.max(0, salary - row.salaryMinusCard);
-      } else if (row.pocketMoney > 0 && !sheetExp) {
-        totalCost = row.pocketMoney;
+      } else {
+        // 선준 카드값 산출:
+        // 1순위: 선준 카드 내역(getAllSeonjunItems)의 실시간 합계가 있다면 최우선 적용
+        let seonjunSum = 0;
+        try {
+          const sItems = (typeof getAllSeonjunItems === 'function') ? getAllSeonjunItems() : [];
+          seonjunSum = sItems
+            .filter(it => (it.year === year || !it.year) && it.month === month)
+            .reduce((sum, cur) => sum + (cur.amount || 0), 0);
+        } catch (e) {}
+
+        if (seonjunSum > 0) {
+          totalCost = seonjunSum;
+        } else if (salary > 0 && row.salaryMinusCard > 0 && salary > row.salaryMinusCard) {
+          totalCost = salary - row.salaryMinusCard;
+        } else if (row.pocketMoney > 0 && !sheetExp) {
+          totalCost = row.pocketMoney;
+        } else if (row.cardTotal && row.cardTotal > 0) {
+          totalCost = row.cardTotal;
+        } else if (row.totalCost && row.totalCost > 0) {
+          totalCost = row.totalCost;
+        }
       }
 
-      // 3. 급여 - 카드결제금액
+      // 3. 급여 - 선준 카드값
       let salaryMinusCard = 0;
       if (overrides.salaryMinusCard !== undefined) {
         salaryMinusCard = overrides.salaryMinusCard;
@@ -2016,6 +2030,7 @@
         month,
         salary,
         totalCost,
+        seonjunCardCost: totalCost,
         salaryMinusCard,
         dajeongRemain,
         remainBalance,
@@ -2415,14 +2430,14 @@
         });
 
       } else {
-        // [모드 2: 급여/카드/전체비용 흐름표]
+        // [모드 2: 급여/선준카드/잔금 흐름표]
         if (thead) {
           thead.innerHTML = `
             <tr class="bg-slate-100 text-slate-800 border-b border-slate-300">
               <th class="py-2.5 px-3 border border-slate-300">연도/월</th>
               <th class="py-2.5 px-3 border border-slate-300 text-right text-emerald-700 font-bold">급여</th>
-              <th class="py-2.5 px-3 border border-slate-300 text-right text-rose-600 font-bold">월 전체비용</th>
-              <th class="py-2.5 px-3 border border-slate-300 text-right text-blue-600 font-semibold">급여−카드</th>
+              <th class="py-2.5 px-3 border border-slate-300 text-right text-rose-600 font-bold">선준 카드값</th>
+              <th class="py-2.5 px-3 border border-slate-300 text-right text-blue-600 font-semibold">급여−선준카드</th>
               <th class="py-2.5 px-3 border border-slate-300 text-right text-purple-600">다정남은금액</th>
               <th class="py-2.5 px-3 border border-slate-300 text-right text-amber-700 font-bold">월 잔금</th>
               <th class="py-2.5 px-3 border border-slate-300 text-right text-emerald-600 font-semibold">적금</th>
@@ -2506,7 +2521,7 @@
       const hintEl = document.getElementById("allocModalAutoHint");
 
       const titles = {
-        totalCost: "월 전체 카드비용 수정",
+        totalCost: "선준 카드값 수정",
         salary: "총 급여 (수입) 수정",
         dajeongRemain: "다정 남은금액 수정",
         remain: "월 잔금 직접 지정",
@@ -2517,7 +2532,7 @@
       };
 
       const autoHints = {
-        totalCost: `한 달 총 카드 결제 금액입니다. (수정 시 월 잔금 및 비상금에 자동 연동)`,
+        totalCost: `선준 카드 청구 금액입니다. (수정 시 급여−선준카드값 및 월 잔금에 자동 연동)`,
         salary: `월 급여 수입입니다. (수정 시 잔금에 자동 연동)`,
         dajeongRemain: `다정 남은금액입니다. (수정 시 잔금에 자동 연동)`,
         remain: `월 잔금을 직접 지정합니다. (비상금 = 잔금 − 적금 − 용돈 − 생활비)`,
@@ -2633,7 +2648,7 @@
       closeAllocEditModal();
       renderSummaryCardsOnly();
       renderSummaryTable();
-      showToast(`${curr.month} ${currentEditingAllocKey === 'totalCost' ? '카드값' : '금액'}이 ${amount.toLocaleString()}원으로 저장되었습니다!`);
+      showToast(`${curr.month} ${currentEditingAllocKey === 'totalCost' ? '선준 카드값' : '금액'}이 ${amount.toLocaleString()}원으로 저장되었습니다!`);
     }
 
     // ==========================================
@@ -3627,7 +3642,7 @@
             },
             {
               type: 'bar',
-              label: '월 전체비용 (지출)',
+              label: '선준 카드값 (지출)',
               data: totalCosts,
               backgroundColor: 'rgba(244, 63, 94, 0.75)',
               borderRadius: 6,
@@ -4709,7 +4724,7 @@ function doGet(e) {
             <input type="text" id="newMonthSalary" oninput="onNumberOnlyInput(this); onAddMonthFieldChange();" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 text-right" placeholder="0" />
           </div>
           <div>
-            <label class="text-[11px] font-bold text-rose-600 block mb-1">카드값 (월 전체비용)</label>
+            <label class="text-[11px] font-bold text-rose-600 block mb-1">선준 카드값</label>
             <input type="text" id="newMonthTotalCost" oninput="onNumberOnlyInput(this); onAddMonthFieldChange();" class="w-full px-3 py-2 bg-white border border-rose-200 rounded-xl text-xs font-bold text-rose-600 outline-none focus:border-rose-500 text-right" placeholder="0" />
           </div>
         </div>

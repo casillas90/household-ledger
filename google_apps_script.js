@@ -454,10 +454,10 @@ function doPost(e) {
           d.salary || 0,
           d.salaryMinusCard || 0,
           d.dajeongRemain || 0,
-          d.totalCost || 0,
-          d.cardTotal || d.totalCost || 0,
+          d.remain || 0,
+          d.cardTotal || 0,
           d.savings || 0,
-          d.pocketMoney || 0,
+          d.totalCost || d.pocketMoney || 0,
           d.livingExpense || 0,
           d.emergencyFund || 0
         ]);
@@ -534,8 +534,10 @@ function doPost(e) {
           var sMonth = String(sValues[sr][1] || '').trim();
           if ((sYear === targetYear || !targetYear) && sMonth === targetMonth) {
             if (field === 'salary') sheetSummary.getRange(sr + 1, 3).setValue(amount);
-            else if (field === 'totalCost') sheetSummary.getRange(sr + 1, 7).setValue(amount);
+            else if (field === 'salaryMinusCard') sheetSummary.getRange(sr + 1, 4).setValue(amount);
             else if (field === 'dajeongRemain') sheetSummary.getRange(sr + 1, 5).setValue(amount);
+            else if (field === 'remain') sheetSummary.getRange(sr + 1, 6).setValue(amount);
+            else if (field === 'totalCost') sheetSummary.getRange(sr + 1, 9).setValue(amount);
             break;
           }
         }
