@@ -10,21 +10,25 @@ function doGet(e) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // 1. 월별 요약 시트
-    var summaryData = getSummaryData(ss);
+    // 1. 월별 비용 시트 (잔금, 적금, 용돈, 생활비, 비상금)
+    var monthlyExpensesData = getMonthlyExpensesData(ss);
+
+    // 2. 월별 요약 시트
+    var summaryData = getSummaryData(ss, monthlyExpensesData);
     
-    // 2. 다정 시트
+    // 3. 다정 시트
     var dajeongData = getDajeongData(ss);
     
-    // 3. 선준 시트
+    // 4. 선준 시트
     var seonjunData = getSeonjunData(ss);
     
-    // 4. 주식 시트 (다정 & 선준 보유 주식 실시간 동기화)
+    // 5. 주식 시트 (다정 & 선준 보유 주식 실시간 동기화)
     var stockData = getStockData(ss);
     
     var result = {
       status: "success",
       summary: summaryData,
+      monthlyExpenses: monthlyExpensesData,
       dajeong: dajeongData,
       seonjun: seonjunData,
       stocks: stockData
@@ -132,6 +136,98 @@ function getStockData(ss) {
     items: items,
     updatedAt: new Date().toISOString()
   };
+}
+
+/**
+ * 월별 비용 시트 (잔금, 적금, 용돈, 생활비, 비상금) 자동 추출 함수
+ * '월별 비용', '월별비용', '비용' 등의 시트명이나 헤더를 검색하여 추출합니다.
+ */
+function getMonthlyExpensesData(ss) {
+  var sheet = ss.getSheetByName('월별 비용') || 
+              ss.getSheetByName('월별비용') || 
+              ss.getSheetByName('비용') ||
+              ss.getSheetByName('월별 요약') ||
+              ss.getSheetByName('요약');
+  
+  var sheetsToSearch = sheet ? [sheet] : [];
+  var allSheets = ss.getSheets();
+  for (var s = 0; s < allSheets.length; s++) {
+    if (!sheet || allSheets[s].getName() !== sheet.getName()) {
+      sheetsToSearch.push(allSheets[s]);
+    }
+  }
+
+  for (var i = 0; i < sheetsToSearch.length; i++) {
+    var curSheet = sheetsToSearch[i];
+    var values = curSheet.getDataRange().getValues();
+    if (!values || values.length < 2) continue;
+
+    var headerRowIdx = -1;
+    var colRemain = -1, colSavings = -1, colPocket = -1, colLiving = -1, colEmergency = -1;
+    var colYear = 0, colMonth = 1;
+
+    for (var r = 0; r < Math.min(10, values.length); r++) {
+      var rowStr = values[r].map(function(c) { return String(c || '').trim(); });
+      for (var c = 0; c < rowStr.length; c++) {
+        var val = rowStr[c];
+        if (val === '잔금') colRemain = c;
+        else if (val === '적금') colSavings = c;
+        else if (val === '용돈') colPocket = c;
+        else if (val === '생활비') colLiving = c;
+        else if (val === '비상금') colEmergency = c;
+      }
+      if (colRemain !== -1 && colSavings !== -1 && colPocket !== -1) {
+        headerRowIdx = r;
+        break;
+      }
+    }
+
+    if (headerRowIdx !== -1) {
+      var results = [];
+      var currentYear = '';
+
+      for (var r = headerRowIdx + 1; r < values.length; r++) {
+        var row = values[r];
+        var yVal = String(row[colYear] || '').trim();
+        var mVal = String(row[colMonth] || '').trim();
+
+        if (yVal && (yVal.indexOf('년') !== -1 || /^\d{4}$/.test(yVal))) {
+          currentYear = yVal.indexOf('년') === -1 ? yVal + '년' : yVal;
+        }
+
+        if (!mVal || (mVal.indexOf('월') === -1 && isNaN(parseInt(mVal, 10)))) continue;
+        var monthStr = mVal.indexOf('월') === -1 ? mVal + '월' : mVal;
+
+        var remain = colRemain !== -1 ? parseNumeric(row[colRemain]) : 0;
+        var savings = colSavings !== -1 ? parseNumeric(row[colSavings]) : 0;
+        var pocket = colPocket !== -1 ? parseNumeric(row[colPocket]) : 0;
+        var living = colLiving !== -1 ? parseNumeric(row[colLiving]) : 0;
+        var emergency = colEmergency !== -1 ? parseNumeric(row[colEmergency]) : 0;
+
+        if (emergency === 0 && remain > 0) {
+          emergency = Math.max(0, remain - (savings + pocket + living));
+        }
+
+        if (remain > 0 || savings > 0 || pocket > 0 || living > 0) {
+          results.push({
+            year: currentYear || '2024년',
+            month: monthStr,
+            remain: remain,
+            savings: savings,
+            pocketMoney: pocket,
+            livingExpense: living,
+            emergencyFund: emergency
+          });
+        }
+      }
+
+      if (results.length > 0) {
+        return results;
+      }
+    }
+  }
+
+  return [];
 }
 
 function parseNumeric(val) {
