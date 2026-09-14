@@ -421,9 +421,9 @@
                   <i class="fa-solid fa-shield-halved text-[11px] sm:text-xs text-amber-600 shrink-0"></i>
                   <span class="text-[11px] sm:text-xs font-bold truncate">4. 비상금 (최종 잔여액)</span>
                 </div>
-                <span class="text-[9px] sm:text-[10px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shrink-0">
-                  <i class="fa-solid fa-lock text-[8px]"></i> 자동
-                </span>
+                <button onclick="openAllocEditModal('emergencyFund')" class="text-[10px] sm:text-[11px] font-semibold text-slate-500 hover:text-amber-700 transition flex items-center gap-0.5 bg-white px-1.5 py-0.5 rounded-lg border border-slate-200 shadow-2xs cursor-pointer shrink-0">
+                  <i class="fa-solid fa-pen text-[9px]"></i> 수정
+                </button>
               </div>
               <span id="allocEmergency" class="text-base sm:text-xl font-black text-amber-700 block tracking-tight tabular-nums truncate">0원</span>
             </div>
@@ -621,10 +621,88 @@
     <!-- ============================================== -->
     <div id="tab-cards" class="tab-content hidden space-y-6">
       
+      <!-- 💳 [최상단 전면 배치] 선준 카드값 할부 분석 및 남은 할부 전체 금액 섹션 -->
+      <div class="bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/60 p-4 sm:p-6 rounded-3xl border border-indigo-200/80 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-indigo-100 pb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs shadow-xs shrink-0">
+              <i class="fa-solid fa-layer-group"></i>
+            </span>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="text-sm sm:text-base font-bold text-slate-900">선준 카드 할부 분석표</h4>
+                <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-extrabold rounded-md">실시간 연동</span>
+              </div>
+              <p class="text-[11px] text-slate-500">이번 달 청구액과 앞으로 남은 할부 전체 금액을 항목별로 분석합니다.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 self-end sm:self-auto">
+            <span class="text-[11px] text-slate-400 font-medium">기준 월:</span>
+            <span id="installmentMonthBadge" class="text-xs font-bold text-indigo-700 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 shadow-2xs">9월</span>
+          </div>
+        </div>
+
+        <!-- 할부 요약 카드 그리드 4종 -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+          <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs">
+            <span class="text-[10px] sm:text-[11px] font-semibold text-slate-400 block">이번달 할부 청구액</span>
+            <span id="instSummaryCurrentTotal" class="text-sm sm:text-base font-black text-rose-600 tabular-nums block mt-0.5">0원</span>
+            <span id="instSummaryCurrentCount" class="text-[10px] text-slate-400 mt-0.5 block">0건 진행 중</span>
+          </div>
+          <div class="bg-white p-3 rounded-xl border border-purple-100 shadow-2xs">
+            <span class="text-[10px] sm:text-[11px] font-semibold text-purple-600 block">남은 할부 전체 금액</span>
+            <span id="instSummaryRemainingTotal" class="text-sm sm:text-base font-black text-purple-700 tabular-nums block mt-0.5">0원</span>
+            <span class="text-[10px] text-purple-400 mt-0.5 block">향후 도래 잔액</span>
+          </div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+            <span class="text-[10px] sm:text-[11px] font-semibold text-slate-500 block">할부 원금 총액</span>
+            <span id="instSummaryGrandTotal" class="text-sm sm:text-base font-black text-slate-800 tabular-nums block mt-0.5">0원</span>
+            <span class="text-[10px] text-slate-400 mt-0.5 block">진행 할부 전체합</span>
+          </div>
+          <div class="bg-white p-3 rounded-xl border border-emerald-100 shadow-2xs">
+            <span class="text-[10px] sm:text-[11px] font-semibold text-emerald-600 block">이번달 완납 예정</span>
+            <span id="instSummaryCompletedCount" class="text-sm sm:text-base font-black text-emerald-700 tabular-nums block mt-0.5">0건</span>
+            <span class="text-[10px] text-emerald-500 mt-0.5 block">다음달부터 청구 종료</span>
+          </div>
+        </div>
+
+        <!-- 할부 상세 분석 표 -->
+        <div class="bg-white rounded-xl border border-indigo-100/80 overflow-hidden shadow-2xs">
+          <div class="p-2.5 bg-slate-50/90 border-b border-slate-100 flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-list-check text-indigo-600"></i> 할부 항목별 금액 & 남은 잔액 표
+            </span>
+            <span class="text-[10px] text-slate-400 flex items-center gap-1 sm:hidden">
+              <i class="fa-solid fa-arrows-left-right"></i> 좌우 스크롤
+            </span>
+          </div>
+          <div class="overflow-x-auto touch-scroll max-h-[260px]">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 sticky top-0 bg-slate-50 z-10 text-[11px]">
+                <tr>
+                  <th class="py-2 px-2.5 whitespace-nowrap">카드사</th>
+                  <th class="py-2 px-2.5 whitespace-nowrap">항목명</th>
+                  <th class="py-2 px-2 whitespace-nowrap text-center">구분</th>
+                  <th class="py-2 px-2.5 whitespace-nowrap text-right text-rose-600 font-bold">이번 달 청구</th>
+                  <th class="py-2 px-2.5 whitespace-nowrap text-right text-purple-600 font-bold">남은 할부 금액</th>
+                  <th class="py-2 px-2.5 whitespace-nowrap text-right text-slate-700 font-bold">전체 금액</th>
+                  <th class="py-2 px-2.5 whitespace-nowrap text-center">회차 / 진행률</th>
+                  <th class="py-2 px-2.5 whitespace-nowrap text-center">상태</th>
+                </tr>
+              </thead>
+              <tbody id="seonjunInstallmentTableBody" class="divide-y divide-slate-100 font-medium text-xs">
+                <!-- 동적 렌더링 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 아래: 좌우 분할 (아래 왼쪽: 다정 카드값 / 아래 오른쪽: 선준 카드값) -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- 왼쪽: 다정 카드값 (5컬럼) -->
-        <div class="lg:col-span-5 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
+        <!-- 아래 왼쪽: 다정 카드값 (6컬럼) -->
+        <div class="lg:col-span-6 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
           <div>
             <div class="flex justify-between items-center mb-3">
               <div class="flex items-center gap-2">
@@ -726,86 +804,9 @@
           </div>
         </div>
 
-        <!-- 오른쪽: 선준 카드값 (7컬럼) -->
-        <div class="lg:col-span-7 bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
+        <!-- 아래 오른쪽: 선준 카드값 (6컬럼) -->
+        <div class="lg:col-span-6 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
           <div>
-            <!-- 💳 [신설] 선준 카드값 할부 분석 및 남은 할부 전체 금액 섹션 -->
-            <div class="mb-5 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/60 p-3.5 sm:p-5 rounded-2xl border border-indigo-200/80 shadow-xs space-y-3">
-              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-indigo-100 pb-2.5">
-                <div class="flex items-center gap-2">
-                  <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs shadow-xs shrink-0">
-                    <i class="fa-solid fa-layer-group"></i>
-                  </span>
-                  <div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <h4 class="text-sm sm:text-base font-bold text-slate-900">선준 카드 할부 분석표</h4>
-                      <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-extrabold rounded-md">실시간 연동</span>
-                    </div>
-                    <p class="text-[11px] text-slate-500">이번 달 청구액과 앞으로 남은 할부 전체 금액을 항목별로 분석합니다.</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1.5 self-end sm:self-auto">
-                  <span class="text-[11px] text-slate-400 font-medium">기준 월:</span>
-                  <span id="installmentMonthBadge" class="text-xs font-bold text-indigo-700 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 shadow-2xs">9월</span>
-                </div>
-              </div>
-
-              <!-- 할부 요약 카드 그리드 4종 -->
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
-                <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs">
-                  <span class="text-[10px] sm:text-[11px] font-semibold text-slate-400 block">이번달 할부 청구액</span>
-                  <span id="instSummaryCurrentTotal" class="text-sm sm:text-base font-black text-rose-600 tabular-nums block mt-0.5">0원</span>
-                  <span id="instSummaryCurrentCount" class="text-[10px] text-slate-400 mt-0.5 block">0건 진행 중</span>
-                </div>
-                <div class="bg-white p-3 rounded-xl border border-purple-100 shadow-2xs">
-                  <span class="text-[10px] sm:text-[11px] font-semibold text-purple-600 block">남은 할부 전체 금액</span>
-                  <span id="instSummaryRemainingTotal" class="text-sm sm:text-base font-black text-purple-700 tabular-nums block mt-0.5">0원</span>
-                  <span class="text-[10px] text-purple-400 mt-0.5 block">향후 도래 잔액</span>
-                </div>
-                <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
-                  <span class="text-[10px] sm:text-[11px] font-semibold text-slate-500 block">할부 원금 총액</span>
-                  <span id="instSummaryGrandTotal" class="text-sm sm:text-base font-black text-slate-800 tabular-nums block mt-0.5">0원</span>
-                  <span class="text-[10px] text-slate-400 mt-0.5 block">진행 할부 전체합</span>
-                </div>
-                <div class="bg-white p-3 rounded-xl border border-emerald-100 shadow-2xs">
-                  <span class="text-[10px] sm:text-[11px] font-semibold text-emerald-600 block">이번달 완납 예정</span>
-                  <span id="instSummaryCompletedCount" class="text-sm sm:text-base font-black text-emerald-700 tabular-nums block mt-0.5">0건</span>
-                  <span class="text-[10px] text-emerald-500 mt-0.5 block">다음달부터 청구 종료</span>
-                </div>
-              </div>
-
-              <!-- 할부 상세 분석 표 -->
-              <div class="bg-white rounded-xl border border-indigo-100/80 overflow-hidden shadow-2xs">
-                <div class="p-2.5 bg-slate-50/90 border-b border-slate-100 flex items-center justify-between text-xs">
-                  <span class="font-bold text-slate-700 flex items-center gap-1.5">
-                    <i class="fa-solid fa-list-check text-indigo-600"></i> 할부 항목별 금액 & 남은 잔액 표
-                  </span>
-                  <span class="text-[10px] text-slate-400 flex items-center gap-1 sm:hidden">
-                    <i class="fa-solid fa-arrows-left-right"></i> 좌우 스크롤
-                  </span>
-                </div>
-                <div class="overflow-x-auto touch-scroll max-h-[260px]">
-                  <table class="w-full text-xs text-left">
-                    <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 sticky top-0 bg-slate-50 z-10 text-[11px]">
-                      <tr>
-                        <th class="py-2 px-2.5 whitespace-nowrap">카드사</th>
-                        <th class="py-2 px-2.5 whitespace-nowrap">항목명</th>
-                        <th class="py-2 px-2 whitespace-nowrap text-center">구분</th>
-                        <th class="py-2 px-2.5 whitespace-nowrap text-right text-rose-600 font-bold">이번 달 청구</th>
-                        <th class="py-2 px-2.5 whitespace-nowrap text-right text-purple-600 font-bold">남은 할부 금액</th>
-                        <th class="py-2 px-2.5 whitespace-nowrap text-right text-slate-700 font-bold">전체 금액</th>
-                        <th class="py-2 px-2.5 whitespace-nowrap text-center">회차 / 진행률</th>
-                        <th class="py-2 px-2.5 whitespace-nowrap text-center">상태</th>
-                      </tr>
-                    </thead>
-                    <tbody id="seonjunInstallmentTableBody" class="divide-y divide-slate-100 font-medium text-xs">
-                      <!-- 동적 렌더링 -->
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
               <div class="flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full bg-indigo-600 ring-4 ring-indigo-100"></span>
@@ -1548,22 +1549,17 @@
               <table class="w-full text-xs sm:text-sm border-collapse text-center" id="houseSavingsPhotoTable">
                 <thead>
                   <tr class="bg-slate-100 text-slate-800 font-bold border-b border-slate-300 text-xs sm:text-sm">
-                    <th class="py-3 px-2 sm:px-3 border border-slate-300 cursor-pointer hover:bg-violet-50 transition" onclick="openStockModal()" title="클릭 시 보유 주식 상세 보기">
-                      <span class="flex items-center justify-center gap-1">
-                        주식
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-violet-500"></i>
-                      </span>
-                    </th>
-                    <th class="py-3 px-2 sm:px-3 border border-slate-300">보증금</th>
-                    <th class="py-3 px-2 sm:px-3 border border-slate-300">주택청약</th>
-                    <th class="py-3 px-2 sm:px-3 border border-slate-300">월별 저축</th>
-                    <th class="py-3 px-2 sm:px-3 border border-slate-300">파킹통장</th>
-                    <th class="py-3 px-2 sm:px-3 border border-slate-300 bg-emerald-100/70 text-emerald-900 font-black">저축합계</th>
+                    <th class="py-3 px-2 sm:px-3 border border-slate-300 text-violet-800 bg-violet-50/50">주식</th>
+                    <th class="py-3 px-2 sm:px-3 border border-slate-300 text-blue-800 bg-blue-50/50">보증금</th>
+                    <th class="py-3 px-2 sm:px-3 border border-slate-300 text-amber-800 bg-amber-50/50">주택청약</th>
+                    <th class="py-3 px-2 sm:px-3 border border-slate-300 text-emerald-800 bg-emerald-50/50">월별 저축</th>
+                    <th class="py-3 px-2 sm:px-3 border border-slate-300 text-slate-700 bg-slate-50">파킹통장</th>
+                    <th class="py-3 px-2 sm:px-3 border border-slate-300 bg-emerald-100 text-emerald-900 font-black">저축합계</th>
                   </tr>
                 </thead>
                 <tbody class="font-bold text-slate-900 tabular-nums">
                   <tr class="bg-white hover:bg-slate-50/80 transition">
-                    <td id="tableHouseStock" class="py-3.5 px-2 sm:px-3 border border-slate-300 text-violet-700 cursor-pointer hover:underline" onclick="openStockModal()">16,973,686</td>
+                    <td id="tableHouseStock" class="py-3.5 px-2 sm:px-3 border border-slate-300 text-violet-700 font-bold">16,973,686</td>
                     <td id="tableHouseDeposit" class="py-3.5 px-2 sm:px-3 border border-slate-300 text-slate-800">29,921,000</td>
                     <td id="tableHouseSub" class="py-3.5 px-2 sm:px-3 border border-slate-300 text-slate-800">8,850,000</td>
                     <td id="tableHouseMonthly" class="py-3.5 px-2 sm:px-3 border border-slate-300 text-slate-800">36,060,000</td>
@@ -1598,10 +1594,8 @@
                 <span class="text-slate-500 font-medium">보증금</span>
                 <span id="houseDepositRatio" class="font-bold text-blue-600">32.6%</span>
               </div>
-              <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center cursor-pointer hover:bg-violet-50 transition" onclick="openStockModal()">
-                <span class="text-slate-500 font-medium flex items-center gap-1">
-                  주식 <span id="stockSyncBadge" class="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1 rounded-full">연동</span>
-                </span>
+              <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center">
+                <span class="text-slate-500 font-medium">주식</span>
                 <span id="houseStockRatio" class="font-bold text-violet-600">18.5%</span>
               </div>
               <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center">
@@ -2028,10 +2022,10 @@
       { year: '2026년', month: '6월',  remain: 3016017, savings: 2400000, pocketMoney: 151122, livingExpense: 300000, emergencyFund: 164895 },
       { year: '2026년', month: '7월',  remain: 2215661, savings: 1500000, pocketMoney: 159954, livingExpense: 268500, emergencyFund: 287207 },
       { year: '2026년', month: '8월',  remain: 1025473, savings: 1100000, pocketMoney: 41586,  livingExpense: 186240, emergencyFund: -302353 },
-      { year: '2026년', month: '9월',  remain: 1366167, savings: 950000,  pocketMoney: 251000, livingExpense: 135734, emergencyFund: 29433 },
-      { year: '2026년', month: '10월', remain: 1832611, savings: 0,       pocketMoney: 160750, livingExpense: 0,      emergencyFund: 1671861 },
-      { year: '2026년', month: '11월', remain: 0,       savings: 0,       pocketMoney: 0,      livingExpense: 0,      emergencyFund: 0 },
-      { year: '2026년', month: '12월', remain: 0,       savings: 0,       pocketMoney: 0,      livingExpense: 0,      emergencyFund: 0 }
+      { year: '2026년', month: '9월',  remain: 1366167, savings: 950000,  pocketMoney: 135734, livingExpense: 251000, emergencyFund: 29433 },
+      { year: '2026년', month: '10월', remain: 1832611, savings: 0,       pocketMoney: 300000, livingExpense: 300000, emergencyFund: 1232611 },
+      { year: '2026년', month: '11월', remain: 0,       savings: 0,       pocketMoney: 300000, livingExpense: 300000, emergencyFund: -600000 },
+      { year: '2026년', month: '12월', remain: 0,       savings: 0,       pocketMoney: 300000, livingExpense: 300000, emergencyFund: -600000 }
     ];
 
     let currentSummaryTableMode = 'costs'; // 'costs' | 'flow'
@@ -2056,13 +2050,6 @@
       try {
         const data = JSON.parse(localStorage.getItem(STORAGE_KEY_ALLOC_OVERRIDES) || "{}");
         let changed = false;
-        // 비상금은 잔금-적금-용돈-생활비로 고정이므로 비상금 오버라이드 제거
-        Object.keys(data).forEach(k => {
-          if (data[k] && data[k].emergencyFund !== undefined) {
-            delete data[k].emergencyFund;
-            changed = true;
-          }
-        });
         // 2026년 잘못 주입되었던 SMS 수수료(300원) 및 이전 오염값 자동 정제
         Object.keys(data).forEach(k => {
           if (data[k]) {
@@ -2070,16 +2057,27 @@
               delete data[k].savings;
               changed = true;
             }
-            if ([1258597, 1261314, 1323865, 1528602, 1310092, 1329759, 1506900, 2138575, 1951482, 1667389, 281926, 258414].includes(data[k].pocketMoney)) {
+            if ([1258597, 1261314, 1323865, 1528602, 1310092, 1329759, 1506900, 2138575, 1951482, 1667389, 281926, 258414, 160750].includes(data[k].pocketMoney)) {
               delete data[k].pocketMoney;
               changed = true;
             }
           }
         });
-        // 과거 잘못 저장되었을 수 있는 구버전 2026년 9월 임시 오버라이드 정제 (용돈 135734, 450000 등)
+        // 2026년 9월에 잘못 저장된 용돈 251,000원 또는 450,000원이 있다면 정제하여 원래 값(135,734원)으로 복원
         if (data["2026년_9월"]) {
-          if (data["2026년_9월"].savings === 0 || data["2026년_9월"].pocketMoney === 450000 || data["2026년_9월"].pocketMoney === 135734) {
+          if (data["2026년_9월"].pocketMoney === 251000 || data["2026년_9월"].pocketMoney === 450000) {
             delete data["2026년_9월"].pocketMoney;
+            changed = true;
+          }
+          if (data["2026년_9월"].livingExpense === 135734) {
+            delete data["2026년_9월"].livingExpense;
+            changed = true;
+          }
+        }
+        // 2026년 10월에 잘못 저장된 임시 배분값 정제하여 원래 값(용돈 30만, 생활비 30만) 복원
+        if (data["2026년_10월"]) {
+          if (data["2026년_10월"].pocketMoney === 160750) {
+            delete data["2026년_10월"].pocketMoney;
             changed = true;
           }
         }
@@ -2392,8 +2390,18 @@
         livingSource = "시트 데이터";
       }
 
-      // D. 비상금 (고정 공식: 잔금 - 적금 - 용돈 - 생활비)
-      const emergencyFund = remainBalance - (savings + pocketMoney + livingExpense);
+      // D. 비상금 (고정 공식: 잔금 - 적금 - 용돈 - 생활비, 단 사용자가 직접 수정한 값이 있을 경우 우선 적용)
+      let emergencyFund = 0;
+      if (overrides.emergencyFund !== undefined) {
+        emergencyFund = overrides.emergencyFund;
+      } else {
+        const monthlyEmergency = getMonthlyEmergencyAmount(year, month);
+        if (monthlyEmergency !== 0 && monthlyEmergency !== undefined && monthlyEmergency !== null) {
+          emergencyFund = monthlyEmergency;
+        } else {
+          emergencyFund = remainBalance - (savings + pocketMoney + livingExpense);
+        }
+      }
 
       return {
         year,
@@ -2878,10 +2886,6 @@
     let currentEditingAllocKey = null;
 
     function openAllocEditModal(key) {
-      if (key === 'emergencyFund') {
-        alert("비상금은 [잔금 − 적금 − 용돈 − 생활비]로 자동 고정 계산됩니다.\n적금, 용돈, 생활비 금액을 수정하시면 비상금이 자동으로 계산됩니다.");
-        return;
-      }
       const list = getValidSummaryList();
       if (list.length === 0) return;
       const idx = selectedSummaryIndex >= 0 && selectedSummaryIndex < list.length 
@@ -4998,47 +5002,14 @@
     let stockItemsData = [];
 
     function processStockFromRawData() {
-      if (!rawData) return;
-
-      let detectedStock = null;
-      let detectedItems = [];
-
-      // 1. rawData.stocks 또는 rawData.stock 확인
-      const stockSource = rawData.stocks || rawData.stock || rawData.stockData;
-      if (stockSource !== undefined && stockSource !== null) {
-        if (typeof stockSource === 'number') {
-          detectedStock = stockSource;
-        } else if (typeof stockSource === 'object') {
-          if (Array.isArray(stockSource)) {
-            detectedItems = stockSource;
-            detectedStock = stockSource.reduce((acc, cur) => acc + (Number(cur.amount || cur.value || cur.price) || 0), 0);
-          } else {
-            detectedStock = Number(stockSource.total !== undefined ? stockSource.total : (stockSource.totalAmount || stockSource.amount)) || 0;
-            detectedItems = stockSource.items || stockSource.list || [];
-            if (detectedStock === 0 && detectedItems.length > 0) {
-              detectedStock = detectedItems.reduce((acc, cur) => acc + (Number(cur.amount || cur.value) || 0), 0);
-            }
-          }
-        }
-      }
-
-      if (detectedStock !== null && !isNaN(detectedStock) && detectedStock > 0) {
-        HOUSE_DATA.savings.stock = detectedStock;
-        stockItemsData = detectedItems;
-        isStockSyncedFromSheet = true;
-      }
-
-      // 2. 구글 시트에서 직접 넘어온 내집마련 플랜 4번 저축 자산 객체가 있을 경우 동기화
+      // 1. 구글 시트에서 직접 넘어온 내집마련 플랜 4번 저축 자산 객체가 있을 경우 동기화
       if (rawData && rawData.houseSavings) {
         const hs = rawData.houseSavings;
         if (hs.deposit !== undefined && hs.deposit > 0) HOUSE_DATA.savings.deposit = Number(hs.deposit);
         if (hs.housingSubscription !== undefined && hs.housingSubscription > 0) HOUSE_DATA.savings.housingSubscription = Number(hs.housingSubscription);
         if (hs.monthlySavings !== undefined && hs.monthlySavings > 0) HOUSE_DATA.savings.monthlySavings = Number(hs.monthlySavings);
         if (hs.parkingAccount !== undefined) HOUSE_DATA.savings.parkingAccount = Number(hs.parkingAccount);
-        if (hs.stock !== undefined && hs.stock > 0) {
-          HOUSE_DATA.savings.stock = Number(hs.stock);
-          isStockSyncedFromSheet = true;
-        }
+        if (hs.stock !== undefined && hs.stock > 0) HOUSE_DATA.savings.stock = Number(hs.stock);
       }
 
       // 총 저축합계 동적 재계산 (수식: 주식 + 보증금 + 주택청약 + 월별 저축 + 파킹통장)
@@ -5135,18 +5106,6 @@
       if (bSub) {
         bSub.style.width = subRatio + "%";
         bSub.title = `주택청약 (${subRatio}%)`;
-      }
-
-      // 연동 상태 뱃지
-      const badge = document.getElementById("stockSyncBadge");
-      if (badge) {
-        if (isStockSyncedFromSheet) {
-          badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>시트 실시간 연동';
-          badge.className = 'text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded-full inline-flex items-center gap-1';
-        } else {
-          badge.innerHTML = '<i class="fa-solid fa-arrows-rotate text-[9px]"></i>시트 연동 대기';
-          badge.className = 'text-[10px] font-bold text-violet-700 bg-violet-100 px-1.5 py-0.2 rounded-full inline-flex items-center gap-1';
-        }
       }
     }
 
@@ -5405,134 +5364,14 @@
     }
 
     // ==============================================
-    // 주식 자산 상세 모달 제어 로직
     // ==============================================
-    function openStockModal() {
-      const modal = document.getElementById("stockModal");
-      if (!modal) return;
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
-
-      const modalTotal = document.getElementById("stockModalTotal");
-      if (modalTotal) modalTotal.innerText = (HOUSE_DATA.savings.stock || 0).toLocaleString() + "원";
-
-      const total = HOUSE_DATA.savings.total || 1;
-      const ratio = (((HOUSE_DATA.savings.stock || 0) / total) * 100).toFixed(1);
-      const ratioText = document.getElementById("stockModalRatioText");
-      if (ratioText) ratioText.innerText = ratio + "%";
-
-      const badge = document.getElementById("stockModalStatusBadge");
-      if (badge) {
-        if (isStockSyncedFromSheet) {
-          badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>시트 실시간 연동 중';
-          badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-400/30';
-        } else {
-          badge.innerHTML = '<i class="fa-solid fa-arrows-rotate text-[9px]"></i>시트 연동 대기 (기본값 반영)';
-          badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold text-violet-200 bg-violet-900/60 px-2 py-0.5 rounded-full border border-violet-400/30';
-        }
-      }
-
-      renderStockItemsTable();
-    }
-
-    function closeStockModal() {
-      const modal = document.getElementById("stockModal");
-      if (!modal) return;
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
-    }
-
-    function renderStockItemsTable() {
-      const container = document.getElementById("stockModalItemsList");
-      if (!container) return;
-
-      if (stockItemsData && stockItemsData.length > 0) {
-        let html = `
-          <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
-            <table class="w-full text-xs text-left">
-              <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
-                <tr>
-                  <th class="py-2.5 px-3">소유자</th>
-                  <th class="py-2.5 px-3">종목명</th>
-                  <th class="py-2.5 px-3 text-right">수량</th>
-                  <th class="py-2.5 px-3 text-right">평가금액</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100">
-        `;
-
-        stockItemsData.forEach(item => {
-          const isDajeong = item.owner && item.owner.includes('다정');
-          const isSeonjun = item.owner && item.owner.includes('선준');
-          const ownerBadge = isDajeong 
-            ? '<span class="px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 font-extrabold text-[10px]">다정</span>'
-            : (isSeonjun 
-              ? '<span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-extrabold text-[10px]">선준</span>'
-              : '<span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px]">공통</span>');
-
-          html += `
-            <tr class="hover:bg-slate-50/80 transition">
-              <td class="py-2.5 px-3 whitespace-nowrap">${ownerBadge}</td>
-              <td class="py-2.5 px-3 font-bold text-slate-800">${item.name || '-'}</td>
-              <td class="py-2.5 px-3 text-right text-slate-500">${item.quantity ? item.quantity.toLocaleString() + '주' : '-'}</td>
-              <td class="py-2.5 px-3 text-right font-extrabold text-violet-700">${Number(item.amount || 0).toLocaleString()}원</td>
-            </tr>
-          `;
-        });
-
-        html += `</tbody></table></div>`;
-        container.innerHTML = html;
-      } else {
-        container.innerHTML = `
-          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2 text-xs text-slate-600">
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-slate-800">현재 반영된 평가금액</span>
-              <span class="text-sm font-extrabold text-violet-700">${(HOUSE_DATA.savings.stock || 0).toLocaleString()}원</span>
-            </div>
-            <p class="text-[11px] text-slate-500 leading-relaxed">
-              구글 시트의 <strong>[주식]</strong> 시트 총 평가금액이 내 집 마련 플랜 및 부족액 계산에 실시간 반영됩니다.
-              아래 Apps Script 코드를 구글 시트에 적용하시면 다정 & 선준 개별 종목별 상세 목록까지 즉시 연동됩니다.
-            </p>
-          </div>
-        `;
-      }
-    }
-
-    async function copyAppsScriptCode() {
-      const code = `// Google Apps Script (Code.gs)
-// 구글 스프레드시트 ➔ 확장 프로그램 ➔ Apps Script 에 아래 코드를 붙여넣고 [새 배포] 하세요.
-function doGet(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var summaryData = getSummaryData(ss);
-  var dajeongData = getDajeongData(ss);
-  var seonjunData = getSeonjunData(ss);
-  var stockData = getStockData(ss);
-  return ContentService.createTextOutput(JSON.stringify({
-    status: "success",
-    summary: summaryData,
-    dajeong: dajeongData,
-    seonjun: seonjunData,
-    stocks: stockData
-  })).setMimeType(ContentService.MimeType.JSON);
-}`;
-      try {
-        await navigator.clipboard.writeText(code);
-        alert("Apps Script 코드가 복사되었습니다! 전체 코드는 프로젝트 폴더의 google_apps_script.js 파일에서 확인하실 수 있습니다.");
-      } catch(e) {
-        alert("프로젝트 폴더의 google_apps_script.js 파일을 확인해 주세요.");
-      }
-    }
-
-    function toggleAppsScriptCodeBox() {
-      const box = document.getElementById("appsScriptCodeBox");
-      if (box) box.classList.toggle("hidden");
-    }
+    // ESC 키로 모달 닫기 및 모달 배경 클릭 시 닫기
+    // ==============================================
 
     // ESC 키로 모달 닫기 및 모달 배경 클릭 시 닫기
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         closeShareModal();
-        closeStockModal();
         closeAllocEditModal();
         closeAddMonthModal();
         closeAddCardItemModal();
@@ -5541,8 +5380,6 @@ function doGet(e) {
     document.addEventListener("click", (e) => {
       const shareM = document.getElementById("shareModal");
       if (shareM && e.target === shareM) closeShareModal();
-      const stockM = document.getElementById("stockModal");
-      if (stockM && e.target === stockM) closeStockModal();
       const allocM = document.getElementById("allocEditModal");
       if (allocM && e.target === allocM) closeAllocEditModal();
       const monthM = document.getElementById("addMonthModal");
@@ -5720,104 +5557,7 @@ function doGet(e) {
     </div>
   </div>
 
-  <!-- ============================================== -->
-  <!-- 📈 다정 & 선준 주식 자산 상세 및 연동 모달 -->
-  <!-- ============================================== -->
-  <div id="stockModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 transition-all duration-300">
-    <div class="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
-      
-      <!-- 모달 헤더 -->
-      <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-50 to-violet-50/50">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center text-base shadow-sm shadow-violet-200">
-            <i class="fa-solid fa-arrow-trend-up"></i>
-          </div>
-          <div>
-            <h3 class="text-base sm:text-lg font-black text-slate-900">다정 & 선준 주식 자산 상세</h3>
-            <p class="text-xs text-slate-500">구글 스프레드시트 [주식] 시트 실시간 자동 연동</p>
-          </div>
-        </div>
-        <button onclick="closeStockModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition">
-          <i class="fa-solid fa-xmark text-sm"></i>
-        </button>
-      </div>
 
-      <!-- 모달 본문 (스크롤 가능) -->
-      <div class="p-5 sm:p-6 overflow-y-auto space-y-5">
-        
-        <!-- 1. 총 평가금액 KPI 배너 -->
-        <div class="bg-gradient-to-br from-violet-600 via-indigo-700 to-purple-800 text-white rounded-2xl p-5 shadow-sm space-y-2 relative overflow-hidden">
-          <div class="flex justify-between items-start">
-            <span class="text-xs font-semibold text-violet-200">현재 주식 총 평가금액</span>
-            <span id="stockModalStatusBadge" class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-400/30">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              시트 연동
-            </span>
-          </div>
-          <span id="stockModalTotal" class="text-2xl sm:text-3xl font-black block tracking-tight">16,974,329원</span>
-          <p class="text-[11px] text-violet-200">
-            내 집 마련 보유 자산의 <strong id="stockModalRatioText">18.5%</strong>를 차지하며, 입주 잔금 산정에 자동 합산됩니다.
-          </p>
-        </div>
-
-        <!-- 2. 세부 보유 종목 내역 -->
-        <div class="space-y-2">
-          <div class="flex justify-between items-center">
-            <label class="text-xs font-bold text-slate-700">보유 종목 내역 (다정 & 선준)</label>
-            <span class="text-[11px] text-slate-400">구글 시트 '주식' 시트 데이터</span>
-          </div>
-          <div id="stockModalItemsList">
-            <!-- 동적 렌더링 -->
-          </div>
-        </div>
-
-        <!-- 3. 실시간 구글 시트 연동 안내 및 원클릭 복사 카드 -->
-        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-          <div class="flex items-start gap-2.5">
-            <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs shrink-0 mt-0.5">
-              <i class="fa-solid fa-code"></i>
-            </span>
-            <div class="flex-1">
-              <h4 class="text-xs font-bold text-slate-800">구글 시트 수정 즉시 대시보드 반영</h4>
-              <p class="text-[11px] text-slate-500 mt-0.5">
-                구글 시트의 [주식] 시트에서 금액을 변경하고 대시보드 [새로고침]을 누르면 즉시 동기화됩니다.
-              </p>
-            </div>
-          </div>
-          
-          <div class="flex flex-wrap gap-2 pt-1 border-t border-slate-200/80">
-            <button onclick="copyAppsScriptCode()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs">
-              <i class="fa-regular fa-copy"></i>
-              <span>Apps Script 코드 복사</span>
-            </button>
-            <button onclick="toggleAppsScriptCodeBox()" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold rounded-xl transition flex items-center gap-1">
-              <i class="fa-solid fa-circle-question text-slate-400"></i>
-              <span>연동 방법 상세</span>
-            </button>
-          </div>
-
-          <div id="appsScriptCodeBox" class="hidden text-[11px] text-slate-600 bg-white p-3 rounded-xl border border-slate-200 space-y-2">
-            <p class="font-bold text-slate-800">📌 1분 연동 방법:</p>
-            <ol class="list-decimal pl-4 space-y-1 text-[11px]">
-              <li>구글 스프레드시트 ➔ 상단 <strong>[확장 프로그램] ➔ [Apps Script]</strong> 클릭</li>
-              <li>폴더 내 <strong>google_apps_script.js</strong> 내용 전체 복사하여 붙여넣기</li>
-              <li>우측 상단 <strong>[배포] ➔ [새 배포] ➔ [웹 앱]</strong> (액세스: 모든 사용자) 배포!</li>
-            </ol>
-            <p class="text-[10px] text-indigo-600">자세한 내용은 폴더 내 <strong>STOCK_SYNC_GUIDE.md</strong> 파일에서도 확인 가능합니다.</p>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- 모달 푸터 -->
-      <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end">
-        <button onclick="closeStockModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-700 text-xs font-bold rounded-xl transition">
-          닫기
-        </button>
-      </div>
-
-    </div>
-  </div>
   <!-- ============================================== -->
   <!-- ✏️ 잔금 배분 항목 (적금/용돈/생활비/비상금) 금액 수정 모달 -->
   <!-- ============================================== -->
