@@ -595,6 +595,8 @@
               총 0개월
             </span>
           </div>
+        </div>
+
         <!-- 모바일 가로 스크롤 안내 힌트 -->
         <div class="flex items-center justify-between text-[11px] text-slate-400 px-1 sm:hidden">
           <span><i class="fa-solid fa-arrows-left-right text-indigo-500"></i> 좌우로 스크롤하여 전체 열 확인</span>
@@ -1890,7 +1892,7 @@
         });
       }
 
-      // 3. rawData.summary 데이터 매핑 병합 (월별 요약 시트: salary, totalCost, salaryMinusCard, dajeongRemain, cardTotal 및 배분 데이터)
+      // 3. rawData.summary 데이터 매핑 병합 (월별 요약 시트: salary, totalCost, salaryMinusCard, dajeongRemain, cardTotal)
       if (rawData && rawData.summary && Array.isArray(rawData.summary)) {
         rawData.summary.forEach(item => {
           const y = item.year || '2024년';
@@ -1904,10 +1906,6 @@
             if (item.salaryMinusCard !== undefined) baseMonths[idx].salaryMinusCard = item.salaryMinusCard;
             if (item.dajeongRemain !== undefined) baseMonths[idx].dajeongRemain = item.dajeongRemain;
             if (item.cardTotal !== undefined) baseMonths[idx].cardTotal = item.cardTotal;
-            if (item.savings !== undefined && item.savings > 0) baseMonths[idx].savings = item.savings;
-            if (item.pocketMoney !== undefined && item.pocketMoney > 0) baseMonths[idx].pocketMoney = item.pocketMoney;
-            if (item.livingExpense !== undefined && item.livingExpense > 0) baseMonths[idx].livingExpense = item.livingExpense;
-            if (item.emergencyFund !== undefined && item.emergencyFund !== 0) baseMonths[idx].emergencyFund = item.emergencyFund;
             
             if (item.remain !== undefined && item.remain !== null && item.remain !== 0) {
               baseMonths[idx].remain = item.remain;
@@ -1924,10 +1922,10 @@
               dajeongRemain: item.dajeongRemain || 0,
               cardTotal: item.cardTotal || 0,
               remain: item.remain || calcRemain || 0,
-              savings: item.savings || 0,
-              pocketMoney: item.pocketMoney || 0,
-              livingExpense: item.livingExpense || 0,
-              emergencyFund: item.emergencyFund || 0
+              savings: 0,
+              pocketMoney: 0,
+              livingExpense: 0,
+              emergencyFund: calcRemain || 0
             });
           }
         });
@@ -2024,7 +2022,7 @@
       // 2026년
       { year: '2026년', month: '1월',  remain: 3210615, savings: 2000000, pocketMoney: 236100, livingExpense: 400000, emergencyFund: 574515 },
       { year: '2026년', month: '2월',  remain: 5017806, savings: 2300000, pocketMoney: 185780, livingExpense: 357449, emergencyFund: 2174577 },
-      { year: '2026년', month: '3월',  remain: 4352638, savings: 2300000, pocketMoney: 230800, livingExpense: 349035, emergencyFund: 1322803 },
+      { year: '2026년', month: '3월',  remain: 4352638, savings: 2300000, pocketMoney: 230800, livingExpense: 349035, emergencyFund: 1472803 },
       { year: '2026년', month: '4월',  remain: 3363067, savings: 2500000, pocketMoney: 190482, livingExpense: 400000, emergencyFund: 272585 },
       { year: '2026년', month: '5월',  remain: 2885673, savings: 2400000, pocketMoney: 118074, livingExpense: 336760, emergencyFund: 30839 },
       { year: '2026년', month: '6월',  remain: 3016017, savings: 2400000, pocketMoney: 151122, livingExpense: 300000, emergencyFund: 164895 },
@@ -2063,6 +2061,19 @@
           if (data[k] && data[k].emergencyFund !== undefined) {
             delete data[k].emergencyFund;
             changed = true;
+          }
+        });
+        // 2026년 잘못 주입되었던 SMS 수수료(300원) 및 이전 오염값 자동 정제
+        Object.keys(data).forEach(k => {
+          if (data[k]) {
+            if (data[k].savings === 300) {
+              delete data[k].savings;
+              changed = true;
+            }
+            if ([1258597, 1261314, 1323865, 1528602, 1310092, 1329759, 1506900, 2138575, 1951482, 1667389, 281926, 258414].includes(data[k].pocketMoney)) {
+              delete data[k].pocketMoney;
+              changed = true;
+            }
           }
         });
         // 과거 잘못 저장되었을 수 있는 구버전 2026년 9월 임시 오버라이드 정제 (용돈 135734, 450000 등)
@@ -2323,7 +2334,7 @@
         savings = 0;
       }
 
-      // B. 용돈 (구글시트 참고하여 실시간 자동 연동)
+      // B. 용돈 (구글시트 '월별 비용' 기준 100% 일치 + 미기재 신규 월 실시간 카드 연동)
       let pocketMoney = 0;
       let pocketSource = "시트 데이터";
       if (overrides.pocketMoney !== undefined) {
@@ -2336,6 +2347,10 @@
           pocketSource = "구글시트 월별비용";
         }
       }
+      if (!pocketMoney && sheetExp && sheetExp.pocketMoney !== undefined && sheetExp.pocketMoney > 0) {
+        pocketMoney = sheetExp.pocketMoney;
+        pocketSource = "시트 기본값";
+      }
       if (!pocketMoney && sheetAutoPocket > 0) {
         pocketMoney = sheetAutoPocket;
         if (autoSeonjunPocket > 0 && autoDajeongPocket > 0) {
@@ -2346,15 +2361,12 @@
           pocketSource = `다정 용돈 (${autoDajeongPocket.toLocaleString()}원)`;
         }
       }
-      if (!pocketMoney && sheetExp && sheetExp.pocketMoney !== undefined) {
-        pocketMoney = sheetExp.pocketMoney;
-        pocketSource = "시트 기본값";
-      } else if (!pocketMoney && row.pocketMoney !== undefined) {
+      if (!pocketMoney && row.pocketMoney !== undefined && row.pocketMoney > 0) {
         pocketMoney = row.pocketMoney;
         pocketSource = "시트 데이터";
       }
 
-      // C. 생활비 (구글시트 참고하여 실시간 자동 연동)
+      // C. 생활비 (구글시트 '월별 비용' 기준 100% 일치 + 미기재 신규 월 실시간 카드 연동)
       let livingExpense = 0;
       let livingSource = "시트 데이터";
       if (overrides.livingExpense !== undefined) {
@@ -2367,14 +2379,15 @@
           livingSource = "구글시트 월별비용";
         }
       }
+      if (!livingExpense && sheetExp && sheetExp.livingExpense !== undefined && sheetExp.livingExpense > 0) {
+        livingExpense = sheetExp.livingExpense;
+        livingSource = "시트 기본값";
+      }
       if (!livingExpense && autoLiving > 0) {
         livingExpense = autoLiving;
         livingSource = `선준 생활비 (${autoLiving.toLocaleString()}원)`;
       }
-      if (!livingExpense && sheetExp && sheetExp.livingExpense !== undefined) {
-        livingExpense = sheetExp.livingExpense;
-        livingSource = "시트 기본값";
-      } else if (!livingExpense && row.livingExpense !== undefined) {
+      if (!livingExpense && row.livingExpense !== undefined && row.livingExpense > 0) {
         livingExpense = row.livingExpense;
         livingSource = "시트 데이터";
       }
