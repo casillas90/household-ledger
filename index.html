@@ -1193,7 +1193,7 @@
 
           <div class="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
             <span class="text-[11px] text-slate-300 font-medium block">현재 보유 저축합계</span>
-            <span id="houseTopKpiSavings" class="text-lg sm:text-xl font-black text-emerald-300 mt-1 block tracking-tight">91,807,567원</span>
+            <span id="houseTopKpiSavings" class="text-lg sm:text-xl font-black text-emerald-300 mt-1 block tracking-tight">91,806,924원</span>
             <span class="text-[10px] text-emerald-200 mt-1 block">주식+보증금+청약+월저축 등</span>
           </div>
         </div>
@@ -1522,6 +1522,7 @@
         </div>
 
         <!-- 우측: 4. 현재 보유 자산 & 저축 현황 (lg:col-span-5) -->
+        <!-- 우측: 4. 현재 보유 자산 & 저축 현황 (lg:col-span-5) - 사진 형식 100% 반영 -->
         <div class="lg:col-span-5 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm space-y-4 flex flex-col justify-between">
           <div>
             <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
@@ -1531,125 +1532,89 @@
                 </span>
                 <div>
                   <h3 class="text-base font-bold text-slate-900">4. 현재 보유 자산 및 저축</h3>
-                  <p class="text-xs text-slate-400">내 집 마련을 위해 모아둔 가용 자산</p>
+                  <p class="text-xs text-slate-400">구글 시트 내집마련 플랜 4번 실시간 자산 현황표</p>
                 </div>
               </div>
               <div class="text-right">
                 <span class="text-[10px] text-slate-400 block font-medium">총 저축합계</span>
-                <span id="houseTotalSavingsTop" class="text-lg font-black text-emerald-600">91,807,567원</span>
+                <span id="houseTotalSavingsTop" class="text-base sm:text-lg font-black text-emerald-600">91,806,924원</span>
               </div>
             </div>
 
-            <!-- 자산 비중 막대 -->
-            <div class="space-y-1.5 mb-4">
+            <!-- 사진 형태 100% 일치: 6열 저축 자산 테이블 -->
+            <div class="overflow-x-auto rounded-2xl border border-slate-300 shadow-xs touch-scroll mb-4">
+              <table class="w-full text-xs sm:text-sm border-collapse text-center" id="houseSavingsPhotoTable">
+                <thead>
+                  <tr class="bg-slate-100 text-slate-800 font-bold border-b border-slate-300 text-xs sm:text-sm">
+                    <th class="py-3 px-2 sm:px-3 border border-slate-300 cursor-pointer hover:bg-violet-50 transition" onclick="openStockModal()" title="클릭 시 보유 주식 상세 보기">
+                      <span class="flex items-center justify-center gap-1">
+                        주식
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-violet-500"></i>
+                      </span>
+                    </th>
+                    <th class="py-3 px-2 sm:px-3 border border-slate-300">보증금</th>
+                    <th class="py-3 px-2 sm:px-3 border border-slate-300">주택청약</th>
+                    <th class="py-3 px-2 sm:px-3 border border-slate-300">월별 저축</th>
+                    <th class="py-3 px-2 sm:px-3 border border-slate-300">파킹통장</th>
+                    <th class="py-3 px-2 sm:px-3 border border-slate-300 bg-emerald-100/70 text-emerald-900 font-black">저축합계</th>
+                  </tr>
+                </thead>
+                <tbody class="font-bold text-slate-900 tabular-nums">
+                  <tr class="bg-white hover:bg-slate-50/80 transition">
+                    <td id="tableHouseStock" class="py-3.5 px-2 sm:px-3 border border-slate-300 text-violet-700 cursor-pointer hover:underline" onclick="openStockModal()">16,973,686</td>
+                    <td id="tableHouseDeposit" class="py-3.5 px-2 sm:px-3 border border-slate-300 text-slate-800">29,921,000</td>
+                    <td id="tableHouseSub" class="py-3.5 px-2 sm:px-3 border border-slate-300 text-slate-800">8,850,000</td>
+                    <td id="tableHouseMonthly" class="py-3.5 px-2 sm:px-3 border border-slate-300 text-slate-800">36,060,000</td>
+                    <td id="tableHouseParking" class="py-3.5 px-2 sm:px-3 border border-slate-300 text-slate-800">2,238</td>
+                    <td id="tableHouseTotal" class="py-3.5 px-2 sm:px-3 border border-slate-300 text-emerald-700 bg-emerald-50/80 font-black text-sm sm:text-base">91,806,924</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- 자산 비중 프로그레스 바 -->
+            <div class="space-y-1.5 mb-3.5">
               <div class="flex justify-between text-xs text-slate-500 font-semibold">
                 <span>자산 포트폴리오 비중</span>
                 <span id="houseTotalSavingsHeader">총 9,181만원</span>
               </div>
               <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex">
-                <div id="barMonthlySavings" class="h-full bg-emerald-500 transition-all duration-500" style="width: 39.4%" title="월별 저축 (39.4%)"></div>
-                <div id="barDeposit" class="h-full bg-blue-500 transition-all duration-500" style="width: 32.5%" title="전세보증금 (32.5%)"></div>
+                <div id="barMonthlySavings" class="h-full bg-emerald-500 transition-all duration-500" style="width: 39.3%" title="월별 저축 (39.3%)"></div>
+                <div id="barDeposit" class="h-full bg-blue-500 transition-all duration-500" style="width: 32.6%" title="전세보증금 (32.6%)"></div>
                 <div id="barStock" class="h-full bg-violet-500 transition-all duration-500" style="width: 18.5%" title="주식 (18.5%)"></div>
                 <div id="barHousingSubscription" class="h-full bg-amber-500 transition-all duration-500" style="width: 9.6%" title="주택청약 (9.6%)"></div>
               </div>
             </div>
 
-            <!-- 세부 자산 리스트 -->
-            <div class="space-y-2">
-              <div class="flex justify-between items-center p-2.5 bg-slate-50 hover:bg-slate-100/80 rounded-xl transition">
-                <div class="flex items-center gap-2.5">
-                  <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-wallet"></i>
-                  </span>
-                  <div>
-                    <span class="text-xs font-bold text-slate-800 block">월별 누적 저축</span>
-                    <span class="text-[10px] text-slate-400">매월 모아온 가계 저축</span>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <span class="text-xs font-bold text-slate-800">36,160,000원</span>
-                  <span id="houseMonthlySavingsRatio" class="text-[10px] text-emerald-600 block">39.4%</span>
-                </div>
+            <!-- 세부 자산 항목 요약 칩 (컴팩트 카드) -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center">
+                <span class="text-slate-500 font-medium">월별저축</span>
+                <span id="houseMonthlySavingsRatio" class="font-bold text-emerald-600">39.3%</span>
               </div>
-
-              <div class="flex justify-between items-center p-2.5 bg-slate-50 hover:bg-slate-100/80 rounded-xl transition">
-                <div class="flex items-center gap-2.5">
-                  <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-key"></i>
-                  </span>
-                  <div>
-                    <span class="text-xs font-bold text-slate-800 block">전세 보증금</span>
-                    <span class="text-[10px] text-slate-400">입주시 회수 예정 보증금</span>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <span class="text-xs font-bold text-slate-800">29,821,000원</span>
-                  <span id="houseDepositRatio" class="text-[10px] text-blue-600 block">32.5%</span>
-                </div>
+              <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center">
+                <span class="text-slate-500 font-medium">보증금</span>
+                <span id="houseDepositRatio" class="font-bold text-blue-600">32.6%</span>
               </div>
-
-              <!-- 주식 자산 (구글시트 실시간 연동) -->
-              <div class="p-2.5 bg-slate-50 hover:bg-slate-100/80 rounded-xl transition border border-transparent hover:border-violet-300">
-                <div class="flex justify-between items-center cursor-pointer" onclick="openStockModal()">
-                  <div class="flex items-center gap-2.5">
-                    <span class="w-7 h-7 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center text-xs shadow-xs">
-                      <i class="fa-solid fa-arrow-trend-up"></i>
-                    </span>
-                    <div>
-                      <div class="flex items-center gap-1.5">
-                        <span class="text-xs font-bold text-slate-800 block">주식 자산</span>
-                        <span id="stockSyncBadge" class="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded-full inline-flex items-center gap-1">
-                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                          시트 연동
-                        </span>
-                      </div>
-                      <span class="text-[10px] text-slate-400">다정 & 선준 보유 평가액 (클릭시 상세)</span>
-                    </div>
-                  </div>
-                  <div class="text-right">
-                    <span id="houseStockAmount" class="text-xs font-bold text-violet-700">16,974,329원</span>
-                    <span id="houseStockRatio" class="text-[10px] text-violet-600 font-semibold block">18.5%</span>
-                  </div>
-                </div>
+              <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center cursor-pointer hover:bg-violet-50 transition" onclick="openStockModal()">
+                <span class="text-slate-500 font-medium flex items-center gap-1">
+                  주식 <span id="stockSyncBadge" class="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1 rounded-full">연동</span>
+                </span>
+                <span id="houseStockRatio" class="font-bold text-violet-600">18.5%</span>
               </div>
-
-              <div class="flex justify-between items-center p-2.5 bg-slate-50 hover:bg-slate-100/80 rounded-xl transition">
-                <div class="flex items-center gap-2.5">
-                  <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-award"></i>
-                  </span>
-                  <div>
-                    <span class="text-xs font-bold text-slate-800 block">주택청약 종합저축</span>
-                    <span class="text-[10px] text-slate-400">청약 납입 원금</span>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <span class="text-xs font-bold text-slate-800">8,850,000원</span>
-                  <span id="houseSubRatio" class="text-[10px] text-amber-600 block">9.6%</span>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center p-2.5 bg-slate-50 hover:bg-slate-100/80 rounded-xl transition">
-                <div class="flex items-center gap-2.5">
-                  <span class="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-coins"></i>
-                  </span>
-                  <div>
-                    <span class="text-xs font-bold text-slate-800 block">파킹통장</span>
-                    <span class="text-[10px] text-slate-400">수시입출금 잔고</span>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <span class="text-xs font-bold text-slate-800">2,238원</span>
-                  <span id="houseParkingRatio" class="text-[10px] text-slate-400 block">0.0%</span>
-                </div>
+              <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center">
+                <span class="text-slate-500 font-medium">주택청약</span>
+                <span id="houseSubRatio" class="font-bold text-amber-600">9.6%</span>
               </div>
             </div>
           </div>
 
-          <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-between">
-            <span class="text-xs font-bold text-emerald-800">가용 자산 합계</span>
-            <span id="houseTotalSavingsBottom" class="text-base font-black text-emerald-700">91,807,567원</span>
+          <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-between mt-3">
+            <span class="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+              <i class="fa-solid fa-calculator text-emerald-600"></i>
+              저축합계 수식 (주식+보증금+청약+월저축+파킹)
+            </span>
+            <span id="houseTotalSavingsBottom" class="text-base font-black text-emerald-700">91,806,924원</span>
           </div>
         </div>
 
@@ -1925,21 +1890,45 @@
         });
       }
 
-      // 3. rawData.summary 데이터 매핑 병합 (월별 요약 시트: salary, totalCost, salaryMinusCard, dajeongRemain, cardTotal)
+      // 3. rawData.summary 데이터 매핑 병합 (월별 요약 시트: salary, totalCost, salaryMinusCard, dajeongRemain, cardTotal 및 배분 데이터)
       if (rawData && rawData.summary && Array.isArray(rawData.summary)) {
         rawData.summary.forEach(item => {
           const y = item.year || '2024년';
           const m = item.month;
           const idx = baseMonths.findIndex(b => b.year === y && b.month === m);
+          const calcRemain = (item.salaryMinusCard !== undefined && item.salaryMinusCard !== null ? item.salaryMinusCard : 0) + (item.dajeongRemain || 0);
+          
           if (idx >= 0) {
             if (item.salary !== undefined) baseMonths[idx].salary = item.salary;
             if (item.totalCost !== undefined) baseMonths[idx].totalCost = item.totalCost;
             if (item.salaryMinusCard !== undefined) baseMonths[idx].salaryMinusCard = item.salaryMinusCard;
             if (item.dajeongRemain !== undefined) baseMonths[idx].dajeongRemain = item.dajeongRemain;
             if (item.cardTotal !== undefined) baseMonths[idx].cardTotal = item.cardTotal;
-            if (!baseMonths[idx].remain && item.remain) baseMonths[idx].remain = item.remain;
-          } else if ((item.salary && item.salary > 0) || (item.cardTotal && item.cardTotal > 0) || (item.totalCost && item.totalCost > 0)) {
-            baseMonths.push(item);
+            if (item.savings !== undefined && item.savings > 0) baseMonths[idx].savings = item.savings;
+            if (item.pocketMoney !== undefined && item.pocketMoney > 0) baseMonths[idx].pocketMoney = item.pocketMoney;
+            if (item.livingExpense !== undefined && item.livingExpense > 0) baseMonths[idx].livingExpense = item.livingExpense;
+            if (item.emergencyFund !== undefined && item.emergencyFund !== 0) baseMonths[idx].emergencyFund = item.emergencyFund;
+            
+            if (item.remain !== undefined && item.remain !== null && item.remain !== 0) {
+              baseMonths[idx].remain = item.remain;
+            } else if (calcRemain > 0 && (!baseMonths[idx].remain || baseMonths[idx].remain === 0)) {
+              baseMonths[idx].remain = calcRemain;
+            }
+          } else if ((item.salary && item.salary > 0) || (item.cardTotal && item.cardTotal > 0) || (item.totalCost && item.totalCost > 0) || calcRemain > 0) {
+            baseMonths.push({
+              year: y,
+              month: m,
+              salary: item.salary || 0,
+              totalCost: item.totalCost || 0,
+              salaryMinusCard: item.salaryMinusCard || 0,
+              dajeongRemain: item.dajeongRemain || 0,
+              cardTotal: item.cardTotal || 0,
+              remain: item.remain || calcRemain || 0,
+              savings: item.savings || 0,
+              pocketMoney: item.pocketMoney || 0,
+              livingExpense: item.livingExpense || 0,
+              emergencyFund: item.emergencyFund || 0
+            });
           }
         });
       }
@@ -2042,9 +2031,9 @@
       { year: '2026년', month: '7월',  remain: 2215661, savings: 1500000, pocketMoney: 159954, livingExpense: 268500, emergencyFund: 287207 },
       { year: '2026년', month: '8월',  remain: 1025473, savings: 1100000, pocketMoney: 41586,  livingExpense: 186240, emergencyFund: -302353 },
       { year: '2026년', month: '9월',  remain: 1366167, savings: 950000,  pocketMoney: 251000, livingExpense: 135734, emergencyFund: 29433 },
-      { year: '2026년', month: '10월', remain: 0,       savings: 0,       pocketMoney: 400000, livingExpense: 400000, emergencyFund: -800000 },
-      { year: '2026년', month: '11월', remain: 0,       savings: 0,       pocketMoney: 400000, livingExpense: 400000, emergencyFund: -800000 },
-      { year: '2026년', month: '12월', remain: 0,       savings: 0,       pocketMoney: 400000, livingExpense: 400000, emergencyFund: -800000 }
+      { year: '2026년', month: '10월', remain: 1832611, savings: 0,       pocketMoney: 160750, livingExpense: 0,      emergencyFund: 1671861 },
+      { year: '2026년', month: '11월', remain: 0,       savings: 0,       pocketMoney: 0,      livingExpense: 0,      emergencyFund: 0 },
+      { year: '2026년', month: '12월', remain: 0,       savings: 0,       pocketMoney: 0,      livingExpense: 0,      emergencyFund: 0 }
     ];
 
     let currentSummaryTableMode = 'costs'; // 'costs' | 'flow'
@@ -3285,6 +3274,10 @@
       if (!years.includes("2026년")) years.push("2026년");
       if (!months.includes("9월")) months.push("9월");
 
+      // 년도 및 월 필터 정렬 (월은 1월 ~ 12월 오름차순)
+      years.sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
+      months.sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
+
       // 년도 필터 채우기
       const yearSelect = document.getElementById("dajeongYearFilter");
       if (yearSelect) {
@@ -3500,6 +3493,11 @@
 
       if (!years.includes("2026년")) years.push("2026년");
       if (!months.includes("9월")) months.push("9월");
+
+      // 년도 및 월 필터 정렬 (월은 1월 ~ 12월 오름차순)
+      years.sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
+      months.sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
+
       ['신한카드', '하나카드', '롯데카드', '기업카드'].forEach(c => {
         if (!cards.includes(c)) cards.push(c);
       });
@@ -4962,12 +4960,12 @@
         appliedTotal: 16328000   // 시트 반영 실제 옵션비
       },
       savings: {
-        stock: 16974329,
-        deposit: 29821000,
+        stock: 16973686,
+        deposit: 29921000,
         housingSubscription: 8850000,
-        monthlySavings: 36160000,
+        monthlySavings: 36060000,
         parkingAccount: 2238,
-        total: 91807567
+        total: 91806924
       },
       costs: {
         etcCost: 50000000        // 취득세, 등기, 이사, 가전 등 기타비용
@@ -5017,7 +5015,20 @@
         isStockSyncedFromSheet = true;
       }
 
-      // 총 저축합계 동적 재계산
+      // 2. 구글 시트에서 직접 넘어온 내집마련 플랜 4번 저축 자산 객체가 있을 경우 동기화
+      if (rawData && rawData.houseSavings) {
+        const hs = rawData.houseSavings;
+        if (hs.deposit !== undefined && hs.deposit > 0) HOUSE_DATA.savings.deposit = Number(hs.deposit);
+        if (hs.housingSubscription !== undefined && hs.housingSubscription > 0) HOUSE_DATA.savings.housingSubscription = Number(hs.housingSubscription);
+        if (hs.monthlySavings !== undefined && hs.monthlySavings > 0) HOUSE_DATA.savings.monthlySavings = Number(hs.monthlySavings);
+        if (hs.parkingAccount !== undefined) HOUSE_DATA.savings.parkingAccount = Number(hs.parkingAccount);
+        if (hs.stock !== undefined && hs.stock > 0) {
+          HOUSE_DATA.savings.stock = Number(hs.stock);
+          isStockSyncedFromSheet = true;
+        }
+      }
+
+      // 총 저축합계 동적 재계산 (수식: 주식 + 보증금 + 주택청약 + 월별 저축 + 파킹통장)
       HOUSE_DATA.savings.total = 
         (HOUSE_DATA.savings.stock || 0) + 
         (HOUSE_DATA.savings.deposit || 0) + 
@@ -5027,12 +5038,15 @@
     }
 
     function renderHouseAssetsUI() {
-      const total = HOUSE_DATA.savings.total || 1;
       const stock = HOUSE_DATA.savings.stock || 0;
       const monthly = HOUSE_DATA.savings.monthlySavings || 0;
       const deposit = HOUSE_DATA.savings.deposit || 0;
       const sub = HOUSE_DATA.savings.housingSubscription || 0;
       const parking = HOUSE_DATA.savings.parkingAccount || 0;
+      // 수식: 주식 + 보증금 + 주택청약 + 월별 저축 + 파킹통장
+      const calculatedTotal = stock + deposit + sub + monthly + parking;
+      HOUSE_DATA.savings.total = calculatedTotal;
+      const total = calculatedTotal || 1;
 
       const stockRatio = ((stock / total) * 100).toFixed(1);
       const monthlyRatio = ((monthly / total) * 100).toFixed(1);
@@ -5040,19 +5054,33 @@
       const subRatio = ((sub / total) * 100).toFixed(1);
       const parkingRatio = ((parking / total) * 100).toFixed(1);
 
+      // [사진과 100% 동일한 6열 테이블 셀 렌더링]
+      const tStock = document.getElementById("tableHouseStock");
+      if (tStock) tStock.innerText = stock.toLocaleString();
+      const tDep = document.getElementById("tableHouseDeposit");
+      if (tDep) tDep.innerText = deposit.toLocaleString();
+      const tSub = document.getElementById("tableHouseSub");
+      if (tSub) tSub.innerText = sub.toLocaleString();
+      const tMonthly = document.getElementById("tableHouseMonthly");
+      if (tMonthly) tMonthly.innerText = monthly.toLocaleString();
+      const tParking = document.getElementById("tableHouseParking");
+      if (tParking) tParking.innerText = parking.toLocaleString();
+      const tTotal = document.getElementById("tableHouseTotal");
+      if (tTotal) tTotal.innerText = calculatedTotal.toLocaleString();
+
       // 상단 큰 카드
       const topKpi = document.getElementById("houseTopKpiSavings");
-      if (topKpi) topKpi.innerText = total.toLocaleString() + "원";
+      if (topKpi) topKpi.innerText = calculatedTotal.toLocaleString() + "원";
 
-      // 4번 섹션 헤더
+      // 4번 섹션 헤더 및 바텀
       const topSavings = document.getElementById("houseTotalSavingsTop");
-      if (topSavings) topSavings.innerText = total.toLocaleString() + "원";
+      if (topSavings) topSavings.innerText = calculatedTotal.toLocaleString() + "원";
 
       const headerSavings = document.getElementById("houseTotalSavingsHeader");
-      if (headerSavings) headerSavings.innerText = "총 " + Math.round(total / 10000).toLocaleString() + "만원";
+      if (headerSavings) headerSavings.innerText = "총 " + Math.round(calculatedTotal / 10000).toLocaleString() + "만원";
 
       const bottomSavings = document.getElementById("houseTotalSavingsBottom");
-      if (bottomSavings) bottomSavings.innerText = total.toLocaleString() + "원";
+      if (bottomSavings) bottomSavings.innerText = calculatedTotal.toLocaleString() + "원";
 
       // 주식 금액 및 비율
       const stockAmt = document.getElementById("houseStockAmount");
