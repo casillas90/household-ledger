@@ -47,15 +47,28 @@
   <style>
     body {
       font-family: 'Pretendard', sans-serif;
-      padding-top: max(12px, env(safe-area-inset-top));
-      padding-bottom: max(24px, env(safe-area-inset-bottom));
-      padding-left: max(12px, env(safe-area-inset-left));
-      padding-right: max(12px, env(safe-area-inset-right));
+      padding-top: max(8px, env(safe-area-inset-top));
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+      padding-left: max(8px, env(safe-area-inset-left));
+      padding-right: max(8px, env(safe-area-inset-right));
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    /* iOS Safari 포커스 시 화면 자동 확대 방지 (16px 고정) */
+    @media screen and (max-width: 640px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    }
+    /* 가로/세로 스무스 터치 스크롤 */
+    .touch-scroll {
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
     }
     /* 커스텀 스크롤바 */
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
     }
     ::-webkit-scrollbar-track {
       background: #f1f5f9;
@@ -68,68 +81,82 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
     }
+    /* 스크롤바 숨김 유틸리티 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* 모바일 가독성 향상 숫자 정렬 */
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
   </style>
 </head>
-<body class="bg-slate-50/80 text-slate-800 antialiased min-h-screen p-3 sm:p-6 lg:p-8">
+<body class="bg-slate-50/80 text-slate-800 antialiased min-h-screen p-2.5 sm:p-6 lg:p-8">
 
-  <div class="max-w-7xl mx-auto space-y-6">
+  <div class="max-w-7xl mx-auto space-y-4 sm:space-y-6">
     <!-- 헤더 -->
-    <header class="bg-white/80 backdrop-blur-md p-5 sm:p-7 rounded-3xl shadow-sm border border-slate-200/70 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all">
-      <div>
+    <header class="bg-white/90 backdrop-blur-md p-4 sm:p-7 rounded-2xl sm:rounded-3xl shadow-xs border border-slate-200/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4 transition-all">
+      <div class="w-full md:w-auto">
         <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center shadow-indigo-200 shadow-lg text-lg">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center shadow-indigo-200 shadow-md text-base sm:text-lg shrink-0">
             <i class="fa-solid fa-wallet"></i>
           </div>
-          <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+          <div class="min-w-0 flex-1">
+            <h1 class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 truncate">
               다정 & 선준 가계부 대시보드
             </h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-0.5 flex items-center gap-2">
-              <span class="inline-flex items-center gap-1 text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full text-xs">
+            <p class="text-[11px] sm:text-sm text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
+              <span class="inline-flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] sm:text-xs">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 실시간 연동
               </span>
-              <span>구글 스프레드시트 기반 자동 동기화</span>
+              <span class="text-slate-400">구글 시트 자동 동기화</span>
             </p>
           </div>
         </div>
       </div>
       
-      <div class="flex items-center gap-2 sm:gap-3 w-full md:w-auto justify-between md:justify-end flex-wrap sm:flex-nowrap">
+      <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
         <div class="text-right hidden sm:block">
           <span class="text-[11px] text-slate-400 block font-medium">마지막 동기화</span>
           <span id="lastUpdated" class="text-xs font-semibold text-slate-600">-</span>
         </div>
-        <button id="btnRefresh" onclick="loadData()" class="px-3.5 sm:px-4 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-semibold rounded-2xl transition-all shadow-sm flex items-center gap-2">
+        <button id="btnRefresh" onclick="loadData()" class="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-semibold rounded-xl sm:rounded-2xl transition-all shadow-xs flex items-center justify-center gap-1.5">
           <i id="refreshIcon" class="fa-solid fa-arrows-rotate"></i>
           <span>새로고침</span>
         </button>
-        <button id="btnShareMobile" onclick="openShareModal()" class="px-3.5 sm:px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 active:scale-95 text-white text-xs font-bold rounded-2xl transition-all shadow-sm shadow-indigo-200 flex items-center gap-2">
+        <button id="btnShareMobile" onclick="openShareModal()" class="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 active:scale-95 text-white text-xs font-bold rounded-xl sm:rounded-2xl transition-all shadow-xs shadow-indigo-200 flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-mobile-screen-button"></i>
           <span>아이폰 공유</span>
         </button>
       </div>
     </header>
 
-    <!-- 탭 내비게이션 -->
-    <div class="flex flex-wrap gap-2 border-b border-slate-200/80 pb-1">
-      <button onclick="switchTab('tab-summary')" id="btn-tab-summary" class="tab-btn px-4 sm:px-5 py-2.5 text-sm font-bold text-indigo-600 border-b-2 border-indigo-600 flex items-center gap-2 transition-all">
-        <i class="fa-solid fa-chart-pie"></i>
-        <span>월별 가계부 & 자산 흐름</span>
-      </button>
-      <button onclick="switchTab('tab-cards')" id="btn-tab-cards" class="tab-btn px-4 sm:px-5 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-all">
-        <i class="fa-solid fa-credit-card"></i>
-        <span>카드값 상세 (다정 / 선준)</span>
-      </button>
-      <button onclick="switchTab('tab-charts')" id="btn-tab-charts" class="tab-btn px-4 sm:px-5 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-all">
-        <i class="fa-solid fa-chart-line"></i>
-        <span>통계 & 추이 차트</span>
-      </button>
-      <button onclick="switchTab('tab-house')" id="btn-tab-house" class="tab-btn px-4 sm:px-5 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-all">
-        <i class="fa-solid fa-house-chimney text-amber-500"></i>
-        <span>내 집 마련 & 분양 플랜</span>
-        <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-extrabold rounded-full">NEW</span>
-      </button>
+    <!-- 탭 내비게이션 (모바일 가로 스와이프 지원) -->
+    <div class="border-b border-slate-200/80 pb-0.5">
+      <div class="flex flex-nowrap overflow-x-auto no-scrollbar touch-scroll gap-1 sm:gap-2 -mx-2.5 px-2.5 sm:mx-0 sm:px-0">
+        <button onclick="switchTab('tab-summary')" id="btn-tab-summary" class="tab-btn shrink-0 px-3.5 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-indigo-600 border-b-2 border-indigo-600 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+          <i class="fa-solid fa-chart-pie text-xs sm:text-sm"></i>
+          <span>월별 가계부 & 자산</span>
+        </button>
+        <button onclick="switchTab('tab-cards')" id="btn-tab-cards" class="tab-btn shrink-0 px-3.5 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+          <i class="fa-solid fa-credit-card text-xs sm:text-sm"></i>
+          <span>카드값 & 할부 관리</span>
+        </button>
+        <button onclick="switchTab('tab-charts')" id="btn-tab-charts" class="tab-btn shrink-0 px-3.5 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+          <i class="fa-solid fa-chart-line text-xs sm:text-sm"></i>
+          <span>통계 & 추이</span>
+        </button>
+        <button onclick="switchTab('tab-house')" id="btn-tab-house" class="tab-btn shrink-0 px-3.5 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+          <i class="fa-solid fa-house-chimney text-amber-500 text-xs sm:text-sm"></i>
+          <span>내 집 마련 플랜</span>
+          <span class="px-1.5 py-0.2 bg-amber-100 text-amber-800 text-[9px] font-extrabold rounded-full">NEW</span>
+        </button>
+      </div>
     </div>
 
     <!-- ============================================== -->
@@ -322,76 +349,84 @@
         </div>
 
         <!-- 4대 배분 카드 그리드 (순잔금은 없애고 비상금이 최종 잔여액) -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           <!-- 1. 적금 (저축) -->
-          <div class="bg-gradient-to-b from-white to-emerald-50/25 p-4 sm:p-5 rounded-2xl border border-emerald-200/80 hover:border-emerald-400 transition shadow-xs relative group">
-            <div class="flex items-center justify-between text-emerald-700 mb-2">
-              <div class="flex items-center gap-1.5">
-                <i class="fa-solid fa-vault text-xs"></i>
-                <span class="text-xs font-bold">1. 적금 (저축)</span>
+          <div class="bg-gradient-to-b from-white to-emerald-50/25 p-3.5 sm:p-5 rounded-2xl border border-emerald-200/80 hover:border-emerald-400 transition shadow-xs relative group flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-emerald-700 mb-1.5 sm:mb-2">
+                <div class="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                  <i class="fa-solid fa-vault text-[11px] sm:text-xs shrink-0"></i>
+                  <span class="text-[11px] sm:text-xs font-bold truncate">1. 적금 (저축)</span>
+                </div>
+                <button onclick="openAllocEditModal('savings')" class="text-[10px] sm:text-[11px] font-semibold text-slate-500 hover:text-emerald-700 transition flex items-center gap-0.5 bg-white px-1.5 py-0.5 rounded-lg border border-slate-200 shadow-2xs cursor-pointer shrink-0">
+                  <i class="fa-solid fa-pen text-[9px]"></i> 수정
+                </button>
               </div>
-              <button onclick="openAllocEditModal('savings')" class="text-[11px] font-semibold text-slate-500 hover:text-emerald-700 transition flex items-center gap-0.5 bg-white px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs cursor-pointer">
-                <i class="fa-solid fa-pen text-[10px]"></i> 수정
-              </button>
+              <span id="allocSavings" class="text-base sm:text-xl font-black text-slate-900 block tracking-tight tabular-nums truncate">0원</span>
             </div>
-            <span id="allocSavings" class="text-lg sm:text-xl font-black text-slate-900 block tracking-tight">0원</span>
-            <div class="flex items-center justify-between mt-1.5 text-[11px]">
-              <span id="allocSavingsRatio" class="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">잔금의 0%</span>
-              <span id="allocSavingsSub" class="text-slate-400 truncate">시트 데이터</span>
+            <div class="flex items-center justify-between mt-1.5 text-[10px] sm:text-[11px] gap-1">
+              <span id="allocSavingsRatio" class="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded shrink-0">잔금의 0%</span>
+              <span id="allocSavingsSub" class="text-slate-400 truncate text-right">시트 데이터</span>
             </div>
           </div>
 
           <!-- 2. 용돈 -->
-          <div class="bg-gradient-to-b from-white to-indigo-50/25 p-4 sm:p-5 rounded-2xl border border-indigo-200/80 hover:border-indigo-400 transition shadow-xs relative group">
-            <div class="flex items-center justify-between text-indigo-700 mb-2">
-              <div class="flex items-center gap-1.5">
-                <i class="fa-solid fa-piggy-bank text-xs"></i>
-                <span class="text-xs font-bold">2. 용돈</span>
+          <div class="bg-gradient-to-b from-white to-indigo-50/25 p-3.5 sm:p-5 rounded-2xl border border-indigo-200/80 hover:border-indigo-400 transition shadow-xs relative group flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-indigo-700 mb-1.5 sm:mb-2">
+                <div class="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                  <i class="fa-solid fa-piggy-bank text-[11px] sm:text-xs shrink-0"></i>
+                  <span class="text-[11px] sm:text-xs font-bold truncate">2. 용돈</span>
+                </div>
+                <button onclick="openAllocEditModal('pocketMoney')" class="text-[10px] sm:text-[11px] font-semibold text-slate-500 hover:text-indigo-700 transition flex items-center gap-0.5 bg-white px-1.5 py-0.5 rounded-lg border border-slate-200 shadow-2xs cursor-pointer shrink-0">
+                  <i class="fa-solid fa-pen text-[9px]"></i> 수정
+                </button>
               </div>
-              <button onclick="openAllocEditModal('pocketMoney')" class="text-[11px] font-semibold text-slate-500 hover:text-indigo-700 transition flex items-center gap-0.5 bg-white px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs cursor-pointer">
-                <i class="fa-solid fa-pen text-[10px]"></i> 수정
-              </button>
+              <span id="allocPocket" class="text-base sm:text-xl font-black text-slate-900 block tracking-tight tabular-nums truncate">0원</span>
             </div>
-            <span id="allocPocket" class="text-lg sm:text-xl font-black text-slate-900 block tracking-tight">0원</span>
-            <div class="flex items-center justify-between mt-1.5 text-[11px]">
-              <span id="allocPocketRatio" class="text-indigo-600 font-bold bg-indigo-50 px-1.5 py-0.5 rounded">잔금의 0%</span>
-              <span id="allocPocketSub" class="text-slate-400 truncate">시트 데이터</span>
+            <div class="flex items-center justify-between mt-1.5 text-[10px] sm:text-[11px] gap-1">
+              <span id="allocPocketRatio" class="text-indigo-600 font-bold bg-indigo-50 px-1.5 py-0.5 rounded shrink-0">잔금의 0%</span>
+              <span id="allocPocketSub" class="text-slate-400 truncate text-right">시트 데이터</span>
             </div>
           </div>
 
           <!-- 3. 생활비 -->
-          <div class="bg-gradient-to-b from-white to-sky-50/25 p-4 sm:p-5 rounded-2xl border border-sky-200/80 hover:border-sky-400 transition shadow-xs relative group">
-            <div class="flex items-center justify-between text-sky-700 mb-2">
-              <div class="flex items-center gap-1.5">
-                <i class="fa-solid fa-cart-shopping text-xs"></i>
-                <span class="text-xs font-bold">3. 생활비</span>
+          <div class="bg-gradient-to-b from-white to-sky-50/25 p-3.5 sm:p-5 rounded-2xl border border-sky-200/80 hover:border-sky-400 transition shadow-xs relative group flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-sky-700 mb-1.5 sm:mb-2">
+                <div class="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                  <i class="fa-solid fa-cart-shopping text-[11px] sm:text-xs shrink-0"></i>
+                  <span class="text-[11px] sm:text-xs font-bold truncate">3. 생활비</span>
+                </div>
+                <button onclick="openAllocEditModal('livingExpense')" class="text-[10px] sm:text-[11px] font-semibold text-slate-500 hover:text-sky-700 transition flex items-center gap-0.5 bg-white px-1.5 py-0.5 rounded-lg border border-slate-200 shadow-2xs cursor-pointer shrink-0">
+                  <i class="fa-solid fa-pen text-[9px]"></i> 수정
+                </button>
               </div>
-              <button onclick="openAllocEditModal('livingExpense')" class="text-[11px] font-semibold text-slate-500 hover:text-sky-700 transition flex items-center gap-0.5 bg-white px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs cursor-pointer">
-                <i class="fa-solid fa-pen text-[10px]"></i> 수정
-              </button>
+              <span id="allocLiving" class="text-base sm:text-xl font-black text-slate-900 block tracking-tight tabular-nums truncate">0원</span>
             </div>
-            <span id="allocLiving" class="text-lg sm:text-xl font-black text-slate-900 block tracking-tight">0원</span>
-            <div class="flex items-center justify-between mt-1.5 text-[11px]">
-              <span id="allocLivingRatio" class="text-sky-600 font-bold bg-sky-50 px-1.5 py-0.5 rounded">잔금의 0%</span>
-              <span id="allocLivingSub" class="text-slate-400 truncate">시트 데이터</span>
+            <div class="flex items-center justify-between mt-1.5 text-[10px] sm:text-[11px] gap-1">
+              <span id="allocLivingRatio" class="text-sky-600 font-bold bg-sky-50 px-1.5 py-0.5 rounded shrink-0">잔금의 0%</span>
+              <span id="allocLivingSub" class="text-slate-400 truncate text-right">시트 데이터</span>
             </div>
           </div>
 
           <!-- 4. 비상금 (잔금 잔여액) -->
-          <div class="bg-gradient-to-b from-white to-amber-50/35 p-4 sm:p-5 rounded-2xl border border-amber-300 hover:border-amber-500 transition shadow-xs relative group">
-            <div class="flex items-center justify-between text-amber-800 mb-2">
-              <div class="flex items-center gap-1.5">
-                <i class="fa-solid fa-shield-halved text-xs text-amber-600"></i>
-                <span class="text-xs font-bold">4. 비상금 (최종 잔여액)</span>
+          <div class="bg-gradient-to-b from-white to-amber-50/35 p-3.5 sm:p-5 rounded-2xl border border-amber-300 hover:border-amber-500 transition shadow-xs relative group flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-amber-800 mb-1.5 sm:mb-2">
+                <div class="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                  <i class="fa-solid fa-shield-halved text-[11px] sm:text-xs text-amber-600 shrink-0"></i>
+                  <span class="text-[11px] sm:text-xs font-bold truncate">4. 비상금 (최종 잔여액)</span>
+                </div>
+                <span class="text-[9px] sm:text-[10px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shrink-0">
+                  <i class="fa-solid fa-lock text-[8px]"></i> 자동
+                </span>
               </div>
-              <span class="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md flex items-center gap-1">
-                <i class="fa-solid fa-lock text-[9px]"></i> 자동계산
-              </span>
+              <span id="allocEmergency" class="text-base sm:text-xl font-black text-amber-700 block tracking-tight tabular-nums truncate">0원</span>
             </div>
-            <span id="allocEmergency" class="text-lg sm:text-xl font-black text-amber-700 block tracking-tight">0원</span>
-            <div class="flex items-center justify-between mt-1.5 text-[11px]">
-              <span id="allocEmergencyRatio" class="text-amber-700 font-bold bg-amber-100/70 px-1.5 py-0.5 rounded">잔금의 0%</span>
-              <span id="allocEmergencySub" class="text-amber-600 font-medium truncate">잔금−(적금+용돈+생활비)</span>
+            <div class="flex items-center justify-between mt-1.5 text-[10px] sm:text-[11px] gap-1">
+              <span id="allocEmergencyRatio" class="text-amber-700 font-bold bg-amber-100/70 px-1.5 py-0.5 rounded shrink-0">잔금의 0%</span>
+              <span id="allocEmergencySub" class="text-amber-600 font-medium truncate text-right">잔금−(적금+용돈+생활비)</span>
             </div>
           </div>
         </div>
@@ -557,9 +592,13 @@
               총 0개월
             </span>
           </div>
+        <!-- 모바일 가로 스크롤 안내 힌트 -->
+        <div class="flex items-center justify-between text-[11px] text-slate-400 px-1 sm:hidden">
+          <span><i class="fa-solid fa-arrows-left-right text-indigo-500"></i> 좌우로 스크롤하여 전체 열 확인</span>
+          <span>행 클릭 시 해당 월 선택</span>
         </div>
 
-        <div class="overflow-x-auto rounded-2xl border border-slate-300 shadow-xs">
+        <div class="overflow-x-auto rounded-2xl border border-slate-300 shadow-xs touch-scroll">
           <table class="w-full text-xs sm:text-sm border-collapse" id="summaryMainTable">
             <thead class="bg-slate-100 text-slate-800 font-bold border-b border-slate-300 text-xs" id="summaryTableHeader">
               <!-- Dynamically rendered header based on view mode -->
@@ -666,7 +705,7 @@
               <span>스크롤하여 전체 확인</span>
             </div>
 
-            <div class="max-h-[580px] overflow-y-auto pr-1 border rounded-2xl border-slate-100">
+            <div class="max-h-[580px] overflow-y-auto overflow-x-auto touch-scroll pr-1 border rounded-2xl border-slate-100">
               <table class="w-full text-xs text-left">
                 <thead class="bg-slate-50 text-slate-400 font-semibold border-b sticky top-0 bg-slate-50 z-10">
                   <tr>
@@ -683,8 +722,85 @@
         </div>
 
         <!-- 오른쪽: 선준 카드값 (7컬럼) -->
-        <div class="lg:col-span-7 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
+        <div class="lg:col-span-7 bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
           <div>
+            <!-- 💳 [신설] 선준 카드값 할부 분석 및 남은 할부 전체 금액 섹션 -->
+            <div class="mb-5 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/60 p-3.5 sm:p-5 rounded-2xl border border-indigo-200/80 shadow-xs space-y-3">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-indigo-100 pb-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs shadow-xs shrink-0">
+                    <i class="fa-solid fa-layer-group"></i>
+                  </span>
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h4 class="text-sm sm:text-base font-bold text-slate-900">선준 카드 할부 분석표</h4>
+                      <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-extrabold rounded-md">실시간 연동</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500">이번 달 청구액과 앞으로 남은 할부 전체 금액을 항목별로 분석합니다.</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5 self-end sm:self-auto">
+                  <span class="text-[11px] text-slate-400 font-medium">기준 월:</span>
+                  <span id="installmentMonthBadge" class="text-xs font-bold text-indigo-700 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 shadow-2xs">9월</span>
+                </div>
+              </div>
+
+              <!-- 할부 요약 카드 그리드 4종 -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs">
+                  <span class="text-[10px] sm:text-[11px] font-semibold text-slate-400 block">이번달 할부 청구액</span>
+                  <span id="instSummaryCurrentTotal" class="text-sm sm:text-base font-black text-rose-600 tabular-nums block mt-0.5">0원</span>
+                  <span id="instSummaryCurrentCount" class="text-[10px] text-slate-400 mt-0.5 block">0건 진행 중</span>
+                </div>
+                <div class="bg-white p-3 rounded-xl border border-purple-100 shadow-2xs">
+                  <span class="text-[10px] sm:text-[11px] font-semibold text-purple-600 block">남은 할부 전체 금액</span>
+                  <span id="instSummaryRemainingTotal" class="text-sm sm:text-base font-black text-purple-700 tabular-nums block mt-0.5">0원</span>
+                  <span class="text-[10px] text-purple-400 mt-0.5 block">향후 도래 잔액</span>
+                </div>
+                <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+                  <span class="text-[10px] sm:text-[11px] font-semibold text-slate-500 block">할부 원금 총액</span>
+                  <span id="instSummaryGrandTotal" class="text-sm sm:text-base font-black text-slate-800 tabular-nums block mt-0.5">0원</span>
+                  <span class="text-[10px] text-slate-400 mt-0.5 block">진행 할부 전체합</span>
+                </div>
+                <div class="bg-white p-3 rounded-xl border border-emerald-100 shadow-2xs">
+                  <span class="text-[10px] sm:text-[11px] font-semibold text-emerald-600 block">이번달 완납 예정</span>
+                  <span id="instSummaryCompletedCount" class="text-sm sm:text-base font-black text-emerald-700 tabular-nums block mt-0.5">0건</span>
+                  <span class="text-[10px] text-emerald-500 mt-0.5 block">다음달부터 청구 종료</span>
+                </div>
+              </div>
+
+              <!-- 할부 상세 분석 표 -->
+              <div class="bg-white rounded-xl border border-indigo-100/80 overflow-hidden shadow-2xs">
+                <div class="p-2.5 bg-slate-50/90 border-b border-slate-100 flex items-center justify-between text-xs">
+                  <span class="font-bold text-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-list-check text-indigo-600"></i> 할부 항목별 금액 & 남은 잔액 표
+                  </span>
+                  <span class="text-[10px] text-slate-400 flex items-center gap-1 sm:hidden">
+                    <i class="fa-solid fa-arrows-left-right"></i> 좌우 스크롤
+                  </span>
+                </div>
+                <div class="overflow-x-auto touch-scroll max-h-[260px]">
+                  <table class="w-full text-xs text-left">
+                    <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 sticky top-0 bg-slate-50 z-10 text-[11px]">
+                      <tr>
+                        <th class="py-2 px-2.5 whitespace-nowrap">카드사</th>
+                        <th class="py-2 px-2.5 whitespace-nowrap">항목명</th>
+                        <th class="py-2 px-2 whitespace-nowrap text-center">구분</th>
+                        <th class="py-2 px-2.5 whitespace-nowrap text-right text-rose-600 font-bold">이번 달 청구</th>
+                        <th class="py-2 px-2.5 whitespace-nowrap text-right text-purple-600 font-bold">남은 할부 금액</th>
+                        <th class="py-2 px-2.5 whitespace-nowrap text-right text-slate-700 font-bold">전체 금액</th>
+                        <th class="py-2 px-2.5 whitespace-nowrap text-center">회차 / 진행률</th>
+                        <th class="py-2 px-2.5 whitespace-nowrap text-center">상태</th>
+                      </tr>
+                    </thead>
+                    <tbody id="seonjunInstallmentTableBody" class="divide-y divide-slate-100 font-medium text-xs">
+                      <!-- 동적 렌더링 -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
               <div class="flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full bg-indigo-600 ring-4 ring-indigo-100"></span>
@@ -770,7 +886,7 @@
               </div>
             </div>
 
-            <div class="max-h-[520px] overflow-y-auto pr-1 border rounded-2xl border-slate-100">
+            <div class="max-h-[520px] overflow-y-auto overflow-x-auto touch-scroll pr-1 border rounded-2xl border-slate-100">
               <table class="w-full text-xs text-left">
                 <thead class="bg-slate-50 text-slate-400 font-semibold border-b sticky top-0 bg-slate-50 z-10">
                   <tr>
@@ -1725,6 +1841,10 @@
       activeBtn.classList.add("text-indigo-600", "border-b-2", "border-indigo-600", "font-bold");
       activeBtn.classList.remove("text-slate-500");
 
+      if (tabId === 'tab-cards') {
+        renderSeonjunList();
+        renderDajeong();
+      }
       if (tabId === 'tab-charts') {
         setTimeout(renderCharts, 50);
       }
@@ -1861,6 +1981,11 @@
       const select = document.getElementById("summaryMonthSelect");
       selectedSummaryIndex = parseInt(select.value, 10);
       renderSummaryCardsOnly();
+      const list = getValidSummaryList();
+      const cur = list[selectedSummaryIndex];
+      if (cur && typeof renderSeonjunInstallmentTable === 'function') {
+        renderSeonjunInstallmentTable(cur.year, cur.month);
+      }
     }
 
     function renderSummary() {
@@ -2070,7 +2195,7 @@
     }
 
     /**
-     * 월별 핵심 지표 통합 산출 함수
+     * 월별 핵심 지표 통합 산출 함수 (구글 시트 실시간 연동 강화)
      */
     function getMonthMetrics(row) {
       const year = row.year || '';
@@ -2161,6 +2286,31 @@
         remainBalance = row.remain || 0;
       }
 
+      // --- [구글 시트 실시간 카드 집계 추출: 선준(용돈), 생활비, 다정(용돈)] ---
+      let autoSeonjunPocket = 0;
+      let autoLiving = 0;
+      try {
+        const sItems = (typeof getAllSeonjunItems === 'function') ? getAllSeonjunItems() : (rawData?.seonjun || []);
+        sItems.forEach(it => {
+          if ((it.year === year || !it.year) && it.month === month) {
+            if (it.type === '선준') autoSeonjunPocket += (it.amount || 0);
+            else if (it.type === '생활비') autoLiving += (it.amount || 0);
+          }
+        });
+      } catch (e) {}
+
+      let autoDajeongPocket = 0;
+      try {
+        const dItems = (typeof getAllDajeongItems === 'function') ? getAllDajeongItems() : (rawData?.dajeong?.items || []);
+        dItems.forEach(it => {
+          if ((it.year === year || !it.year) && (it.month === month || !it.month) && it.item && it.item.includes('용돈')) {
+            autoDajeongPocket += (it.amount || 0);
+          }
+        });
+      } catch (e) {}
+
+      const sheetAutoPocket = autoSeonjunPocket + autoDajeongPocket;
+
       // --- [4대 배분 항목: 적금, 용돈, 생활비, 비상금] ---
       // A. 적금 (저축)
       let savings = 0;
@@ -2174,28 +2324,60 @@
         savings = 0;
       }
 
-      // B. 용돈
+      // B. 용돈 (구글시트 참고하여 실시간 자동 연동)
       let pocketMoney = 0;
+      let pocketSource = "시트 데이터";
       if (overrides.pocketMoney !== undefined) {
         pocketMoney = overrides.pocketMoney;
-      } else if (sheetExp && sheetExp.pocketMoney !== undefined) {
+        pocketSource = "✏️ 직접수정";
+      } else if (rawData && rawData.monthlyExpenses && Array.isArray(rawData.monthlyExpenses)) {
+        const found = rawData.monthlyExpenses.find(e => (e.year === year || !e.year) && e.month === month);
+        if (found && found.pocketMoney !== undefined && found.pocketMoney > 0) {
+          pocketMoney = found.pocketMoney;
+          pocketSource = "구글시트 월별비용";
+        }
+      }
+      if (!pocketMoney && sheetAutoPocket > 0) {
+        pocketMoney = sheetAutoPocket;
+        if (autoSeonjunPocket > 0 && autoDajeongPocket > 0) {
+          pocketSource = `선준 ${autoSeonjunPocket.toLocaleString()}원 + 다정 ${autoDajeongPocket.toLocaleString()}원`;
+        } else if (autoSeonjunPocket > 0) {
+          pocketSource = `선준 용돈 (${autoSeonjunPocket.toLocaleString()}원)`;
+        } else {
+          pocketSource = `다정 용돈 (${autoDajeongPocket.toLocaleString()}원)`;
+        }
+      }
+      if (!pocketMoney && sheetExp && sheetExp.pocketMoney !== undefined) {
         pocketMoney = sheetExp.pocketMoney;
-      } else if (row.pocketMoney !== undefined) {
+        pocketSource = "시트 기본값";
+      } else if (!pocketMoney && row.pocketMoney !== undefined) {
         pocketMoney = row.pocketMoney;
-      } else {
-        pocketMoney = 0;
+        pocketSource = "시트 데이터";
       }
 
-      // C. 생활비
+      // C. 생활비 (구글시트 참고하여 실시간 자동 연동)
       let livingExpense = 0;
+      let livingSource = "시트 데이터";
       if (overrides.livingExpense !== undefined) {
         livingExpense = overrides.livingExpense;
-      } else if (sheetExp && sheetExp.livingExpense !== undefined) {
+        livingSource = "✏️ 직접수정";
+      } else if (rawData && rawData.monthlyExpenses && Array.isArray(rawData.monthlyExpenses)) {
+        const found = rawData.monthlyExpenses.find(e => (e.year === year || !e.year) && e.month === month);
+        if (found && found.livingExpense !== undefined && found.livingExpense > 0) {
+          livingExpense = found.livingExpense;
+          livingSource = "구글시트 월별비용";
+        }
+      }
+      if (!livingExpense && autoLiving > 0) {
+        livingExpense = autoLiving;
+        livingSource = `선준 생활비 (${autoLiving.toLocaleString()}원)`;
+      }
+      if (!livingExpense && sheetExp && sheetExp.livingExpense !== undefined) {
         livingExpense = sheetExp.livingExpense;
-      } else if (row.livingExpense !== undefined) {
+        livingSource = "시트 기본값";
+      } else if (!livingExpense && row.livingExpense !== undefined) {
         livingExpense = row.livingExpense;
-      } else {
-        livingExpense = 0;
+        livingSource = "시트 데이터";
       }
 
       // D. 비상금 (고정 공식: 잔금 - 적금 - 용돈 - 생활비)
@@ -2214,6 +2396,11 @@
         pocketMoney,
         livingExpense,
         emergencyFund,
+        pocketSource,
+        livingSource,
+        autoSeonjunPocket,
+        autoDajeongPocket,
+        autoLiving,
         isOverridden: {
           salary: overrides.salary !== undefined,
           totalCost: overrides.totalCost !== undefined,
@@ -2443,7 +2630,8 @@
       if (allocPocketEl) allocPocketEl.innerText = metrics.pocketMoney.toLocaleString() + "원";
       const allocPocketSubEl = document.getElementById("allocPocketSub");
       if (allocPocketSubEl) {
-        allocPocketSubEl.innerText = metrics.isOverridden.pocketMoney ? "✏️ 직접수정" : "시트 데이터";
+        allocPocketSubEl.innerText = metrics.pocketSource || (metrics.isOverridden.pocketMoney ? "✏️ 직접수정" : "시트 데이터");
+        allocPocketSubEl.title = metrics.pocketSource || "";
       }
 
       // 3. 생활비
@@ -2451,7 +2639,8 @@
       if (allocLivingEl) allocLivingEl.innerText = metrics.livingExpense.toLocaleString() + "원";
       const allocLivingSubEl = document.getElementById("allocLivingSub");
       if (allocLivingSubEl) {
-        allocLivingSubEl.innerText = metrics.isOverridden.livingExpense ? "✏️ 직접수정" : "시트 데이터";
+        allocLivingSubEl.innerText = metrics.livingSource || (metrics.isOverridden.livingExpense ? "✏️ 직접수정" : "시트 데이터");
+        allocLivingSubEl.title = metrics.livingSource || "";
       }
 
       // 4. 비상금 (잔금에서 적금+용돈+생활비를 뺀 최종 잔여액!)
@@ -3363,6 +3552,221 @@
       renderSeonjunCardChips(cards);
     }
 
+    /**
+     * 💳 선준 카드 할부 상세 내역 및 남은 할부 전체 금액 분석 렌더링
+     */
+    function renderSeonjunInstallmentTable(targetYear, targetMonth) {
+      const tbody = document.getElementById("seonjunInstallmentTableBody");
+      if (!tbody) return;
+
+      const allSeonjun = getAllSeonjunItems();
+      // 기준 월 결정 (선택된 월이 'ALL'이면 현재 상단 기준월 또는 '9월')
+      let activeMonth = targetMonth;
+      if (!activeMonth || activeMonth === 'ALL') {
+        const list = getValidSummaryList();
+        const curIdx = selectedSummaryIndex >= 0 && selectedSummaryIndex < list.length ? selectedSummaryIndex : (list.length - 1);
+        activeMonth = list[curIdx]?.month || '9월';
+      }
+
+      const badgeEl = document.getElementById("installmentMonthBadge");
+      if (badgeEl) badgeEl.innerText = activeMonth;
+
+      // 월 순서 번호 매핑
+      const monthOrder = {
+        '1월': 1, '2월': 2, '3월': 3, '4월': 4, '5월': 5, '6월': 6,
+        '7월': 7, '8월': 8, '9월': 9, '10월': 10, '11월': 11, '12월': 12
+      };
+      const getMonthNum = (m) => monthOrder[m] || parseInt(m, 10) || 0;
+      const targetMonthNum = getMonthNum(activeMonth);
+
+      // '할부' 항목 필터링
+      const installmentRows = allSeonjun.filter(it => 
+        (it.note && it.note.includes('할부')) || 
+        (it.item && it.item.includes('할부'))
+      );
+
+      // 카드사 + 항목명으로 그룹화
+      const groups = {};
+      installmentRows.forEach(row => {
+        const c = row.card || '신용카드';
+        const itemClean = row.item ? row.item.trim() : '할부항목';
+        const key = `${c}__${itemClean}`;
+        if (!groups[key]) {
+          groups[key] = {
+            card: c,
+            item: itemClean,
+            type: row.type || '공통',
+            records: []
+          };
+        }
+        groups[key].records.push(row);
+      });
+
+      const processedItems = [];
+      let currentMonthSum = 0;
+      let remainingSum = 0;
+      let grandTotalSum = 0;
+      let completedThisMonthCount = 0;
+
+      Object.values(groups).forEach(g => {
+        g.records.sort((a, b) => getMonthNum(a.month) - getMonthNum(b.month));
+
+        // 이번 달 청구 레코드
+        const currentRec = g.records.find(r => r.month === activeMonth);
+        const currentAmount = currentRec ? (currentRec.amount || 0) : 0;
+
+        // 이번 달 이후(미래) 청구 레코드
+        const futureRecs = g.records.filter(r => getMonthNum(r.month) > targetMonthNum);
+        let futureAmount = futureRecs.reduce((sum, r) => sum + (r.amount || 0), 0);
+
+        // 이번 달 이전(과거) 청구 레코드
+        const pastRecs = g.records.filter(r => getMonthNum(r.month) < targetMonthNum);
+        let pastAmount = pastRecs.reduce((sum, r) => sum + (r.amount || 0), 0);
+
+        // 회차 계산
+        let currentRound = 0;
+        let totalRounds = g.records.length;
+
+        const match = g.item.match(/\((\d+)\/(\d+)회?차?\)/);
+        if (match) {
+          currentRound = parseInt(match[1], 10);
+          totalRounds = parseInt(match[2], 10);
+        } else {
+          const idx = g.records.findIndex(r => r.month === activeMonth);
+          if (idx >= 0) {
+            currentRound = idx + 1;
+          } else {
+            currentRound = pastRecs.length > 0 ? pastRecs.length : 1;
+          }
+        }
+
+        if (totalRounds > g.records.length && currentAmount > 0) {
+          const remainingRounds = Math.max(0, totalRounds - currentRound);
+          if (futureAmount === 0 && remainingRounds > 0) {
+            futureAmount = currentAmount * remainingRounds;
+          }
+        }
+
+        const totalAmount = (pastAmount + currentAmount + futureAmount) || (currentAmount * totalRounds) || 0;
+
+        const isCurrentActive = currentAmount > 0;
+        const isCompletedThisMonth = isCurrentActive && futureAmount === 0;
+
+        if (isCurrentActive || futureAmount > 0) {
+          currentMonthSum += currentAmount;
+          remainingSum += futureAmount;
+          grandTotalSum += (currentAmount + futureAmount);
+          if (isCompletedThisMonth) completedThisMonthCount++;
+
+          processedItems.push({
+            card: g.card,
+            item: g.item,
+            type: g.type,
+            currentAmount: currentAmount,
+            remainingAmount: futureAmount,
+            totalAmount: totalAmount,
+            currentRound: currentRound,
+            totalRounds: Math.max(totalRounds, currentRound),
+            futureMonths: futureRecs.map(r => r.month),
+            isCompletedThisMonth: isCompletedThisMonth,
+            isCurrentActive: isCurrentActive
+          });
+        }
+      });
+
+      // 이번 달 청구금액 내림차순, 남은 금액 내림차순 정렬
+      processedItems.sort((a, b) => b.currentAmount - a.currentAmount || b.remainingAmount - a.remainingAmount);
+
+      // 상단 요약 카드 수치 업데이트
+      const curTotEl = document.getElementById("instSummaryCurrentTotal");
+      if (curTotEl) curTotEl.innerText = currentMonthSum.toLocaleString() + "원";
+      const curCntEl = document.getElementById("instSummaryCurrentCount");
+      if (curCntEl) curCntEl.innerText = `${processedItems.filter(i => i.isCurrentActive).length}건 진행 중`;
+
+      const remTotEl = document.getElementById("instSummaryRemainingTotal");
+      if (remTotEl) remTotEl.innerText = remainingSum.toLocaleString() + "원";
+
+      const grdTotEl = document.getElementById("instSummaryGrandTotal");
+      if (grdTotEl) grdTotEl.innerText = grandTotalSum.toLocaleString() + "원";
+
+      const cmpCntEl = document.getElementById("instSummaryCompletedCount");
+      if (cmpCntEl) cmpCntEl.innerText = `${completedThisMonthCount}건`;
+
+      // 테이블 내용 렌더링
+      tbody.innerHTML = "";
+      if (processedItems.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">해당 월에 진행 중인 할부 내역이 없습니다.</td></tr>`;
+        return;
+      }
+
+      processedItems.forEach(it => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-indigo-50/30 transition border-b border-slate-100 last:border-none";
+
+        // 카드사 뱃지 스타일
+        let cardColor = "bg-slate-100 text-slate-700";
+        if (it.card.includes("하나")) cardColor = "bg-emerald-50 text-emerald-700 border border-emerald-200/60";
+        else if (it.card.includes("롯데")) cardColor = "bg-rose-50 text-rose-700 border border-rose-200/60";
+        else if (it.card.includes("신한")) cardColor = "bg-blue-50 text-blue-700 border border-blue-200/60";
+        else if (it.card.includes("기업")) cardColor = "bg-indigo-50 text-indigo-700 border border-indigo-200/60";
+
+        // 구분 뱃지
+        let typeBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600">공통</span>`;
+        if (it.type === "선준") {
+          typeBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] bg-amber-50 text-amber-700 font-bold border border-amber-200/50">선준</span>`;
+        } else if (it.type === "생활비") {
+          typeBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/50">생활비</span>`;
+        }
+
+        // 진행률 계산
+        const pct = it.totalRounds > 0 ? Math.min(100, Math.round((it.currentRound / it.totalRounds) * 100)) : 100;
+
+        // 상태 배지
+        let statusBadge = "";
+        if (it.isCompletedThisMonth) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 whitespace-nowrap">완납 예정</span>`;
+        } else if (it.isCurrentActive) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 whitespace-nowrap">납부 중</span>`;
+        } else {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 whitespace-nowrap">향후 청구</span>`;
+        }
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-2.5 whitespace-nowrap">
+            <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${cardColor}">${it.card}</span>
+          </td>
+          <td class="py-2.5 px-2.5 font-bold text-slate-800 whitespace-nowrap">
+            ${it.item}
+          </td>
+          <td class="py-2.5 px-2 text-center whitespace-nowrap">
+            ${typeBadge}
+          </td>
+          <td class="py-2.5 px-2.5 text-right font-black text-rose-600 whitespace-nowrap tabular-nums">
+            ${it.currentAmount > 0 ? it.currentAmount.toLocaleString() + '원' : '-'}
+          </td>
+          <td class="py-2.5 px-2.5 text-right font-bold text-purple-700 whitespace-nowrap tabular-nums">
+            ${it.remainingAmount > 0 ? it.remainingAmount.toLocaleString() + '원' : '<span class="text-slate-400 font-normal">0원 (완납)</span>'}
+          </td>
+          <td class="py-2.5 px-2.5 text-right font-semibold text-slate-700 whitespace-nowrap tabular-nums">
+            ${it.totalAmount > 0 ? it.totalAmount.toLocaleString() + '원' : '-'}
+          </td>
+          <td class="py-2.5 px-2.5 text-center whitespace-nowrap">
+            <div class="inline-flex flex-col items-center">
+              <span class="text-[10px] font-bold text-slate-600">${it.currentRound} / ${it.totalRounds}회</span>
+              <div class="w-12 bg-slate-100 rounded-full h-1.5 mt-0.5 overflow-hidden">
+                <div class="bg-indigo-500 h-1.5 rounded-full" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          </td>
+          <td class="py-2.5 px-2.5 text-center whitespace-nowrap">
+            ${statusBadge}
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
     function renderSeonjunList() {
       const allSeonjun = getAllSeonjunItems();
 
@@ -3376,6 +3780,9 @@
         activeLabel.innerText = selectedCard === "ALL" ? "전체 카드" : selectedCard;
       }
       const search = (document.getElementById("seonjunSearchInput")?.value || "").trim().toLowerCase();
+
+      // 💳 할부 분석 표 함께 갱신
+      renderSeonjunInstallmentTable(selectedYear, selectedMonth);
 
       const tbody = document.getElementById("seonjunTableBody");
       if (!tbody) return;
