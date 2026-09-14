@@ -150,6 +150,8 @@ function getMonthlyExpensesData(ss) {
   var sheet = ss.getSheetByName('월별 비용') || 
               ss.getSheetByName('월별비용') || 
               ss.getSheetByName('비용') ||
+              ss.getSheetByName('지출') ||
+              ss.getSheetByName('월별지출') ||
               ss.getSheetByName('월별 요약') ||
               ss.getSheetByName('요약');
   
@@ -168,19 +170,21 @@ function getMonthlyExpensesData(ss) {
 
     var headerRowIdx = -1;
     var colRemain = -1, colSavings = -1, colPocket = -1, colLiving = -1, colEmergency = -1;
-    var colYear = 0, colMonth = 1;
+    var colYear = -1, colMonth = -1;
 
     for (var r = 0; r < Math.min(10, values.length); r++) {
       var rowStr = values[r].map(function(c) { return String(c || '').trim(); });
       for (var c = 0; c < rowStr.length; c++) {
         var val = rowStr[c];
-        if (val === '잔금') colRemain = c;
-        else if (val === '적금') colSavings = c;
+        if (val.indexOf('년도') !== -1 || val === '년') colYear = c;
+        else if (val === '월' || val.indexOf('월별') !== -1) colMonth = c;
+        else if (val === '잔금' || val.indexOf('잔액') !== -1) colRemain = c;
+        else if (val === '적금' || val.indexOf('저축') !== -1) colSavings = c;
         else if (val === '용돈') colPocket = c;
         else if (val === '생활비') colLiving = c;
         else if (val === '비상금') colEmergency = c;
       }
-      if (colRemain !== -1 && colSavings !== -1 && colPocket !== -1) {
+      if ((colRemain !== -1 && colPocket !== -1) || (colSavings !== -1 && colPocket !== -1 && colLiving !== -1)) {
         headerRowIdx = r;
         break;
       }
@@ -190,16 +194,18 @@ function getMonthlyExpensesData(ss) {
       var results = [];
       var currentYear = '';
 
-      // 잔금 열 위치를 기준으로 이전 열이 월, 그 앞 열이 연도
-      if (colRemain > 1) {
+      if (colRemain > 1 && colMonth === -1) {
         colMonth = colRemain - 1;
         colYear = colRemain - 2;
+      } else if (colMonth === -1) {
+        colMonth = 1;
+        colYear = 0;
       }
 
       for (var r = headerRowIdx + 1; r < values.length; r++) {
         var row = values[r];
-        var yVal = String(row[colYear] || '').trim();
-        var mVal = String(row[colMonth] || '').trim();
+        var yVal = colYear !== -1 ? String(row[colYear] || '').trim() : '';
+        var mVal = colMonth !== -1 ? String(row[colMonth] || '').trim() : '';
 
         if (yVal && (yVal.indexOf('년') !== -1 || /^\d{4}$/.test(yVal))) {
           currentYear = yVal.indexOf('년') === -1 ? yVal + '년' : yVal;
@@ -208,7 +214,7 @@ function getMonthlyExpensesData(ss) {
         if (!mVal || (mVal.indexOf('월') === -1 && isNaN(parseInt(mVal, 10)))) continue;
         var monthStr = mVal.indexOf('월') === -1 ? mVal + '월' : mVal;
 
-        // 수식 없이 시트 셀에 입력된 순수 숫자만 추출
+        // 수식 결과 숫자 추출
         var remain = colRemain !== -1 ? parseNumeric(row[colRemain]) : 0;
         var savings = colSavings !== -1 ? parseNumeric(row[colSavings]) : 0;
         var pocket = colPocket !== -1 ? parseNumeric(row[colPocket]) : 0;
@@ -218,6 +224,7 @@ function getMonthlyExpensesData(ss) {
         if (rawEmergency !== null && rawEmergency !== undefined && String(rawEmergency).trim() !== '') {
           emergency = parseNumeric(rawEmergency);
         } else {
+          // 비상금 = 잔금 - (적금 + 용돈 + 생활비) 수식 적용
           emergency = remain - (savings + pocket + living);
         }
 
@@ -247,7 +254,6 @@ function parseNumeric(val) {
   if (typeof val === 'number') return val;
   if (!val) return 0;
   var str = String(val).trim();
-  // 회계 음수 표기 (1,000) 또는 -1,000 감지
   var isNegative = false;
   if (str.indexOf('-') !== -1 || (str.indexOf('(') !== -1 && str.indexOf(')') !== -1)) {
     isNegative = true;
@@ -259,9 +265,9 @@ function parseNumeric(val) {
 }
 
 /**
- * 기존 시트 추출 함수 (요약 시트)
+ * 기존 시트 추출 함수 (요약 시트) - 월별 비용 데이터와 지능적 상호 보완
  */
-function getSummaryData(ss) {
+function getSummaryData(ss, monthlyExpensesData) {
   var sheet = ss.getSheetByName('월별 요약') || ss.getSheetByName('요약') || ss.getSheets()[0];
   if (!sheet) return [];
   var values = sheet.getDataRange().getValues();
@@ -271,9 +277,12 @@ function getSummaryData(ss) {
   for (var r = 1; r < values.length; r++) {
     var row = values[r];
     if (!row[0] && !row[1]) continue;
-    result.push({
-      year: String(row[0] || ''),
-      month: String(row[1] || ''),
+    var y = String(row[0] || '');
+    var m = String(row[1] || '');
+
+    var item = {
+      year: y,
+      month: m,
       salary: parseNumeric(row[2]),
       salaryMinusCard: parseNumeric(row[3]),
       dajeongRemain: parseNumeric(row[4]),
@@ -283,7 +292,24 @@ function getSummaryData(ss) {
       pocketMoney: parseNumeric(row[8]),
       livingExpense: parseNumeric(row[9]),
       emergencyFund: parseNumeric(row[10])
-    });
+    };
+
+    // 월별 비용 시트에 기재된 데이터가 있다면 결측치나 옛날 값 보완
+    if (monthlyExpensesData && monthlyExpensesData.length > 0) {
+      for (var me = 0; me < monthlyExpensesData.length; me++) {
+        var exp = monthlyExpensesData[me];
+        if ((exp.year === y || !exp.year) && exp.month === m) {
+          if (exp.remain !== undefined && exp.remain > 0) item.remain = exp.remain;
+          if (exp.savings !== undefined && exp.savings > 0) item.savings = exp.savings;
+          if (exp.pocketMoney !== undefined && exp.pocketMoney > 0) item.pocketMoney = exp.pocketMoney;
+          if (exp.livingExpense !== undefined && exp.livingExpense > 0) item.livingExpense = exp.livingExpense;
+          if (exp.emergencyFund !== undefined) item.emergencyFund = exp.emergencyFund;
+          break;
+        }
+      }
+    }
+
+    result.push(item);
   }
   return result;
 }
