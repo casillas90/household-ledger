@@ -123,6 +123,7 @@
           <div class="min-w-0 flex-1">
             <h1 class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 truncate">
               다정 & 선준 가계부 대시보드
+              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-2xs">v2.7</span>
             </h1>
             <p class="text-[11px] sm:text-sm text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
               <span class="inline-flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] sm:text-xs">
@@ -135,16 +136,20 @@
         </div>
       </div>
       
-      <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+      <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end flex-wrap">
         <div class="text-right hidden sm:block">
           <span class="text-[11px] text-slate-400 block font-medium">마지막 동기화</span>
           <span id="lastUpdated" class="text-xs font-semibold text-slate-600">-</span>
         </div>
-        <button id="btnRefresh" onclick="loadData()" class="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-semibold rounded-xl sm:rounded-2xl transition-all shadow-xs flex items-center justify-center gap-1.5">
+        <button id="btnHardSync" onclick="resetAndSyncAll()" class="px-3 py-2 sm:py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white text-xs font-bold rounded-xl sm:rounded-2xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer" title="맥북/아이폰 캐시를 초기화하고 구글 시트 원본과 100% 동일하게 동기화합니다">
+          <i class="fa-solid fa-bolt"></i>
+          <span>완전 동기화</span>
+        </button>
+        <button id="btnRefresh" onclick="loadData()" class="px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-semibold rounded-xl sm:rounded-2xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
           <i id="refreshIcon" class="fa-solid fa-arrows-rotate"></i>
           <span>새로고침</span>
         </button>
-        <button id="btnShareMobile" onclick="openShareModal()" class="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 active:scale-95 text-white text-xs font-bold rounded-xl sm:rounded-2xl transition-all shadow-xs shadow-indigo-200 flex items-center justify-center gap-1.5">
+        <button id="btnShareMobile" onclick="openShareModal()" class="px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 active:scale-95 text-white text-xs font-bold rounded-xl sm:rounded-2xl transition-all shadow-xs shadow-indigo-200 flex items-center justify-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-mobile-screen-button"></i>
           <span>아이폰 공유</span>
         </button>
@@ -1686,7 +1691,7 @@
 
       try {
         const fetchUrl = APPS_SCRIPT_URL + (APPS_SCRIPT_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
-        const res = await fetch(fetchUrl);
+        const res = await fetch(fetchUrl, { cache: 'no-store' });
         rawData = await res.json();
         
         // 다정 카드값 영구 보관소와 자동 동기화 (구글 시트에서 행을 지워도 대시보드에는 영구 보존)
@@ -1711,6 +1716,23 @@
         alert("데이터를 불러오는 중 오류가 발생했습니다: " + err.message);
       } finally {
         if (refreshIcon) refreshIcon.classList.remove("fa-spin");
+      }
+    }
+
+    // 맥북 및 아이폰 캐시 완전 초기화 및 구글 시트 원본 동기화
+    function resetAndSyncAll() {
+      try {
+        // 로컬 오버라이드 캐시 완전 삭제
+        localStorage.removeItem(STORAGE_KEY_ALLOC_OVERRIDES);
+        localStorage.removeItem(STORAGE_KEY_CUSTOM_MONTHS);
+        showToast("⚡️ 로컬 캐시를 초기화하고 구글 시트 최신 데이터로 완전 동기화합니다...");
+        setTimeout(() => {
+          const url = new URL(window.location.href);
+          url.searchParams.set('v', Date.now().toString());
+          window.location.replace(url.toString());
+        }, 350);
+      } catch (e) {
+        console.error("캐시 초기화 실패:", e);
       }
     }
 
@@ -1945,7 +1967,7 @@
       { year: '2026년', month: '7월',  remain: 2215661, savings: 1500000, pocketMoney: 159954, livingExpense: 268500, emergencyFund: 287207 },
       { year: '2026년', month: '8월',  remain: 1025473, savings: 1100000, pocketMoney: 41586,  livingExpense: 186240, emergencyFund: -302353 },
       { year: '2026년', month: '9월',  remain: 1366167, savings: 950000,  pocketMoney: 135734, livingExpense: 251000, emergencyFund: 29433 },
-      { year: '2026년', month: '10월', remain: 1832611, savings: 0,       pocketMoney: 300000, livingExpense: 300000, emergencyFund: 1232611 },
+      { year: '2026년', month: '10월', remain: 1832611, savings: 0,       pocketMoney: 216300, livingExpense: 300000, emergencyFund: 1316311 },
       { year: '2026년', month: '11월', remain: 0,       savings: 0,       pocketMoney: 300000, livingExpense: 300000, emergencyFund: -600000 },
       { year: '2026년', month: '12월', remain: 0,       savings: 0,       pocketMoney: 300000, livingExpense: 300000, emergencyFund: -600000 }
     ];
@@ -1985,24 +2007,23 @@
             }
           }
         });
-        // 2026년 9월에 잘못 저장된 용돈 251,000원 또는 450,000원이 있다면 정제하여 원래 값(135,734원)으로 복원
-        if (data["2026년_9월"]) {
-          if (data["2026년_9월"].pocketMoney === 251000 || data["2026년_9월"].pocketMoney === 450000) {
-            delete data["2026년_9월"].pocketMoney;
-            changed = true;
+        // 2026년 9월 이후 월의 과거 로컬 임시값 정제 -> 항상 실시간 할부/생활비 차감 수식이 깨끗하게 작동
+        ['2026년_9월', '2026년_10월', '2026년_11월', '2026년_12월'].forEach(mKey => {
+          if (data[mKey]) {
+            if ([135734, 216300, 251000, 300000, 450000, 160750].includes(data[mKey].pocketMoney)) {
+              delete data[mKey].pocketMoney;
+              changed = true;
+            }
+            if ([135734, 251000, 300000].includes(data[mKey].livingExpense)) {
+              delete data[mKey].livingExpense;
+              changed = true;
+            }
+            if ([29433, 1232611, 1316311].includes(data[mKey].emergencyFund)) {
+              delete data[mKey].emergencyFund;
+              changed = true;
+            }
           }
-          if (data["2026년_9월"].livingExpense === 135734) {
-            delete data["2026년_9월"].livingExpense;
-            changed = true;
-          }
-        }
-        // 2026년 10월에 잘못 저장된 임시 배분값 정제하여 원래 값(용돈 30만, 생활비 30만) 복원
-        if (data["2026년_10월"]) {
-          if (data["2026년_10월"].pocketMoney === 160750) {
-            delete data["2026년_10월"].pocketMoney;
-            changed = true;
-          }
-        }
+        });
         if (changed) {
           localStorage.setItem(STORAGE_KEY_ALLOC_OVERRIDES, JSON.stringify(data));
         }
@@ -2122,6 +2143,50 @@
       } catch (e) {
         return [];
       }
+    }
+
+    /**
+     * 카드할부에서 '선준'으로 지정된 금액 계산 함수
+     * (월별 선준 할부 청구액 합계: note가 '할부'이면서 type이 '선준'인 항목)
+     */
+    function getSeonjunInstallmentDeduction(year, month) {
+      let deduction = 0;
+      try {
+        const sItems = (typeof getAllSeonjunItems === 'function') ? getAllSeonjunItems() : (rawData?.seonjun || []);
+        sItems.forEach(it => {
+          if ((it.year === year || !it.year) && it.month === month) {
+            const isSeonjun = it.type === '선준' || it.note === '선준';
+            const isInstallment = it.note === '할부' || (it.item && (it.item.includes('회차') || it.item.includes('할부')));
+            if (isSeonjun && isInstallment) {
+              deduction += (it.amount || 0);
+            }
+          }
+        });
+      } catch (e) {
+        console.error("선준 할부 차감 계산 오류:", e);
+      }
+      return deduction;
+    }
+
+    /**
+     * 카드에서 '생활비'로 지정된 지출 금액 계산 함수
+     */
+    function getLivingCardDeduction(year, month) {
+      let deduction = 0;
+      try {
+        const sItems = (typeof getAllSeonjunItems === 'function') ? getAllSeonjunItems() : (rawData?.seonjun || []);
+        sItems.forEach(it => {
+          if ((it.year === year || !it.year) && it.month === month) {
+            const isLiving = it.type === '생활비' || it.note === '생활비' || (it.item && it.item.includes('생활비'));
+            if (isLiving) {
+              deduction += (it.amount || 0);
+            }
+          }
+        });
+      } catch (e) {
+        console.error("생활비 카드 지출 계산 오류:", e);
+      }
+      return deduction;
     }
 
     /**
@@ -2254,12 +2319,20 @@
         savings = 0;
       }
 
-            // B. 용돈 (구글 시트 [월별 비용] 원본 데이터 100% 일치)
+      // B. 용돈 (수식: 기준 용돈 300,000원 - 카드할부 중 '선준'으로 적힌 금액 차감)
       let pocketMoney = 0;
       let pocketSource = "구글 시트";
+      const seonjunInstallmentDeduction = getSeonjunInstallmentDeduction(year, month);
+
       if (overrides.pocketMoney !== undefined) {
         pocketMoney = overrides.pocketMoney;
         pocketSource = "✏️ 직접수정";
+      } else if (year === '2026년' && (['9월', '10월', '11월', '12월'].includes(month) || seonjunInstallmentDeduction > 0)) {
+        // 2026년 9월 이후: 기준 용돈 300,000원에서 선준 카드할부 청구액 실시간 차감
+        pocketMoney = Math.max(0, 300000 - seonjunInstallmentDeduction);
+        pocketSource = seonjunInstallmentDeduction > 0 
+          ? `30만−할부(${seonjunInstallmentDeduction.toLocaleString()}원)` 
+          : "기준 용돈 30만";
       } else if (rawData && rawData.monthlyExpenses && Array.isArray(rawData.monthlyExpenses)) {
         const found = rawData.monthlyExpenses.find(e => (e.year === year || !e.year) && e.month === month);
         if (found && found.pocketMoney !== undefined && found.pocketMoney !== null) {
@@ -2269,19 +2342,27 @@
       }
       if (!pocketMoney && sheetExp && sheetExp.pocketMoney !== undefined) {
         pocketMoney = sheetExp.pocketMoney;
-        pocketSource = "구글시트 원본";
+        pocketSource = "시트 원본";
       }
       if (!pocketMoney && row.pocketMoney !== undefined && row.pocketMoney > 0) {
         pocketMoney = row.pocketMoney;
         pocketSource = "시트 데이터";
       }
 
-      // C. 생활비 (구글 시트 [월별 비용] 원본 데이터 100% 일치)
+      // C. 생활비 (수식: 기준 생활비 300,000원 - 카드 지출 중 '생활비'로 적힌 금액 차감)
       let livingExpense = 0;
       let livingSource = "구글 시트";
+      const livingCardDeduction = getLivingCardDeduction(year, month);
+
       if (overrides.livingExpense !== undefined) {
         livingExpense = overrides.livingExpense;
         livingSource = "✏️ 직접수정";
+      } else if (year === '2026년' && (['9월', '10월', '11월', '12월'].includes(month) || livingCardDeduction > 0)) {
+        // 2026년 9월 이후: 기준 생활비 300,000원에서 카드 생활비 지출액 실시간 차감
+        livingExpense = Math.max(0, 300000 - livingCardDeduction);
+        livingSource = livingCardDeduction > 0 
+          ? `30만−카드(${livingCardDeduction.toLocaleString()}원)` 
+          : "기준 생활비 30만";
       } else if (rawData && rawData.monthlyExpenses && Array.isArray(rawData.monthlyExpenses)) {
         const found = rawData.monthlyExpenses.find(e => (e.year === year || !e.year) && e.month === month);
         if (found && found.livingExpense !== undefined && found.livingExpense !== null) {
@@ -2291,7 +2372,7 @@
       }
       if (!livingExpense && sheetExp && sheetExp.livingExpense !== undefined) {
         livingExpense = sheetExp.livingExpense;
-        livingSource = "구글시트 원본";
+        livingSource = "시트 원본";
       }
       if (!livingExpense && row.livingExpense !== undefined && row.livingExpense > 0) {
         livingExpense = row.livingExpense;
@@ -2303,7 +2384,7 @@
       if (overrides.emergencyFund !== undefined) {
         emergencyFund = overrides.emergencyFund;
       } else {
-        // 구글 시트 원본 수식 그대로 자동 계산 (1원의 오차도 없이 잔금 = 적금 + 용돈 + 생활비 + 비상금)
+        // 잔금 = 적금 + 용돈 + 생활비 + 비상금 100% 일치 자동 계산
         emergencyFund = remainBalance - (savings + pocketMoney + livingExpense);
       }
 
@@ -2554,13 +2635,8 @@
       if (allocPocketEl) allocPocketEl.innerText = metrics.pocketMoney.toLocaleString() + "원";
       const allocPocketSubEl = document.getElementById("allocPocketSub");
       if (allocPocketSubEl) {
-        const cardActual = (metrics.autoSeonjunPocket || 0) + (metrics.autoDajeongPocket || 0);
-        if (cardActual > 0) {
-          allocPocketSubEl.innerText = `카드실사용 ${cardActual.toLocaleString()}원`;
-          allocPocketSubEl.title = `시트 계획: ${metrics.pocketMoney.toLocaleString()}원 / 실시간 카드합계: ${cardActual.toLocaleString()}원`;
-        } else {
-          allocPocketSubEl.innerText = metrics.isOverridden.pocketMoney ? "✏️ 직접수정" : "시트 데이터";
-        }
+        allocPocketSubEl.innerText = metrics.isOverridden.pocketMoney ? "✏️ 직접수정" : (metrics.pocketSource || "기준 용돈 30만");
+        allocPocketSubEl.title = `용돈 산출: ${metrics.pocketSource}`;
       }
 
       // 3. 생활비
@@ -2568,12 +2644,8 @@
       if (allocLivingEl) allocLivingEl.innerText = metrics.livingExpense.toLocaleString() + "원";
       const allocLivingSubEl = document.getElementById("allocLivingSub");
       if (allocLivingSubEl) {
-        if (metrics.autoLiving > 0) {
-          allocLivingSubEl.innerText = `카드실사용 ${metrics.autoLiving.toLocaleString()}원`;
-          allocLivingSubEl.title = `시트 계획: ${metrics.livingExpense.toLocaleString()}원 / 실시간 카드합계: ${metrics.autoLiving.toLocaleString()}원`;
-        } else {
-          allocLivingSubEl.innerText = metrics.isOverridden.livingExpense ? "✏️ 직접수정" : "시트 데이터";
-        }
+        allocLivingSubEl.innerText = metrics.isOverridden.livingExpense ? "✏️ 직접수정" : (metrics.livingSource || "기준 생활비 30만");
+        allocLivingSubEl.title = `생활비 산출: ${metrics.livingSource}`;
       }
 
       // 4. 비상금 (잔금에서 적금+용돈+생활비를 뺀 최종 잔여액!)
