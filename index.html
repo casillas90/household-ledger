@@ -6,6 +6,9 @@
   <title>다정 & 선준 가계부 대시보드</title>
 
   <!-- iOS Safari & 모바일 PWA 메타 태그 -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="다정선준 가계부">
@@ -1826,6 +1829,13 @@
       } finally {
         if (refreshIcon) refreshIcon.classList.remove("fa-spin");
       }
+    }
+
+    // 아이폰 홈화면 바로가기(PWA/WebClip) 캐시 우회 강제 새로고침
+    function forceAppReload() {
+      const url = new URL(window.location.href);
+      url.searchParams.set('reload', Date.now().toString());
+      window.location.replace(url.toString());
     }
 
     // 탭 전환
@@ -5580,6 +5590,23 @@ function doGet(e) {
             <button onclick="triggerNativeShare()" class="flex-1 py-2 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-indigo-200">
               <i class="fa-solid fa-arrow-up-right-from-square"></i>
               <span>카카오톡 / 메시지 공유</span>
+            </button>
+          </div>
+
+          <!-- 아이폰 홈화면 바로가기 최신버전 새로고침 버튼 -->
+          <div class="p-3.5 bg-indigo-50/80 rounded-xl border border-indigo-100/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate text-indigo-600"></i>
+                화면 수정사항이 반영 안 되시나요?
+              </p>
+              <p class="text-[11px] text-slate-600 mt-0.5">
+                홈 화면 바로가기는 사파리 캐시가 남을 수 있습니다. 강제 새로고침을 누르면 최신 코드를 즉시 다운로드합니다.
+              </p>
+            </div>
+            <button onclick="forceAppReload()" class="shrink-0 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-bolt text-amber-300"></i>
+              <span>앱 강제 새로고침</span>
             </button>
           </div>
 
