@@ -217,7 +217,7 @@ function getMonthlyExpensesData(ss) {
         var val = rowStr[c];
         if (val.indexOf('년도') !== -1 || val === '년') colYear = c;
         else if (val === '월' || val.indexOf('월별') !== -1) colMonth = c;
-        else if (val === '잔금' || val.indexOf('잔액') !== -1) colRemain = c;
+        else if (val === '잔금' || val.indexOf('잔액') !== -1 || val.indexOf('남은') !== -1 || val.indexOf('잔여') !== -1) colRemain = c;
         else if (val === '적금' || val.indexOf('저축') !== -1) colSavings = c;
         else if (val === '용돈') colPocket = c;
         else if (val === '생활비') colLiving = c;
@@ -341,7 +341,7 @@ function getSummaryData(ss, monthlyExpensesData) {
 
   // 동적 헤더 위치 감지
   var colYear = 0, colMonth = 1, colSalary = 2, colSalaryMinusCard = 3, colDajeongRemain = 4;
-  var colTotalCost = 5, colCardTotal = 6, colSavings = 7, colPocket = 8, colLiving = 9, colEmergency = 10;
+  var colTotalCost = 5, colCardTotal = 6, colSavings = 7, colPocket = 8, colLiving = 9, colEmergency = 10, colRemain = -1;
   if (values.length > 0) {
     var headers = values[0].map(function(h) { return String(h || '').trim(); });
     for (var c = 0; c < headers.length; c++) {
@@ -351,6 +351,7 @@ function getSummaryData(ss, monthlyExpensesData) {
       else if (h.indexOf('급여') !== -1 || h.indexOf('수입') !== -1) colSalary = c;
       else if (h.indexOf('급여-') !== -1 || h.indexOf('급여−') !== -1 || h.indexOf('차액') !== -1) colSalaryMinusCard = c;
       else if (h.indexOf('다정') !== -1 && h.indexOf('남은') !== -1) colDajeongRemain = c;
+      else if (h.indexOf('남은') !== -1 || h.indexOf('잔금') !== -1 || h.indexOf('잔액') !== -1) colRemain = c;
       else if (h.indexOf('전체비용') !== -1 || h.indexOf('선준 카드') !== -1 || h.indexOf('선준카드') !== -1) colTotalCost = c;
       else if (h.indexOf('카드') !== -1 && h.indexOf('합계') !== -1) colCardTotal = c;
       else if (h.indexOf('적금') !== -1 || h.indexOf('저축') !== -1) colSavings = c;
@@ -380,12 +381,19 @@ function getSummaryData(ss, monthlyExpensesData) {
     if (mNum < 1 || mNum > 12) continue;
     var formattedMonth = mNum + '월';
 
+    var rawRemain = colRemain !== -1 ? parseNumeric(row[colRemain]) : 0;
+    var rawSalaryMinusCard = colSalaryMinusCard !== -1 ? parseNumeric(row[colSalaryMinusCard]) : 0;
+    if (rawRemain > 0 && rawSalaryMinusCard === 0) {
+      rawSalaryMinusCard = rawRemain;
+    }
+
     var item = {
       year: currentYear,
       month: formattedMonth,
       salary: parseNumeric(row[colSalary]),
-      salaryMinusCard: parseNumeric(row[colSalaryMinusCard]),
+      salaryMinusCard: rawSalaryMinusCard,
       dajeongRemain: parseNumeric(row[colDajeongRemain]),
+      remain: rawRemain,
       totalCost: parseNumeric(row[colTotalCost]),
       cardTotal: parseNumeric(row[colCardTotal]),
       savings: parseNumeric(row[colSavings]),
@@ -393,6 +401,16 @@ function getSummaryData(ss, monthlyExpensesData) {
       livingExpense: parseNumeric(row[colLiving]),
       emergencyFund: parseNumeric(row[colEmergency])
     };
+
+    // totalCost 자동 역산 (급여 - 남은금액)
+    if (item.salary > 0 && item.salaryMinusCard > 0 && item.totalCost === 0) {
+      item.totalCost = item.salary - item.salaryMinusCard;
+    }
+
+    // remain 자동 보정
+    if (item.remain === 0 && item.salaryMinusCard > 0) {
+      item.remain = item.salaryMinusCard + (item.dajeongRemain || 0);
+    }
 
     // 월별 비용 시트에 기재된 데이터가 있다면 보완
     if (monthlyExpensesData && monthlyExpensesData.length > 0) {
