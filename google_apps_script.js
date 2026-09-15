@@ -30,6 +30,12 @@ function doGet(e) {
     // 6. 내집마련 플랜 4번 저축 자산 데이터 (주식, 보증금, 주택청약, 월별 저축, 파킹통장, 저축합계)
     var houseSavingsData = getHouseSavingsData(ss);
 
+    // 주식 시트의 실시간 평가액을 내집마련 4번 저축 자산의 주식 항목에도 100% 실시간 동기화
+    if (stockData && stockData.total > 0 && houseSavingsData) {
+      houseSavingsData.stock = Math.round(stockData.total);
+      houseSavingsData.total = houseSavingsData.stock + (houseSavingsData.deposit || 0) + (houseSavingsData.housingSubscription || 0) + (houseSavingsData.monthlySavings || 0) + (houseSavingsData.parkingAccount || 0);
+    }
+
     var result = {
       status: "success",
       sheetNames: sheetNames,
@@ -533,13 +539,13 @@ function getDajeongData(ss) {
  * 선준 시트 추출 함수 (유연 탐색 및 동적 헤더 감지)
  */
 function getSeonjunData(ss) {
-  var sheet = findSheetByKeywords(ss, ['선준', '선준카드', '선준 카드', '선준(카드)']);
+  var sheet = findSheetByKeywords(ss, ['선준 카드값', '선준카드값', '선준 카드', '선준카드'], ['축의금', '조의금', '다정', '주식', '내집', '시트']);
   if (!sheet) {
     var allSheets = ss.getSheets();
     for (var s = 0; s < allSheets.length; s++) {
       var sName = allSheets[s].getName().trim();
-      if (sName.indexOf('다정') !== -1 || sName.indexOf('주식') !== -1 || sName.indexOf('내집') !== -1) continue;
-      if (sName.indexOf('선준') !== -1) {
+      if (sName.indexOf('축의') !== -1 || sName.indexOf('조의') !== -1 || sName.indexOf('다정') !== -1 || sName.indexOf('주식') !== -1 || sName.indexOf('내집') !== -1) continue;
+      if (sName.indexOf('선준') !== -1 && (sName.indexOf('카드') !== -1 || sName.indexOf('비용') !== -1)) {
         sheet = allSheets[s];
         break;
       }
@@ -809,12 +815,12 @@ function doPost(e) {
  */
 function getHouseSavingsData(ss) {
   var defaultData = {
-    stock: 16973686,
+    stock: 17164816,
     deposit: 29921000,
     housingSubscription: 8850000,
-    monthlySavings: 36060000,
+    monthlySavings: 37860000,
     parkingAccount: 2238,
-    total: 91806924
+    total: 93798054
   };
 
   try {
