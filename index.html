@@ -123,7 +123,7 @@
           <div class="min-w-0 flex-1">
             <h1 class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 truncate">
               다정 & 선준 가계부 대시보드
-              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-2xs">v2.7</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-2xs">v2.8</span>
             </h1>
             <p class="text-[11px] sm:text-sm text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
               <span class="inline-flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] sm:text-xs">
@@ -1381,8 +1381,13 @@
                   <i class="fa-solid fa-piggy-bank"></i>
                 </span>
                 <div>
-                  <h3 class="text-base font-bold text-slate-900">4. 현재 보유 자산 및 저축</h3>
-                  <p class="text-xs text-slate-400">구글 시트 내집마련 플랜 4번 실시간 자산 현황표</p>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="text-base font-bold text-slate-900">4. 현재 보유 자산 및 저축</h3>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>구글시트 실시간 연동
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-400">구글 시트 4번 표 수정 시 새로고침하면 실시간 자동 반영</p>
                 </div>
               </div>
               <div class="flex items-center gap-2">
@@ -1722,9 +1727,10 @@
     // 맥북 및 아이폰 캐시 완전 초기화 및 구글 시트 원본 동기화
     function resetAndSyncAll() {
       try {
-        // 로컬 오버라이드 캐시 완전 삭제
+        // 로컬 오버라이드 및 고정 자산 캐시 완전 삭제 -> 구글 시트 100% 실시간 연동 보장
         localStorage.removeItem(STORAGE_KEY_ALLOC_OVERRIDES);
         localStorage.removeItem(STORAGE_KEY_CUSTOM_MONTHS);
+        localStorage.removeItem(STORAGE_KEY_HOUSE_SAVINGS);
         showToast("⚡️ 로컬 캐시를 초기화하고 구글 시트 최신 데이터로 완전 동기화합니다...");
         setTimeout(() => {
           const url = new URL(window.location.href);
@@ -1967,7 +1973,7 @@
       { year: '2026년', month: '7월',  remain: 2215661, savings: 1500000, pocketMoney: 159954, livingExpense: 268500, emergencyFund: 287207 },
       { year: '2026년', month: '8월',  remain: 1025473, savings: 1100000, pocketMoney: 41586,  livingExpense: 186240, emergencyFund: -302353 },
       { year: '2026년', month: '9월',  remain: 1366167, savings: 950000,  pocketMoney: 135734, livingExpense: 251000, emergencyFund: 29433 },
-      { year: '2026년', month: '10월', remain: 1832611, savings: 0,       pocketMoney: 216300, livingExpense: 300000, emergencyFund: 1316311 },
+      { year: '2026년', month: '10월', remain: 1832611, savings: 0,       pocketMoney: 139250, livingExpense: 300000, emergencyFund: 1393361 },
       { year: '2026년', month: '11월', remain: 0,       savings: 0,       pocketMoney: 300000, livingExpense: 300000, emergencyFund: -600000 },
       { year: '2026년', month: '12월', remain: 0,       savings: 0,       pocketMoney: 300000, livingExpense: 300000, emergencyFund: -600000 }
     ];
@@ -2007,10 +2013,10 @@
             }
           }
         });
-        // 2026년 9월 이후 월의 과거 로컬 임시값 정제 -> 항상 실시간 할부/생활비 차감 수식이 깨끗하게 작동
+        // 2026년 9월 이후 월의 과거 로컬 임시값 정제 -> 항상 실시간 선준 금액(할부+일반) 차감 수식이 깨끗하게 작동
         ['2026년_9월', '2026년_10월', '2026년_11월', '2026년_12월'].forEach(mKey => {
           if (data[mKey]) {
-            if ([135734, 216300, 251000, 300000, 450000, 160750].includes(data[mKey].pocketMoney)) {
+            if ([135734, 139250, 216300, 251000, 300000, 450000, 160750].includes(data[mKey].pocketMoney)) {
               delete data[mKey].pocketMoney;
               changed = true;
             }
@@ -2018,7 +2024,7 @@
               delete data[mKey].livingExpense;
               changed = true;
             }
-            if ([29433, 1232611, 1316311].includes(data[mKey].emergencyFund)) {
+            if ([29433, 1232611, 1316311, 1393361].includes(data[mKey].emergencyFund)) {
               delete data[mKey].emergencyFund;
               changed = true;
             }
@@ -2146,26 +2152,41 @@
     }
 
     /**
-     * 카드할부에서 '선준'으로 지정된 금액 계산 함수
-     * (월별 선준 할부 청구액 합계: note가 '할부'이면서 type이 '선준'인 항목)
+     * 선준 카드값에서 구분에 '선준'으로 적혀있는 금액 합산 함수 (할부 + 일반 전액)
+     * 사용자 룰: 잔금 배분 용돈의 값은 선준 카드값에서 구분에 선준이라고 적혀있으면 용돈에서 -한다
+     * 공식: 월 용돈 = 300,000원 - (구분에 선준 할부+일반 금액)
      */
-    function getSeonjunInstallmentDeduction(year, month) {
+    function getSeonjunDeduction(year, month) {
       let deduction = 0;
+      let instSum = 0;
+      let regularSum = 0;
       try {
         const sItems = (typeof getAllSeonjunItems === 'function') ? getAllSeonjunItems() : (rawData?.seonjun || []);
         sItems.forEach(it => {
           if ((it.year === year || !it.year) && it.month === month) {
-            const isSeonjun = it.type === '선준' || it.note === '선준';
-            const isInstallment = it.note === '할부' || (it.item && (it.item.includes('회차') || it.item.includes('할부')));
-            if (isSeonjun && isInstallment) {
-              deduction += (it.amount || 0);
+            // 구분에 '선준'이라고 적혀있는 항목 (할부 + 일반 포함)
+            const isSeonjun = it.type === '선준' || (it.note === '선준' && (!it.type || it.type === ''));
+            if (isSeonjun) {
+              const amt = Number(it.amount) || 0;
+              deduction += amt;
+              const isInst = it.note === '할부' || (it.item && (it.item.includes('회차') || it.item.includes('할부')));
+              if (isInst) instSum += amt;
+              else regularSum += amt;
             }
           }
         });
       } catch (e) {
-        console.error("선준 할부 차감 계산 오류:", e);
+        console.error("선준 지출 차감 계산 오류:", e);
       }
-      return deduction;
+      return {
+        total: deduction,
+        installment: instSum,
+        regular: regularSum
+      };
+    }
+
+    function getSeonjunInstallmentDeduction(year, month) {
+      return getSeonjunDeduction(year, month).total;
     }
 
     /**
@@ -2319,19 +2340,21 @@
         savings = 0;
       }
 
-      // B. 용돈 (수식: 기준 용돈 300,000원 - 카드할부 중 '선준'으로 적힌 금액 차감)
+      // B. 용돈 (사용자 룰: 선준 카드값에서 구분에 선준 할부+일반 금액 차감)
+      // 공식: 월 용돈 = 300,000원 - (구분에 선준 할부+일반 금액)
       let pocketMoney = 0;
       let pocketSource = "구글 시트";
-      const seonjunInstallmentDeduction = getSeonjunInstallmentDeduction(year, month);
+      const seonjunDeductInfo = getSeonjunDeduction(year, month);
+      const seonjunDeduction = seonjunDeductInfo.total;
 
       if (overrides.pocketMoney !== undefined) {
         pocketMoney = overrides.pocketMoney;
         pocketSource = "✏️ 직접수정";
-      } else if (year === '2026년' && (['9월', '10월', '11월', '12월'].includes(month) || seonjunInstallmentDeduction > 0)) {
-        // 2026년 9월 이후: 기준 용돈 300,000원에서 선준 카드할부 청구액 실시간 차감
-        pocketMoney = Math.max(0, 300000 - seonjunInstallmentDeduction);
-        pocketSource = seonjunInstallmentDeduction > 0 
-          ? `30만−할부(${seonjunInstallmentDeduction.toLocaleString()}원)` 
+      } else if (year === '2026년' && (['9월', '10월', '11월', '12월'].includes(month) || seonjunDeduction > 0)) {
+        // 2026년 9월 이후: 기준 용돈 300,000원에서 구분에 선준 금액(할부+일반) 실시간 차감
+        pocketMoney = Math.max(0, 300000 - seonjunDeduction);
+        pocketSource = seonjunDeduction > 0 
+          ? `30만−선준(${seonjunDeduction.toLocaleString()}원)` 
           : "기준 용돈 30만";
       } else if (rawData && rawData.monthlyExpenses && Array.isArray(rawData.monthlyExpenses)) {
         const found = rawData.monthlyExpenses.find(e => (e.year === year || !e.year) && e.month === month);
@@ -4556,6 +4579,24 @@
       if (HOUSE_DATA.savings) HOUSE_DATA.savings[field] = amount;
       renderHouseTab();
       showToast(`내집마련 저축 자산 [${field}] 금액이 ${amount.toLocaleString()}원으로 갱신되었습니다!`);
+
+      // 구글 시트 웹 앱 백엔드로 실시간 역동기화 (POST 요청 전송)
+      if (APPS_SCRIPT_URL) {
+        try {
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'updateHouseSavingsField',
+              field: field,
+              amount: amount
+            })
+          });
+        } catch(e) {
+          console.log('Apps Script house savings update error:', e);
+        }
+      }
     }
 
     function editHouseSavingPrompt(field, label) {
@@ -4568,22 +4609,36 @@
     }
 
     function processStockFromRawData() {
-      // 0. 로컬 저장소 우선 로드
-      const stored = getStoredHouseSavings();
-      if (stored.deposit !== undefined) HOUSE_DATA.savings.deposit = Number(stored.deposit);
-      if (stored.housingSubscription !== undefined) HOUSE_DATA.savings.housingSubscription = Number(stored.housingSubscription);
-      if (stored.monthlySavings !== undefined) HOUSE_DATA.savings.monthlySavings = Number(stored.monthlySavings);
-      if (stored.parkingAccount !== undefined) HOUSE_DATA.savings.parkingAccount = Number(stored.parkingAccount);
-      if (stored.stock !== undefined) HOUSE_DATA.savings.stock = Number(stored.stock);
-
-      // 1. 구글 시트에서 직접 넘어온 내집마련 플랜 4번 저축 자산 객체가 있을 경우 동기화
+      // 1. 구글 시트에서 직접 넘어온 내집마련 플랜 4번 저축 자산 객체가 있을 경우 최우선 동기화
       if (rawData && rawData.houseSavings) {
         const hs = rawData.houseSavings;
-        if (hs.deposit !== undefined && hs.deposit > 0) HOUSE_DATA.savings.deposit = Number(hs.deposit);
-        if (hs.housingSubscription !== undefined && hs.housingSubscription > 0) HOUSE_DATA.savings.housingSubscription = Number(hs.housingSubscription);
-        if (hs.monthlySavings !== undefined && hs.monthlySavings > 0) HOUSE_DATA.savings.monthlySavings = Number(hs.monthlySavings);
-        if (hs.parkingAccount !== undefined) HOUSE_DATA.savings.parkingAccount = Number(hs.parkingAccount);
-        if (hs.stock !== undefined && hs.stock > 0) HOUSE_DATA.savings.stock = Number(hs.stock);
+        if (hs.deposit !== undefined && !isNaN(hs.deposit) && hs.deposit !== null) HOUSE_DATA.savings.deposit = Number(hs.deposit);
+        if (hs.housingSubscription !== undefined && !isNaN(hs.housingSubscription) && hs.housingSubscription !== null) HOUSE_DATA.savings.housingSubscription = Number(hs.housingSubscription);
+        if (hs.monthlySavings !== undefined && !isNaN(hs.monthlySavings) && hs.monthlySavings !== null) HOUSE_DATA.savings.monthlySavings = Number(hs.monthlySavings);
+        if (hs.parkingAccount !== undefined && !isNaN(hs.parkingAccount) && hs.parkingAccount !== null) HOUSE_DATA.savings.parkingAccount = Number(hs.parkingAccount);
+        if (hs.stock !== undefined && !isNaN(hs.stock) && hs.stock !== null) HOUSE_DATA.savings.stock = Number(hs.stock);
+
+        // 시트 데이터를 로컬 저장소에도 백업 캐싱
+        localStorage.setItem(STORAGE_KEY_HOUSE_SAVINGS, JSON.stringify({
+          deposit: HOUSE_DATA.savings.deposit,
+          housingSubscription: HOUSE_DATA.savings.housingSubscription,
+          monthlySavings: HOUSE_DATA.savings.monthlySavings,
+          parkingAccount: HOUSE_DATA.savings.parkingAccount,
+          stock: HOUSE_DATA.savings.stock
+        }));
+      } else {
+        // 구글 시트 응답에 houseSavings가 아직 없을 때만 로컬 저장소 값 보조 적용
+        const stored = getStoredHouseSavings();
+        if (stored.deposit !== undefined) HOUSE_DATA.savings.deposit = Number(stored.deposit);
+        if (stored.housingSubscription !== undefined) HOUSE_DATA.savings.housingSubscription = Number(stored.housingSubscription);
+        if (stored.monthlySavings !== undefined) HOUSE_DATA.savings.monthlySavings = Number(stored.monthlySavings);
+        if (stored.parkingAccount !== undefined) HOUSE_DATA.savings.parkingAccount = Number(stored.parkingAccount);
+        if (stored.stock !== undefined) HOUSE_DATA.savings.stock = Number(stored.stock);
+      }
+
+      // 주식 시트 연동 여부 체크 (stocks 데이터가 있으면 보완 반영)
+      if (rawData && rawData.stocks && rawData.stocks.total > 0 && (!rawData.houseSavings || !rawData.houseSavings.stock)) {
+        HOUSE_DATA.savings.stock = rawData.stocks.total;
       }
 
       // 총 저축합계 동적 재계산 (수식: 주식 + 보증금 + 주택청약 + 월별 저축 + 파킹통장)

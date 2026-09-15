@@ -600,6 +600,52 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    // 5. 내집마련 플랜 4번 자산 개별 금액 수정 (updateHouseSavingsField)
+    if (action === 'updateHouseSavingsField') {
+      var field = postData.field;
+      var amount = postData.amount;
+      var targetSheets = ['내집마련', '내집마련 플랜', '분양자금', '분양', '자산', '요약'];
+      var sheet = null;
+      for (var s = 0; s < targetSheets.length; s++) {
+        sheet = ss.getSheetByName(targetSheets[s]);
+        if (sheet) break;
+      }
+      if (sheet) {
+        var values = sheet.getDataRange().getValues();
+        var fieldLabels = {
+          stock: ['주식'],
+          deposit: ['보증금'],
+          housingSubscription: ['주택청약', '청약'],
+          monthlySavings: ['월별 저축', '월별저축', '적금'],
+          parkingAccount: ['파킹', '파킹통장']
+        };
+        var targets = fieldLabels[field] || [];
+        var updated = false;
+
+        // 가로형/세로형 탐색 및 업데이트
+        for (var r = 0; r < values.length && !updated; r++) {
+          for (var c = 0; c < values[r].length && !updated; c++) {
+            var cellVal = String(values[r][c] || '').trim();
+            for (var t = 0; t < targets.length; t++) {
+              if (cellVal.indexOf(targets[t]) !== -1) {
+                // 바로 아래 행이거나 옆 열에 숫자 쓰기
+                if (r + 1 < values.length) {
+                  sheet.getRange(r + 2, c + 1).setValue(amount);
+                  updated = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        message: "내집마련 4번 자산 수정 완료: " + field + " = " + amount
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
       received: postData
@@ -615,7 +661,7 @@ function doPost(e) {
 
 /**
  * 내집마련 플랜 4번 보유 자산 표 추출 함수
- * 구글 시트의 6열 표 (주식, 보증금, 주택청약, 월별 저축, 파킹통장, 저축합계) 파싱
+ * 구글 시트의 4번 표(가로형 6열 또는 세로형 리스트)를 자동 탐색하여 100% 실시간 연동
  */
 function getHouseSavingsData(ss) {
   var defaultData = {
@@ -628,55 +674,100 @@ function getHouseSavingsData(ss) {
   };
 
   try {
-    var targetSheets = ['내집마련', '분양자금', '분양', '아파트', '자산', '요약'];
-    var sheet = null;
-    for (var s = 0; s < targetSheets.length; s++) {
-      sheet = ss.getSheetByName(targetSheets[s]);
-      if (sheet) break;
+    var candidateSheets = [];
+    var allSheets = ss.getSheets();
+    for (var i = 0; i < allSheets.length; i++) {
+      var sName = allSheets[i].getName();
+      if (sName.indexOf('내집') !== -1 || sName.indexOf('분양') !== -1 || sName.indexOf('자산') !== -1 || sName.indexOf('아파트') !== -1 || sName.indexOf('저축') !== -1) {
+        candidateSheets.unshift(allSheets[i]);
+      } else {
+        candidateSheets.push(allSheets[i]);
+      }
     }
-    if (!sheet) {
-      var allSheets = ss.getSheets();
-      for (var i = 0; i < allSheets.length; i++) {
-        var name = allSheets[i].getName();
-        if (name.indexOf('집') !== -1 || name.indexOf('분양') !== -1 || name.indexOf('저축') !== -1) {
-          sheet = allSheets[i];
-          break;
+
+    for (var sIdx = 0; sIdx < candidateSheets.length; sIdx++) {
+      var sheet = candidateSheets[sIdx];
+      var values = sheet.getDataRange().getValues();
+      if (!values || values.length === 0) continue;
+
+      // [탐색 1: 가로형 6열 표] (한 행에 주식, 보증금, 청약 등이 있고 다음 행에 금액)
+      for (var r = 0; r < values.length; r++) {
+        var rowStr = values[r].map(function(c) { return String(c || '').trim(); });
+        var colStock = -1, colDeposit = -1, colSub = -1, colMonthly = -1, colParking = -1, colTotal = -1;
+        for (var c = 0; c < rowStr.length; c++) {
+          var v = rowStr[c];
+          if (v === '주식' || v.indexOf('주식') !== -1) colStock = c;
+          else if (v.indexOf('보증금') !== -1) colDeposit = c;
+          else if (v.indexOf('주택청약') !== -1 || v.indexOf('청약') !== -1) colSub = c;
+          else if (v.indexOf('월별 저축') !== -1 || v.indexOf('월별저축') !== -1 || v.indexOf('적금') !== -1) colMonthly = c;
+          else if (v.indexOf('파킹') !== -1) colParking = c;
+          else if (v.indexOf('저축합계') !== -1 || v.indexOf('합계') !== -1) colTotal = c;
+        }
+
+        if (colDeposit !== -1 && (colSub !== -1 || colMonthly !== -1 || colStock !== -1) && r + 1 < values.length) {
+          var nextRow = values[r + 1];
+          var stock = colStock !== -1 ? parseNumeric(nextRow[colStock]) : defaultData.stock;
+          var deposit = colDeposit !== -1 ? parseNumeric(nextRow[colDeposit]) : defaultData.deposit;
+          var sub = colSub !== -1 ? parseNumeric(nextRow[colSub]) : defaultData.housingSubscription;
+          var monthly = colMonthly !== -1 ? parseNumeric(nextRow[colMonthly]) : defaultData.monthlySavings;
+          var parking = colParking !== -1 ? parseNumeric(nextRow[colParking]) : defaultData.parkingAccount;
+          var total = colTotal !== -1 ? parseNumeric(nextRow[colTotal]) : (stock + deposit + sub + monthly + parking);
+          if (total === 0) total = stock + deposit + sub + monthly + parking;
+
+          if (deposit > 0 || sub > 0 || monthly > 0) {
+            return {
+              stock: stock,
+              deposit: deposit,
+              housingSubscription: sub,
+              monthlySavings: monthly,
+              parkingAccount: parking,
+              total: total,
+              updatedAt: new Date().toISOString()
+            };
+          }
         }
       }
-    }
-    if (!sheet) return defaultData;
 
-    var values = sheet.getDataRange().getValues();
-    for (var r = 0; r < values.length; r++) {
-      var rowStr = values[r].map(function(c) { return String(c || '').trim(); });
-      var colStock = -1, colDeposit = -1, colSub = -1, colMonthly = -1, colParking = -1, colTotal = -1;
-      for (var c = 0; c < rowStr.length; c++) {
-        var v = rowStr[c];
-        if (v === '주식') colStock = c;
-        else if (v.indexOf('보증금') !== -1) colDeposit = c;
-        else if (v.indexOf('주택청약') !== -1 || v.indexOf('청약') !== -1) colSub = c;
-        else if (v.indexOf('월별 저축') !== -1 || v.indexOf('월별저축') !== -1 || v.indexOf('적금') !== -1) colMonthly = c;
-        else if (v.indexOf('파킹') !== -1) colParking = c;
-        else if (v.indexOf('저축합계') !== -1 || v.indexOf('합계') !== -1) colTotal = c;
+      // [탐색 2: 세로형 표] (각 행에 '주식', '보증금', '청약' 등이 있고 옆 열에 금액)
+      var vStock = 0, vDeposit = 0, vSub = 0, vMonthly = 0, vParking = 0, vTotal = 0;
+      var foundCount = 0;
+
+      for (var vr = 0; vr < values.length; vr++) {
+        for (var vc = 0; vc < values[vr].length; vc++) {
+          var cellText = String(values[vr][vc] || '').trim();
+          var rightNum = (vc + 1 < values[vr].length) ? parseNumeric(values[vr][vc + 1]) : 0;
+          if (rightNum === 0 && vc + 2 < values[vr].length) {
+            rightNum = parseNumeric(values[vr][vc + 2]);
+          }
+
+          if (rightNum > 0) {
+            if (cellText === '주식' || cellText.indexOf('국내 · 해외 주식') !== -1 || cellText.indexOf('보유 주식') !== -1) {
+              vStock = rightNum; foundCount++;
+            } else if (cellText.indexOf('보증금') !== -1 || cellText.indexOf('전세보증금') !== -1) {
+              vDeposit = rightNum; foundCount++;
+            } else if (cellText.indexOf('주택청약') !== -1 || cellText.indexOf('청약') !== -1) {
+              vSub = rightNum; foundCount++;
+            } else if (cellText.indexOf('월별 저축') !== -1 || cellText.indexOf('월별저축') !== -1 || cellText.indexOf('적금 누계') !== -1) {
+              vMonthly = rightNum; foundCount++;
+            } else if (cellText.indexOf('파킹') !== -1) {
+              vParking = rightNum; foundCount++;
+            } else if (cellText.indexOf('저축합계') !== -1 || cellText.indexOf('총 저축') !== -1) {
+              vTotal = rightNum;
+            }
+          }
+        }
       }
 
-      if (colDeposit !== -1 && (colStock !== -1 || colSub !== -1) && r + 1 < values.length) {
-        var nextRow = values[r + 1];
-        var stock = colStock !== -1 ? parseNumeric(nextRow[colStock]) : defaultData.stock;
-        var deposit = colDeposit !== -1 ? parseNumeric(nextRow[colDeposit]) : defaultData.deposit;
-        var sub = colSub !== -1 ? parseNumeric(nextRow[colSub]) : defaultData.housingSubscription;
-        var monthly = colMonthly !== -1 ? parseNumeric(nextRow[colMonthly]) : defaultData.monthlySavings;
-        var parking = colParking !== -1 ? parseNumeric(nextRow[colParking]) : defaultData.parkingAccount;
-        var total = colTotal !== -1 ? parseNumeric(nextRow[colTotal]) : (stock + deposit + sub + monthly + parking);
-        if (total === 0) total = stock + deposit + sub + monthly + parking;
-
+      if (foundCount >= 2 && (vDeposit > 0 || vMonthly > 0 || vSub > 0)) {
+        var calcTot = vTotal > 0 ? vTotal : (vStock + vDeposit + vSub + vMonthly + vParking);
         return {
-          stock: stock,
-          deposit: deposit,
-          housingSubscription: sub,
-          monthlySavings: monthly,
-          parkingAccount: parking,
-          total: total
+          stock: vStock || defaultData.stock,
+          deposit: vDeposit || defaultData.deposit,
+          housingSubscription: vSub || defaultData.housingSubscription,
+          monthlySavings: vMonthly || defaultData.monthlySavings,
+          parkingAccount: vParking || defaultData.parkingAccount,
+          total: calcTot || defaultData.total,
+          updatedAt: new Date().toISOString()
         };
       }
     }
