@@ -3462,6 +3462,130 @@
     function getAllSeonjunItems() {
       const customList = getCustomSeonjunItems();
 
+      // 0. DEFAULT_SEONJUN_ITEMS 기준 마스터 매핑 테이블 생성 (할부/고정/일반 완벽 동기화 기준점)
+      const defaultMasterMap = new Map();
+      if (typeof DEFAULT_SEONJUN_ITEMS !== 'undefined' && Array.isArray(DEFAULT_SEONJUN_ITEMS)) {
+        DEFAULT_SEONJUN_ITEMS.forEach(it => {
+          let y = it.year || "2026년";
+          const ym = String(y).match(/(20\d{2})/);
+          y = ym ? (ym[1] + "년") : "2026년";
+          let m = it.month || "9월";
+          const mm = String(m).match(/(\d{1,2})월?/);
+          m = mm ? (mm[1] + "월") : "9월";
+          const card = String(it.card || '').trim();
+          const item = String(it.item || '').trim();
+          const amtBase = Math.round((Number(it.amount) || 0) / 100) * 100;
+
+          defaultMasterMap.set(`${y}_${m}_${card}_${item}_${amtBase}`, it);
+          defaultMasterMap.set(`${y}_${m}_${card}_${item}`, it);
+          defaultMasterMap.set(`${card}_${item}_${amtBase}`, it);
+        });
+      }
+
+      const KNOWN_INSTALLMENT_ITEMS = [
+        '아이폰', '에어컨필터', '케이스,필름', '피부과', '워치', '카시트',
+        '파라다이스', '보호대', '속초', '제습기', '매트리스', '닥터피엘', '다이치',
+        '한손한끼', '장갑'
+      ];
+      const KNOWN_FIXED_ITEMS = [
+        '디즈니', '제미나이', '도시가스', '타이어', '보험', '통신', '웨이브', '쿠팡', '코웨이', 'LG', '컬리'
+      ];
+
+      function cleanSeonjunItem(it) {
+        if (!it) return null;
+        const cardStr = String(it.card || '').trim();
+        const itemStr = String(it.item || '').trim();
+        const amt = Number(it.amount) || 0;
+        const rawNote = String(it.note || '').trim();
+        const rawType = String(it.type || '').trim() || '공통';
+
+        // 년도 정규화 (구글시트에서 날짜형식 'Sat Apr 04 2026...' 등으로 넘어와도 2026년으로 완벽 변환)
+        let y = String(it.year || '2026년');
+        const ym = y.match(/(20\d{2})/);
+        y = ym ? (ym[1] + '년') : '2026년';
+
+        // 월 정규화
+        let m = String(it.month || '9월');
+        if (m.includes('년')) {
+          const parts = m.split(/\s+/);
+          if (parts.length >= 2) {
+            const ymParts = parts[0].match(/(20\d{2})/);
+            if (ymParts) y = ymParts[1] + '년';
+            m = parts[1];
+          }
+        }
+        const mm = m.match(/(\d{1,2})월?/);
+        m = mm ? (mm[1] + '월') : '9월';
+
+        // 1. DEFAULT_SEONJUN_ITEMS 마스터 매칭 검사
+        const amtBase = Math.round(amt / 100) * 100;
+        const master = defaultMasterMap.get(`${y}_${m}_${cardStr}_${itemStr}_${amtBase}`) ||
+                       defaultMasterMap.get(`${y}_${m}_${cardStr}_${itemStr}`) ||
+                       defaultMasterMap.get(`${cardStr}_${itemStr}_${amtBase}`);
+        if (master) {
+          let mNote = master.note || '일반';
+          if (mNote === '선준') mNote = '일반';
+          return {
+            ...it,
+            card: cardStr,
+            item: itemStr,
+            amount: amt,
+            year: y,
+            month: m,
+            note: mNote,
+            type: master.type || rawType
+          };
+        }
+
+        // 2. 키워드 및 패턴 기반 할부 자동 판별 (새로고침 시 시트의 비고가 비어있거나 날짜여도 100% 인식 보장)
+        const isInstKeyword = KNOWN_INSTALLMENT_ITEMS.some(k => itemStr.includes(k));
+        const isInstPattern = itemStr.includes('할부') || rawNote.includes('할부') || /\(\d+\/\d+회?차?\)/.test(itemStr);
+        const isHospitalInst = itemStr.includes('병원') && (amt > 30000);
+        const isLotteInst = cardStr.includes('롯데') && (itemStr.includes('보험') || itemStr.includes('이마트'));
+        const isOneCardInst = cardStr.includes('하나') && itemStr === 'ㅇ';
+
+        if (isInstKeyword || isInstPattern || isHospitalInst || isLotteInst || isOneCardInst) {
+          const tp = (itemStr.includes('보호대') || (itemStr.includes('병원') && amt === 67000) || itemStr.includes('워치') || itemStr.includes('장갑') || itemStr.includes('넥')) ? '선준' : rawType;
+          return {
+            ...it,
+            card: cardStr,
+            item: itemStr,
+            amount: amt,
+            year: y,
+            month: m,
+            note: '할부',
+            type: tp
+          };
+        }
+
+        // 3. 고정 지출 판별
+        const isFixed = (KNOWN_FIXED_ITEMS.some(k => itemStr.includes(k)) && !(cardStr.includes('롯데') && itemStr.includes('보험'))) || rawNote.includes('고정');
+        if (isFixed) {
+          return {
+            ...it,
+            card: cardStr,
+            item: itemStr,
+            amount: amt,
+            year: y,
+            month: m,
+            note: '고정',
+            type: rawType
+          };
+        }
+
+        // 4. 일반 지출
+        return {
+          ...it,
+          card: cardStr,
+          item: itemStr,
+          amount: amt,
+          year: y,
+          month: m,
+          note: '일반',
+          type: rawType
+        };
+      }
+
       // 1. rawData.seonjun에서 유효한 '신용/체크카드 지출 내역'만 엄격 검증 필터링
       let validRawList = [];
       if (rawData && rawData.seonjun && Array.isArray(rawData.seonjun)) {
@@ -3492,61 +3616,29 @@
         baseList = (typeof DEFAULT_SEONJUN_ITEMS !== 'undefined') ? JSON.parse(JSON.stringify(DEFAULT_SEONJUN_ITEMS)) : [];
       }
 
-      // 3. 월별 정규화 (month: 'X월', year: '202X년') 및 누락 월 방어
+      // 3. 월별 정규화 및 정제
       const allList = [];
-      const seenMonths = new Set();
+      const seenTransactionKeys = new Set();
 
       baseList.forEach(it => {
-        let y = it.year || "2026년";
-        let m = it.month || "9월";
-        if (m.includes("년")) {
-          const parts = m.split(/\s+/);
-          if (parts.length >= 2) {
-            y = parts[0];
-            m = parts[1];
-          }
+        const cleaned = cleanSeonjunItem(it);
+        if (cleaned) {
+          const key = `${cleaned.year}_${cleaned.month}_${cleaned.card}_${cleaned.item}_${Math.round(cleaned.amount)}`;
+          seenTransactionKeys.add(key);
+          allList.push(cleaned);
         }
-        const mMatch = m.match(/(\d{1,2})월?/);
-        if (mMatch) m = mMatch[1] + '월';
-
-        // note 자동 보정: 항목명에 '할부' 또는 회차 표기가 있으면 무조건 '할부'로 보장
-        let note = it.note || '';
-        if (!note || note === '일반') {
-          if (it.item && (it.item.includes('할부') || /\(\d+\/\d+회?차?\)/.test(it.item))) {
-            note = '할부';
-          }
-        }
-
-        seenMonths.add(`${y}_${m}`);
-        allList.push({
-          ...it,
-          year: y,
-          month: m,
-          note: note || '일반'
-        });
       });
 
-      // 4. DEFAULT_SEONJUN_ITEMS에서 누락된 월(예: 10월 등)이 있다면 안전하게 보충 병합
+      // 4. DEFAULT_SEONJUN_ITEMS에서 누락된 할부 및 카드 항목 안전하게 보충 병합 (새로고침 시 할부 내역 절대 소실 방지!)
       if (typeof DEFAULT_SEONJUN_ITEMS !== 'undefined') {
         DEFAULT_SEONJUN_ITEMS.forEach(it => {
-          let y = it.year || "2026년";
-          let m = it.month || "9월";
-          const mMatch = m.match(/(\d{1,2})월?/);
-          if (mMatch) m = mMatch[1] + '월';
-          const key = `${y}_${m}`;
-          if (!seenMonths.has(key)) {
-            let note = it.note || '';
-            if (!note || note === '일반') {
-              if (it.item && (it.item.includes('할부') || /\(\d+\/\d+회?차?\)/.test(it.item))) {
-                note = '할부';
-              }
+          const cleaned = cleanSeonjunItem(it);
+          if (cleaned) {
+            const key = `${cleaned.year}_${cleaned.month}_${cleaned.card}_${cleaned.item}_${Math.round(cleaned.amount)}`;
+            if (!seenTransactionKeys.has(key)) {
+              seenTransactionKeys.add(key);
+              allList.push(cleaned);
             }
-            allList.push({
-              ...it,
-              year: y,
-              month: m,
-              note: note || '일반'
-            });
           }
         });
       }
@@ -3738,7 +3830,8 @@
       "매트리스": 3,
       "보험": 3,
       "이마트": 3,
-      "닥터피엘": 3
+      "닥터피엘": 3,
+      "병원": 3
     };
 
     /**
@@ -3770,17 +3863,24 @@
       ['5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'].forEach(m => availableMonthsSet.add(m));
       const sortedMonths = Array.from(availableMonthsSet).sort((a, b) => getMonthNum(a) - getMonthNum(b));
 
-      // 기준 월 결정 (지정되지 않았거나 'ALL'이면 현재 상단 대시보드 선택 월과 자동 동기화)
-      let activeMonth = targetMonth;
-      if (!activeMonth || activeMonth === 'ALL') {
-        const summarySelect = document.getElementById("summaryMonthSelect");
-        if (summarySelect && summarySelect.selectedIndex >= 0) {
-          const list = getValidSummaryList();
-          const curr = list[summarySelect.selectedIndex];
-          if (curr && curr.month) activeMonth = curr.month;
-        }
-        if (!activeMonth || activeMonth === 'ALL') {
-          activeMonth = selectedInstallmentMonth || '10월';
+      // 기준 월 결정 (지정되지 않았거나 'ALL'이면 기존 선택월 또는 상단 대시보드 선택 월과 자동 동기화)
+      let activeMonth = (targetMonth && targetMonth !== 'ALL') ? targetMonth : '';
+      if (!activeMonth) {
+        const instSelect = document.getElementById("installmentMonthSelect");
+        if (instSelect && instSelect.value && instSelect.value !== 'ALL') {
+          activeMonth = instSelect.value;
+        } else if (selectedInstallmentMonth && selectedInstallmentMonth !== 'ALL') {
+          activeMonth = selectedInstallmentMonth;
+        } else {
+          const summarySelect = document.getElementById("summaryMonthSelect");
+          if (summarySelect && summarySelect.selectedIndex >= 0) {
+            const list = getValidSummaryList();
+            const curr = list[summarySelect.selectedIndex];
+            if (curr && curr.month) activeMonth = curr.month;
+          }
+          if (!activeMonth || activeMonth === 'ALL') {
+            activeMonth = '10월';
+          }
         }
       }
       selectedInstallmentMonth = activeMonth;
@@ -3798,12 +3898,13 @@
 
       const targetMonthNum = getMonthNum(activeMonth);
 
-      // 카드사 + 항목명으로 그룹화
+      // 카드사 + 항목명 + 기준금액(100원 단위)으로 세분화 그룹화하여 동명 복수 할부(병원 등) 각각 보존
       const groups = {};
       installmentRows.forEach(row => {
         const c = row.card || '신용카드';
         const itemClean = row.item ? row.item.trim() : '할부항목';
-        const key = `${c}__${itemClean}`;
+        const baseAmt = Math.round((row.amount || 0) / 100) * 100;
+        const key = `${c}__${itemClean}__${baseAmt}`;
         if (!groups[key]) {
           groups[key] = {
             card: c,
@@ -3825,9 +3926,9 @@
       Object.values(groups).forEach(g => {
         g.records.sort((a, b) => getMonthNum(a.month) - getMonthNum(b.month));
 
-        // 이번 달 청구 레코드
-        const currentRec = g.records.find(r => r.month === activeMonth);
-        const currentAmount = currentRec ? (currentRec.amount || 0) : 0;
+        // 이번 달 청구 레코드 (동일 그룹 내 해당 월 모든 청구 합산)
+        const currentRecs = g.records.filter(r => r.month === activeMonth);
+        const currentAmount = currentRecs.reduce((sum, r) => sum + (r.amount || 0), 0);
 
         // 이번 달 이후(미래) 청구 레코드
         const futureRecs = g.records.filter(r => getMonthNum(r.month) > targetMonthNum);
@@ -4053,11 +4154,15 @@
       const totalEl = document.getElementById("seonjunTotalText");
       if (totalEl) totalEl.innerText = `총 ${totalAmount.toLocaleString()}원`;
 
-      // 서브 브레이크다운 (공통 / 선준 / 생활비)
+      // 서브 브레이크다운 (공통 / 선준 / 생활비 / 할부)
       const typeTotals = {};
+      let installmentTotal = 0;
       filtered.forEach(it => {
         const t = it.type || '기타';
         typeTotals[t] = (typeTotals[t] || 0) + (it.amount || 0);
+        if (it.note === '할부') {
+          installmentTotal += (it.amount || 0);
+        }
       });
 
       const breakdownContainer = document.getElementById("seonjunSubBreakdown");
@@ -4073,6 +4178,12 @@
           badge.className = `px-2 py-0.5 rounded-lg text-[11px] ${badgeColor}`;
           badge.innerText = `${key}: ${val.toLocaleString()}원`;
           breakdownContainer.appendChild(badge);
+        }
+        if (installmentTotal > 0) {
+          const instBadge = document.createElement("span");
+          instBadge.className = "px-2 py-0.5 rounded-lg text-[11px] bg-rose-50 text-rose-700 font-bold border border-rose-200/60 flex items-center gap-1";
+          instBadge.innerHTML = `<i class="fa-solid fa-credit-card text-[9px]"></i><span>할부: ${installmentTotal.toLocaleString()}원</span>`;
+          breakdownContainer.appendChild(instBadge);
         }
       }
 

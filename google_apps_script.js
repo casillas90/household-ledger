@@ -588,6 +588,18 @@ function getSeonjunData(ss) {
       }
     }
 
+    // 년도 정규화 (Date 객체나 타임스탬프로 들어온 경우 2026년 추출)
+    if (year) {
+      var ym = String(year).match(/(20\d{2})/);
+      if (ym) year = ym[1] + '년';
+      else year = '2026년';
+    }
+
+    // 비고에 날짜 객체/타임스탬프가 들어온 경우 할부로 자동 보정
+    if (note && (note.indexOf('GMT') !== -1 || note.indexOf('한국') !== -1 || /^\d{4}[-./]/.test(note))) {
+      note = '할부';
+    }
+
     if (item || amount > 0) {
       result.push({ card: card, item: item, amount: amount, type: type, note: note, month: month, year: year });
     }
