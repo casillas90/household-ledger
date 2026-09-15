@@ -1823,14 +1823,12 @@
 
           const idx = baseMonths.findIndex(b => (b.year === y || !exp.year) && b.month === validMonth);
           if (idx >= 0) {
-            // 들어온 데이터의 잔금이 0인데 기존 기본 잔금이 정상 존재하는 경우(칼럼 밀림/잘못된 시트 파싱)는 덮어쓰지 않고 보호
-            if (exp.remain === 0 && baseMonths[idx].remain > 0) return;
-
-            if (exp.remain !== undefined && exp.remain !== null && exp.remain !== 0) baseMonths[idx].remain = exp.remain;
-            if (exp.savings !== undefined && exp.savings !== null) baseMonths[idx].savings = exp.savings;
-            if (exp.pocketMoney !== undefined && exp.pocketMoney !== null) baseMonths[idx].pocketMoney = exp.pocketMoney;
-            if (exp.livingExpense !== undefined && exp.livingExpense !== null) baseMonths[idx].livingExpense = exp.livingExpense;
-            if (exp.emergencyFund !== undefined && exp.emergencyFund !== null) baseMonths[idx].emergencyFund = exp.emergencyFund;
+            // 들어온 데이터가 0원이거나 비정상일 때 기존 정상 금액을 0으로 덮어쓰지 않고 철저히 보호
+            if (exp.remain !== undefined && exp.remain !== null && exp.remain > 0) baseMonths[idx].remain = exp.remain;
+            if (exp.savings !== undefined && exp.savings !== null && exp.savings > 0) baseMonths[idx].savings = exp.savings;
+            if (exp.pocketMoney !== undefined && exp.pocketMoney !== null && exp.pocketMoney > 0) baseMonths[idx].pocketMoney = exp.pocketMoney;
+            if (exp.livingExpense !== undefined && exp.livingExpense !== null && exp.livingExpense > 0) baseMonths[idx].livingExpense = exp.livingExpense;
+            if (exp.emergencyFund !== undefined && exp.emergencyFund !== null && exp.emergencyFund !== 0) baseMonths[idx].emergencyFund = exp.emergencyFund;
           } else {
             baseMonths.push({
               year: y,
@@ -1913,27 +1911,28 @@
         select.appendChild(opt);
       });
 
-      // 2026년 9월 또는 정상적인 기존 선택값 복원
-      let validSelected = false;
+      // 이전에 사용자가 보고 있던 연도/월을 기억하여 동기화 후에도 완벽히 유지
+      let prevYear = "2026년";
+      let prevMonth = "10월";
       if (selectedSummaryIndex >= 0 && selectedSummaryIndex < list.length) {
-        const cur = list[selectedSummaryIndex];
-        if (cur && /^202\d년?$/.test(cur.year) && /^\d{1,2}월$/.test(cur.month)) {
-          validSelected = true;
-        }
+        prevYear = list[selectedSummaryIndex].year || "2026년";
+        prevMonth = list[selectedSummaryIndex].month || "10월";
       }
 
-      if (!validSelected) {
-        const sep26Idx = list.findIndex(item => item.year === '2026년' && item.month === '9월');
-        if (sep26Idx >= 0) {
-          select.value = sep26Idx;
-          selectedSummaryIndex = sep26Idx;
-        } else if (list.length > 0) {
-          select.value = list.length - 1;
-          selectedSummaryIndex = list.length - 1;
-        }
-      } else {
-        select.value = selectedSummaryIndex;
+      // 기억해둔 연도/월을 최우선 복원, 없으면 2026년 10월 최우선 지정!
+      let targetIdx = list.findIndex(item => item.year === prevYear && item.month === prevMonth);
+      if (targetIdx === -1) {
+        targetIdx = list.findIndex(item => item.year === '2026년' && item.month === '10월');
       }
+      if (targetIdx === -1) {
+        targetIdx = list.findIndex(item => item.year === '2026년' && item.month === '9월');
+      }
+      if (targetIdx === -1) {
+        targetIdx = list.length - 1;
+      }
+
+      select.value = targetIdx;
+      selectedSummaryIndex = targetIdx;
     }
 
     function onSummaryMonthChange() {
@@ -2268,12 +2267,14 @@
 
       // 1. 수입 (급여)
       let salary = 0;
-      if (overrides.salary !== undefined) {
+      if (overrides.salary !== undefined && overrides.salary > 0) {
         salary = overrides.salary;
       } else if (row.salary !== undefined && row.salary > 0) {
         salary = row.salary;
-      } else if (sheetExp && sheetExp.salary !== undefined) {
+      } else if (sheetExp && sheetExp.salary !== undefined && sheetExp.salary > 0) {
         salary = sheetExp.salary;
+      } else {
+        salary = (row.salary > 0) ? row.salary : (sheetExp && sheetExp.salary > 0 ? sheetExp.salary : 0);
       }
 
       // 2. 선준 카드값 (구: 월 전체비용)
@@ -2308,18 +2309,20 @@
         const smc = (row.salaryMinusCard > 0) ? row.salaryMinusCard : (sheetExp && sheetExp.salaryMinusCard > 0 ? sheetExp.salaryMinusCard : 0);
         if (smc > 0 && salary > smc) {
           totalCost = salary - smc;
+        } else if (sheetExp && sheetExp.totalCost > 0) {
+          totalCost = sheetExp.totalCost;
         }
       }
 
       // 3. 급여 - 선준 카드값
       let salaryMinusCard = 0;
-      if (overrides.salaryMinusCard !== undefined) {
+      if (overrides.salaryMinusCard !== undefined && overrides.salaryMinusCard > 0) {
         salaryMinusCard = overrides.salaryMinusCard;
-      } else if (salary > 0 && totalCost > 0) {
+      } else if (salary > 0 && totalCost > 0 && salary >= totalCost) {
         salaryMinusCard = salary - totalCost;
       } else if (row.salaryMinusCard !== undefined && row.salaryMinusCard > 0) {
         salaryMinusCard = row.salaryMinusCard;
-      } else if (sheetExp && sheetExp.salaryMinusCard !== undefined) {
+      } else if (sheetExp && sheetExp.salaryMinusCard !== undefined && sheetExp.salaryMinusCard > 0) {
         salaryMinusCard = sheetExp.salaryMinusCard;
       }
 
@@ -2329,22 +2332,22 @@
         dajeongRemain = overrides.dajeongRemain;
       } else if (row.dajeongRemain !== undefined && row.dajeongRemain > 0) {
         dajeongRemain = row.dajeongRemain;
-      } else if (sheetExp && sheetExp.dajeongRemain !== undefined) {
+      } else if (sheetExp && sheetExp.dajeongRemain !== undefined && sheetExp.dajeongRemain > 0) {
         dajeongRemain = sheetExp.dajeongRemain;
       }
 
       // 5. 잔금
       let remainBalance = 0;
-      if (overrides.remain !== undefined) {
+      if (overrides.remain !== undefined && overrides.remain > 0) {
         remainBalance = overrides.remain;
-      } else if (row.remain !== undefined && row.remain !== 0) {
-        remainBalance = row.remain;
-      } else if (sheetExp && sheetExp.remain !== undefined && sheetExp.remain !== 0) {
-        remainBalance = sheetExp.remain;
-      } else if (salaryMinusCard !== 0 || dajeongRemain !== 0) {
+      } else if (salaryMinusCard > 0 || dajeongRemain > 0) {
         remainBalance = salaryMinusCard + dajeongRemain;
+      } else if (row.remain !== undefined && row.remain > 0) {
+        remainBalance = row.remain;
+      } else if (sheetExp && sheetExp.remain !== undefined && sheetExp.remain > 0) {
+        remainBalance = sheetExp.remain;
       } else {
-        remainBalance = row.remain || 0;
+        remainBalance = row.remain || (sheetExp ? sheetExp.remain : 0);
       }
 
       // --- [구글 시트 실시간 카드 집계 추출: 선준(용돈), 생활비, 다정(용돈)] ---
@@ -2371,7 +2374,7 @@
       } catch (e) {}
 
       // --- [4대 배분 항목: 적금, 용돈, 생활비, 비상금] ---
-      // A. 적금 (저축 - 구글 시트 입력값 실시간 최우선 반영)
+      // A. 적금 (저축 - 구글 시트 입력값 실시간 최우선 반영, 0원 덮어쓰기 원천 차단)
       let savings = 0;
       if (overrides.savings !== undefined && overrides.savings > 0) {
         savings = overrides.savings;
@@ -2379,12 +2382,8 @@
         savings = row.savings;
       } else if (sheetExp && sheetExp.savings !== undefined && sheetExp.savings !== null && sheetExp.savings > 0) {
         savings = sheetExp.savings;
-      } else if (row.savings !== undefined && row.savings !== null) {
-        savings = row.savings;
-      } else if (sheetExp && sheetExp.savings !== undefined) {
-        savings = sheetExp.savings;
       } else {
-        savings = 0;
+        savings = (row.savings && row.savings > 0) ? row.savings : (sheetExp && sheetExp.savings > 0 ? sheetExp.savings : 0);
       }
 
       // B. 용돈 (사용자 룰: 선준 카드값에서 구분에 선준 할부+일반 금액 차감)
@@ -3664,11 +3663,14 @@
           const opt = document.createElement("option");
           opt.value = m;
           opt.innerText = m;
-          if (m === "9월") opt.selected = true;
           monthSelect.appendChild(opt);
         });
         if (currentVal && currentVal !== "ALL" && months.includes(currentVal)) {
           monthSelect.value = currentVal;
+        } else if (months.includes("10월")) {
+          monthSelect.value = "10월";
+        } else if (months.includes("9월")) {
+          monthSelect.value = "9월";
         }
       }
 
