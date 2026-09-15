@@ -123,7 +123,7 @@
           <div class="min-w-0 flex-1">
             <h1 class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 truncate">
               다정 & 선준 가계부 대시보드
-              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-2xs">v2.8</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-2xs">v2.9</span>
             </h1>
             <p class="text-[11px] sm:text-sm text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
               <span class="inline-flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] sm:text-xs">
@@ -1808,11 +1808,14 @@
       // 2. rawData.monthlyExpenses 우선 매핑 (구글 시트 '월별 비용' 탭의 실제 사용자 입력 데이터)
       if (rawData && rawData.monthlyExpenses && Array.isArray(rawData.monthlyExpenses)) {
         rawData.monthlyExpenses.forEach(exp => {
-          const y = exp.year || '2024년';
-          const m = exp.month;
+          const y = String(exp.year || '').trim();
+          const m = String(exp.month || '').trim();
+          // 유효한 연도(202X년) 및 월(X월)만 허용 (잡음 데이터 원천 배제)
+          if (!/^202\d년?$/.test(y) || !/^\d{1,2}월$/.test(m)) return;
+
           const idx = baseMonths.findIndex(b => (b.year === y || !exp.year) && b.month === m);
           if (idx >= 0) {
-            if (exp.remain !== undefined && exp.remain !== null) baseMonths[idx].remain = exp.remain;
+            if (exp.remain !== undefined && exp.remain !== null && exp.remain !== 0) baseMonths[idx].remain = exp.remain;
             if (exp.savings !== undefined && exp.savings !== null) baseMonths[idx].savings = exp.savings;
             if (exp.pocketMoney !== undefined && exp.pocketMoney !== null) baseMonths[idx].pocketMoney = exp.pocketMoney;
             if (exp.livingExpense !== undefined && exp.livingExpense !== null) baseMonths[idx].livingExpense = exp.livingExpense;
@@ -1836,11 +1839,14 @@
         });
       }
 
-      // 3. rawData.summary 데이터 매핑 병합 (월별 요약 시트: salary, totalCost, salaryMinusCard, dajeongRemain, cardTotal)
+      // 3. rawData.summary 데이터 매핑 병합 (월별 요약 시트: salary, totalCost, salaryMinusCard, dajeongRemain, cardTotal, savings)
       if (rawData && rawData.summary && Array.isArray(rawData.summary)) {
         rawData.summary.forEach(item => {
-          const y = item.year || '2024년';
-          const m = item.month;
+          const y = String(item.year || '').trim();
+          const m = String(item.month || '').trim();
+          // 유효한 연도(202X년) 및 월(X월)만 허용 (인터넷+TV 등 잡음 행 완벽 차단)
+          if (!/^202\d년?$/.test(y) || !/^\d{1,2}월$/.test(m)) return;
+
           const idx = baseMonths.findIndex(b => b.year === y && b.month === m);
           const calcRemain = (item.salaryMinusCard !== undefined && item.salaryMinusCard !== null ? item.salaryMinusCard : 0) + (item.dajeongRemain || 0);
           
@@ -1850,6 +1856,10 @@
             if (item.salaryMinusCard !== undefined) baseMonths[idx].salaryMinusCard = item.salaryMinusCard;
             if (item.dajeongRemain !== undefined) baseMonths[idx].dajeongRemain = item.dajeongRemain;
             if (item.cardTotal !== undefined) baseMonths[idx].cardTotal = item.cardTotal;
+            // 구글 시트 적금(저축) 실시간 연동 반영
+            if (item.savings !== undefined && item.savings !== null && item.savings > 0) {
+              baseMonths[idx].savings = item.savings;
+            }
             
             if (item.remain !== undefined && item.remain !== null && item.remain !== 0) {
               baseMonths[idx].remain = item.remain;
@@ -1866,7 +1876,7 @@
               dajeongRemain: item.dajeongRemain || 0,
               cardTotal: item.cardTotal || 0,
               remain: item.remain || calcRemain || 0,
-              savings: 0,
+              savings: item.savings || 0,
               pocketMoney: 0,
               livingExpense: 0,
               emergencyFund: calcRemain || 0
@@ -1903,8 +1913,16 @@
         select.appendChild(opt);
       });
 
-      // 2026년 9월 또는 기존 선택값 복원
-      if (selectedSummaryIndex < 0 || selectedSummaryIndex >= list.length) {
+      // 2026년 9월 또는 정상적인 기존 선택값 복원
+      let validSelected = false;
+      if (selectedSummaryIndex >= 0 && selectedSummaryIndex < list.length) {
+        const cur = list[selectedSummaryIndex];
+        if (cur && /^202\d년?$/.test(cur.year) && /^\d{1,2}월$/.test(cur.month)) {
+          validSelected = true;
+        }
+      }
+
+      if (!validSelected) {
         const sep26Idx = list.findIndex(item => item.year === '2026년' && item.month === '9월');
         if (sep26Idx >= 0) {
           select.value = sep26Idx;
@@ -2328,14 +2346,19 @@
       const sheetAutoPocket = autoSeonjunPocket + autoDajeongPocket;
 
       // --- [4대 배분 항목: 적금, 용돈, 생활비, 비상금] ---
-      // A. 적금 (저축)
+      // A. 적금 (저축 - 구글 시트 입력값 실시간 최우선 반영)
       let savings = 0;
       if (overrides.savings !== undefined) {
         savings = overrides.savings;
+      } else if (row.savings !== undefined && row.savings !== null && row.savings > 0) {
+        // 구글 시트에서 직접 전달된 적금 금액 최우선 적용
+        savings = row.savings;
+      } else if (sheetExp && sheetExp.savings !== undefined && sheetExp.savings !== null && sheetExp.savings > 0) {
+        savings = sheetExp.savings;
+      } else if (row.savings !== undefined && row.savings !== null) {
+        savings = row.savings;
       } else if (sheetExp && sheetExp.savings !== undefined) {
         savings = sheetExp.savings;
-      } else if (row.savings !== undefined) {
-        savings = row.savings;
       } else {
         savings = 0;
       }
@@ -2356,23 +2379,16 @@
         pocketSource = seonjunDeduction > 0 
           ? `30만−선준(${seonjunDeduction.toLocaleString()}원)` 
           : "기준 용돈 30만";
-      } else if (rawData && rawData.monthlyExpenses && Array.isArray(rawData.monthlyExpenses)) {
-        const found = rawData.monthlyExpenses.find(e => (e.year === year || !e.year) && e.month === month);
-        if (found && found.pocketMoney !== undefined && found.pocketMoney !== null) {
-          pocketMoney = found.pocketMoney;
-          pocketSource = "구글시트 [월별비용]";
-        }
-      }
-      if (!pocketMoney && sheetExp && sheetExp.pocketMoney !== undefined) {
+      } else if (row.pocketMoney !== undefined && row.pocketMoney > 0) {
+        pocketMoney = row.pocketMoney;
+        pocketSource = "시트 데이터";
+      } else if (sheetExp && sheetExp.pocketMoney !== undefined) {
         pocketMoney = sheetExp.pocketMoney;
         pocketSource = "시트 원본";
       }
-      if (!pocketMoney && row.pocketMoney !== undefined && row.pocketMoney > 0) {
-        pocketMoney = row.pocketMoney;
-        pocketSource = "시트 데이터";
-      }
 
-      // C. 생활비 (수식: 기준 생활비 300,000원 - 카드 지출 중 '생활비'로 적힌 금액 차감)
+      // C. 생활비 (사용자 룰: 선준 카드값에서 구분에 생활비라고 적혀있으면 생활비 금액에서 차감)
+      // 공식: 월 생활비 = 300,000원 - (선준 카드값 중 구분='생활비' 금액)
       let livingExpense = 0;
       let livingSource = "구글 시트";
       const livingCardDeduction = getLivingCardDeduction(year, month);
@@ -2381,25 +2397,17 @@
         livingExpense = overrides.livingExpense;
         livingSource = "✏️ 직접수정";
       } else if (year === '2026년' && (['9월', '10월', '11월', '12월'].includes(month) || livingCardDeduction > 0)) {
-        // 2026년 9월 이후: 기준 생활비 300,000원에서 카드 생활비 지출액 실시간 차감
+        // 2026년 9월 이후: 기준 생활비 300,000원에서 선준 카드 생활비(구분=생활비) 실시간 차감
         livingExpense = Math.max(0, 300000 - livingCardDeduction);
         livingSource = livingCardDeduction > 0 
-          ? `30만−카드(${livingCardDeduction.toLocaleString()}원)` 
+          ? `30만−생활비(${livingCardDeduction.toLocaleString()}원)` 
           : "기준 생활비 30만";
-      } else if (rawData && rawData.monthlyExpenses && Array.isArray(rawData.monthlyExpenses)) {
-        const found = rawData.monthlyExpenses.find(e => (e.year === year || !e.year) && e.month === month);
-        if (found && found.livingExpense !== undefined && found.livingExpense !== null) {
-          livingExpense = found.livingExpense;
-          livingSource = "구글시트 [월별비용]";
-        }
-      }
-      if (!livingExpense && sheetExp && sheetExp.livingExpense !== undefined) {
-        livingExpense = sheetExp.livingExpense;
-        livingSource = "시트 원본";
-      }
-      if (!livingExpense && row.livingExpense !== undefined && row.livingExpense > 0) {
+      } else if (row.livingExpense !== undefined && row.livingExpense > 0) {
         livingExpense = row.livingExpense;
         livingSource = "시트 데이터";
+      } else if (sheetExp && sheetExp.livingExpense !== undefined) {
+        livingExpense = sheetExp.livingExpense;
+        livingSource = "시트 원본";
       }
 
       // D. 비상금 (구글 시트 수식 100% 일치: 비상금 = 잔금 - 적금 - 용돈 - 생활비)

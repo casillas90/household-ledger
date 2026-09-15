@@ -153,12 +153,15 @@ function getMonthlyExpensesData(ss) {
               ss.getSheetByName('지출') ||
               ss.getSheetByName('월별지출') ||
               ss.getSheetByName('월별 요약') ||
+              ss.getSheetByName('월별요약') ||
               ss.getSheetByName('요약');
   
   var sheetsToSearch = sheet ? [sheet] : [];
   var allSheets = ss.getSheets();
   for (var s = 0; s < allSheets.length; s++) {
-    if (!sheet || allSheets[s].getName() !== sheet.getName()) {
+    var curName = allSheets[s].getName();
+    if (curName.indexOf('다정') !== -1 || curName.indexOf('선준') !== -1 || curName.indexOf('주식') !== -1) continue;
+    if (!sheet || curName !== sheet.getName()) {
       sheetsToSearch.push(allSheets[s]);
     }
   }
@@ -184,7 +187,9 @@ function getMonthlyExpensesData(ss) {
         else if (val === '생활비') colLiving = c;
         else if (val === '비상금') colEmergency = c;
       }
-      if ((colRemain !== -1 && colPocket !== -1) || (colSavings !== -1 && colPocket !== -1 && colLiving !== -1)) {
+      if ((colMonth !== -1 && (colRemain !== -1 || colSavings !== -1)) || 
+          (colRemain !== -1 && colPocket !== -1) || 
+          (colSavings !== -1 && colLiving !== -1)) {
         headerRowIdx = r;
         break;
       }
@@ -211,8 +216,11 @@ function getMonthlyExpensesData(ss) {
           currentYear = yVal.indexOf('년') === -1 ? yVal + '년' : yVal;
         }
 
-        if (!mVal || (mVal.indexOf('월') === -1 && isNaN(parseInt(mVal, 10)))) continue;
-        var monthStr = mVal.indexOf('월') === -1 ? mVal + '월' : mVal;
+        if (!mVal) continue;
+        // X월 형식 검증 (1월 ~ 12월 또는 숫자)
+        var mMatch = mVal.match(/(\d{1,2})\s*월?/);
+        if (!mMatch) continue;
+        var monthStr = mMatch[1] + '월';
 
         // 수식 결과 숫자 추출
         var remain = colRemain !== -1 ? parseNumeric(row[colRemain]) : 0;
@@ -230,7 +238,7 @@ function getMonthlyExpensesData(ss) {
 
         if (remain > 0 || savings > 0 || pocket > 0 || living > 0 || emergency !== 0) {
           results.push({
-            year: currentYear || '2024년',
+            year: currentYear || '2026년',
             month: monthStr,
             remain: remain,
             savings: savings,
@@ -265,10 +273,36 @@ function parseNumeric(val) {
 }
 
 /**
- * 기존 시트 추출 함수 (요약 시트) - 월별 비용 데이터와 지능적 상호 보완
+ * 기존 시트 추출 함수 (요약 시트) - 엄격한 연도/월 검증 및 적금 연동
  */
 function getSummaryData(ss, monthlyExpensesData) {
-  var sheet = ss.getSheetByName('월별 요약') || ss.getSheetByName('요약') || ss.getSheets()[0];
+  var sheet = ss.getSheetByName('월별 요약') || 
+              ss.getSheetByName('월별요약') || 
+              ss.getSheetByName('요약') || 
+              ss.getSheetByName('월별 요약 ') ||
+              ss.getSheetByName('가계부');
+
+  if (!sheet) {
+    var allSheets = ss.getSheets();
+    for (var i = 0; i < allSheets.length; i++) {
+      var s = allSheets[i];
+      var sName = s.getName();
+      if (sName.indexOf('다정') !== -1 || sName.indexOf('선준') !== -1 || sName.indexOf('주식') !== -1 || sName.indexOf('내집') !== -1 || sName.indexOf('분양') !== -1) continue;
+      var v = s.getDataRange().getValues();
+      if (!v || v.length < 2) continue;
+      for (var r = 0; r < Math.min(5, v.length); r++) {
+        var rowText = v[r].join(' ');
+        if ((rowText.indexOf('급여') !== -1 || rowText.indexOf('월') !== -1) && 
+            (rowText.indexOf('선준') !== -1 || rowText.indexOf('다정') !== -1 || rowText.indexOf('잔금') !== -1 || rowText.indexOf('적금') !== -1)) {
+          sheet = s;
+          break;
+        }
+      }
+      if (sheet) break;
+    }
+  }
+
+  if (!sheet) sheet = ss.getSheets()[0];
   if (!sheet) return [];
   var values = sheet.getDataRange().getValues();
   var result = [];
@@ -277,12 +311,18 @@ function getSummaryData(ss, monthlyExpensesData) {
   for (var r = 1; r < values.length; r++) {
     var row = values[r];
     if (!row[0] && !row[1]) continue;
-    var y = String(row[0] || '');
-    var m = String(row[1] || '');
+    var y = String(row[0] || '').trim();
+    var m = String(row[1] || '').trim();
+
+    // 엄격한 연도(202X년) 및 월(X월) 검증 (인터넷+TV 같은 잘못된 잡음 행 배제)
+    if (!/^202\d년?$/.test(y)) continue;
+    var mMatch = m.match(/^(\d{1,2})\s*월?$/);
+    if (!mMatch) continue;
+    var formattedMonth = mMatch[1] + '월';
 
     var item = {
-      year: y,
-      month: m,
+      year: y.indexOf('년') === -1 ? y + '년' : y,
+      month: formattedMonth,
       salary: parseNumeric(row[2]),
       salaryMinusCard: parseNumeric(row[3]),
       dajeongRemain: parseNumeric(row[4]),
@@ -298,7 +338,7 @@ function getSummaryData(ss, monthlyExpensesData) {
     if (monthlyExpensesData && monthlyExpensesData.length > 0) {
       for (var me = 0; me < monthlyExpensesData.length; me++) {
         var exp = monthlyExpensesData[me];
-        if ((exp.year === y || !exp.year) && exp.month === m) {
+        if ((exp.year === item.year || !exp.year) && exp.month === item.month) {
           if (exp.remain !== undefined && exp.remain > 0) item.remain = exp.remain;
           if (exp.savings !== undefined && exp.savings > 0) item.savings = exp.savings;
           if (exp.pocketMoney !== undefined && exp.pocketMoney > 0) item.pocketMoney = exp.pocketMoney;
