@@ -4451,7 +4451,7 @@
       }
 
       const labels = displayList.map(item => `${item.year ? item.year.replace('20', '') + ' ' : ''}${item.month}`);
-      const salaries = displayList.map(item => item.salary || 0);
+      const salaries = displayList.map(item => getMonthMetrics(item).salary);
       const totalCosts = displayList.map(item => getMonthMetrics(item).totalCost);
       const remainBalances = displayList.map(item => getMonthMetrics(item).remainBalance);
 
@@ -4543,7 +4543,7 @@
       const allSeonjun = getAllSeonjunItems();
       if (!allSeonjun || allSeonjun.length === 0) return;
 
-      const selectedMonth = document.getElementById("seonjunMonthFilter")?.value || "9월";
+      const selectedMonth = document.getElementById("seonjunMonthFilter")?.value || "10월";
       const filtered = allSeonjun.filter(it => selectedMonth === "ALL" || it.month === selectedMonth);
 
       const subType = document.getElementById("chartTypeSub");
