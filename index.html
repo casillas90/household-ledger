@@ -108,6 +108,17 @@
     .tabular-nums {
       font-variant-numeric: tabular-nums;
     }
+    /* 내집마련 탭 모든 테이블 금액 및 헤더 줄바꿈 금지(가독성 극대화) */
+    #tab-house table th,
+    #tab-house table td,
+    #tab-house .tabular-nums {
+      white-space: nowrap !important;
+      font-variant-numeric: tabular-nums;
+      word-break: keep-all;
+    }
+    #tab-house .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+    }
   </style>
 </head>
 <body class="bg-slate-50/80 text-slate-800 antialiased min-h-screen p-2.5 sm:p-6 lg:p-8">
@@ -123,7 +134,7 @@
           <div class="min-w-0 flex-1">
             <h1 class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 truncate">
               다정 & 선준 가계부 대시보드
-              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-2xs">v2.9</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-2xs">v3.3</span>
             </h1>
             <p class="text-[11px] sm:text-sm text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
               <span class="inline-flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] sm:text-xs">
@@ -313,7 +324,7 @@
           <div class="col-span-2 md:col-span-1 bg-gradient-to-b from-white to-amber-50/30 p-4 sm:p-5 rounded-2xl border border-amber-200/80 hover:border-amber-400 transition shadow-xs flex flex-col justify-between">
             <div>
               <div class="flex justify-between items-center text-slate-400">
-                <span class="text-xs font-bold text-amber-900">5. 월 잔금 (배분 기준)</span>
+                <span class="text-xs font-bold text-amber-900">5. 월 잔금 (남은금액)</span>
                 <button type="button" onclick="openAllocEditModal('remain')" title="잔금 직접 수정" class="w-6 h-6 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 flex items-center justify-center text-[10px] transition cursor-pointer">
                   <i class="fa-solid fa-pen"></i>
                 </button>
@@ -321,7 +332,7 @@
               <span id="summaryRemainBalance" class="text-lg sm:text-xl font-extrabold text-amber-700 mt-2 block tracking-tight">-</span>
             </div>
             <div class="flex items-center justify-between mt-2 pt-1 border-t border-amber-100">
-              <span class="text-[10px] text-amber-700 font-medium inline-block bg-amber-100/60 px-2 py-0.5 rounded-md" id="summaryRemainRatio">(급여-선준카드) + 다정</span>
+              <span class="text-[10px] text-amber-700 font-medium inline-block bg-amber-100/60 px-2 py-0.5 rounded-md" id="summaryRemainRatio">가계부 시트 연동</span>
               <button type="button" onclick="openAllocEditModal('remain')" class="text-[10px] font-bold text-amber-800 hover:underline cursor-pointer">직접수정</button>
             </div>
           </div>
@@ -1050,11 +1061,11 @@
         </div>
       </div>
 
-      <!-- 그리드 1: 1.분양 정보 & 분납 일정 + 3.중도금 이자 계산 (2열) -->
+      <!-- 그리드 1: 1.분양 정보 & 분납 일정 + 3.중도금 이자 계산 (2열 50:50 균등 배치) -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- 좌측: 1. 분양받은 집 정보 및 분납 일정 (lg:col-span-7) -->
-        <div class="lg:col-span-7 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm space-y-4">
+        <!-- 좌측: 1. 분양받은 집 정보 및 분납 일정 (lg:col-span-6) -->
+        <div class="lg:col-span-6 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm space-y-4">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
             <div class="flex items-center gap-2.5">
               <span class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">
@@ -1091,7 +1102,7 @@
 
           <!-- 중도금 6회차 상세 일정 테이블 -->
           <div class="overflow-x-auto rounded-2xl border border-slate-100">
-            <table class="w-full text-xs text-left">
+            <table class="w-full text-xs text-left whitespace-nowrap">
               <thead class="bg-slate-50 text-slate-400 font-semibold border-b">
                 <tr>
                   <th class="py-2.5 px-3">구분</th>
@@ -1170,8 +1181,8 @@
           </div>
         </div>
 
-        <!-- 우측: 3. 중도금 대출 후불이자 계산 상세 (lg:col-span-5) -->
-        <div class="lg:col-span-5 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm space-y-4 flex flex-col justify-between">
+        <!-- 우측: 3. 중도금 대출 후불이자 계산 상세 (lg:col-span-6) -->
+        <div class="lg:col-span-6 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm space-y-4 flex flex-col justify-between">
           <div>
             <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
               <div class="flex items-center gap-2.5">
@@ -1190,7 +1201,7 @@
             </div>
 
             <div class="overflow-x-auto rounded-2xl border border-slate-100 mb-3">
-              <table class="w-full text-xs text-left">
+              <table class="w-full text-xs text-left whitespace-nowrap">
                 <thead class="bg-slate-50 text-slate-400 font-semibold border-b">
                   <tr>
                     <th class="py-2.5 px-3">회차</th>
@@ -1266,11 +1277,11 @@
 
       </div>
 
-      <!-- 그리드 2: 2. 집 내부 옵션 품목 + 4. 현재 보유 자산 & 저축 현황 (2열) -->
+      <!-- 그리드 2: 2. 집 내부 옵션 품목 + 4. 현재 보유 자산 & 저축 현황 (2열 50:50 균등 배치) -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- 좌측: 2. 집 내부 옵션 품목 내역 (lg:col-span-7) -->
-        <div class="lg:col-span-7 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm space-y-4">
+        <!-- 좌측: 2. 집 내부 옵션 품목 내역 (lg:col-span-6) -->
+        <div class="lg:col-span-6 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm space-y-4">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
             <div class="flex items-center gap-2.5">
               <span class="w-8 h-8 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-sm font-bold">
@@ -1290,7 +1301,7 @@
           </div>
 
           <div class="overflow-x-auto rounded-2xl border border-slate-100">
-            <table class="w-full text-xs text-left">
+            <table class="w-full text-xs text-left whitespace-nowrap">
               <thead class="bg-slate-50 text-slate-400 font-semibold border-b">
                 <tr>
                   <th class="py-2.5 px-3">구분</th>
@@ -1372,8 +1383,8 @@
           </div>
         </div>
 
-        <!-- 우측: 4. 현재 보유 자산 & 저축 현황 (lg:col-span-5) - 1번/2번 표 스타일 통일 리디자인 -->
-        <div class="lg:col-span-5 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm space-y-4 flex flex-col justify-between">
+        <!-- 우측: 4. 현재 보유 자산 & 저축 현황 (lg:col-span-6) - 1번/2번 표 스타일 통일 리디자인 -->
+        <div class="lg:col-span-6 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm space-y-4 flex flex-col justify-between">
           <div>
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3 mb-4">
               <div class="flex items-center gap-2.5">
@@ -1400,7 +1411,7 @@
 
             <!-- 1번/2번 표 스타일의 세로 리스트형 모던 자산 테이블 -->
             <div class="overflow-x-auto rounded-2xl border border-slate-100 mb-3.5 touch-scroll">
-              <table class="w-full text-xs text-left" id="houseSavingsPhotoTable">
+              <table class="w-full text-xs text-left whitespace-nowrap" id="houseSavingsPhotoTable">
                 <thead class="bg-slate-50 text-slate-400 font-semibold border-b">
                   <tr>
                     <th class="py-2.5 px-3">구분</th>
@@ -1572,14 +1583,14 @@
           <table class="w-full text-xs sm:text-sm text-left">
             <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 text-xs">
               <tr>
-                <th class="py-3 px-3 sm:px-4">대출 시나리오</th>
-                <th class="py-3 px-3 sm:px-4 text-right">분양가-대출-계약금</th>
-                <th class="py-3 px-3 sm:px-4 text-right">중도금 이자</th>
-                <th class="py-3 px-3 sm:px-4 text-right">옵션 비용</th>
-                <th class="py-3 px-3 sm:px-4 text-right">기타비용(취득세 등)</th>
-                <th class="py-3 px-3 sm:px-4 text-right font-bold text-indigo-900 bg-indigo-50/50">집 합계 (총 필요현금)</th>
-                <th class="py-3 px-3 sm:px-4 text-right font-bold text-rose-900 bg-rose-50/50">저축 차감 후 남은금액(부족액)</th>
-                <th class="py-3 px-3 sm:px-4 text-center">월 예상상환(30년/4%)</th>
+                <th class="py-3 px-3 sm:px-4 whitespace-nowrap">대출 시나리오</th>
+                <th class="py-3 px-3 sm:px-4 text-right whitespace-nowrap">분양가-대출-계약금</th>
+                <th class="py-3 px-3 sm:px-4 text-right whitespace-nowrap">중도금 이자</th>
+                <th class="py-3 px-3 sm:px-4 text-right whitespace-nowrap">옵션 비용</th>
+                <th class="py-3 px-3 sm:px-4 text-right whitespace-nowrap">기타비용(취득세 등)</th>
+                <th class="py-3 px-3 sm:px-4 text-right font-bold text-indigo-900 bg-indigo-50/50 whitespace-nowrap">집 합계 (총 필요현금)</th>
+                <th class="py-3 px-3 sm:px-4 text-right font-bold text-rose-900 bg-rose-50/50 whitespace-nowrap">저축 차감 후 남은금액(부족액)</th>
+                <th class="py-3 px-3 sm:px-4 text-center whitespace-nowrap">월 예상상환(30년/4%)</th>
               </tr>
             </thead>
             <tbody id="loanScenarioTableBody" class="divide-y divide-slate-100 font-medium">
@@ -1985,13 +1996,13 @@
       { year: '2026년', month: '7월', salary: 2500000, totalCost: 1506900, salaryMinusCard: 993100, dajeongRemain: 1222561, cardTotal: 294120, remain: 2215661, savings: 1500000, pocketMoney: 159954, livingExpense: 268500, emergencyFund: 287207 },
       { year: '2026년', month: '8월', salary: 2500000, totalCost: 2138575, salaryMinusCard: 361425, dajeongRemain: 664048, cardTotal: 381480, remain: 1025473, savings: 1100000, pocketMoney: 41586, livingExpense: 186240, emergencyFund: -302353 },
       { year: '2026년', month: '9월', salary: 3000000, totalCost: 1951482, salaryMinusCard: 1048518, dajeongRemain: 317649, cardTotal: 413361, remain: 1366167, savings: 950000, pocketMoney: 135734, livingExpense: 251000, emergencyFund: 29433 },
-      { year: '2026년', month: '10월', salary: 4000000, totalCost: 1667389, salaryMinusCard: 2332611, dajeongRemain: 0, cardTotal: 245861, remain: 2332611, savings: 1800000, pocketMoney: 139250, livingExpense: 300000, emergencyFund: 93361 },
+      { year: '2026년', month: '10월', salary: 4000000, totalCost: 1820719, salaryMinusCard: 2179281, dajeongRemain: 293424, cardTotal: 245861, remain: 2472705, savings: 2000000, pocketMoney: 121950, livingExpense: 300000, emergencyFund: 50755 },
       { year: '2026년', month: '11월', salary: 0, totalCost: 0, salaryMinusCard: 0, dajeongRemain: 0, cardTotal: 0, remain: 0, savings: 0, pocketMoney: 300000, livingExpense: 300000, emergencyFund: -600000 },
       { year: '2026년', month: '12월', salary: 0, totalCost: 0, salaryMinusCard: 0, dajeongRemain: 0, cardTotal: 0, remain: 0, savings: 0, pocketMoney: 300000, livingExpense: 300000, emergencyFund: -600000 },
     ];
 
     // 선준 카드 기본 내역 (구글 시트 연동 실패 또는 초기 로딩 시에도 완벽 동작)
-    const DEFAULT_SEONJUN_ITEMS = [{"card": "하나카드", "item": "닥터피엘", "amount": 14050, "type": "공통", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "트레이더스", "amount": 23806, "type": "공통", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "넥", "amount": 12500, "type": "선준", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "한손한끼", "amount": 28475, "type": "공통", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "장갑", "amount": 47666, "type": "선준", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "트레이더스", "amount": 22974, "type": "공통", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 53140, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "컬리", "amount": 1900, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "트더", "amount": 58240, "type": "생활비", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "트더 아이스크림", "amount": 5000, "type": "생활비", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "샤워타올", "amount": 14150, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "오위", "amount": 38700, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "비닐", "amount": 8900, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "기저귀", "amount": 69300, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 4710, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 11740, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 5200, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 33260, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 9350, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "약국", "amount": 21000, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "걸이", "amount": 7950, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "유니클로", "amount": 39800, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "맥날", "amount": 9200, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "네이버", "amount": 20900, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 24500, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "스벅", "amount": 13200, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "바지", "amount": 32500, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "롯데카드", "item": "워치", "amount": 63900, "type": "선준", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "롯데카드", "item": "카시트", "amount": 103600, "type": "공통", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "롯데카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡이츠", "amount": 60300, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "케이스", "amount": 39940, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡이츠", "amount": 14700, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "양말", "amount": 5700, "type": "선준", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "기저귀", "amount": 72900, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "점심", "amount": 10200, "type": "선준", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "편의점", "amount": 4200, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 38460, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "컬리", "amount": 1900, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "편의점", "amount": 4700, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "김브", "amount": 23500, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "패드", "amount": 10900, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "편의점", "amount": 6670, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 35350, "type": "선준", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "스벅", "amount": 13000, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "본죽", "amount": 14500, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "커튼", "amount": 15900, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "이유식", "amount": 60540, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "트더", "amount": 2900, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "트더", "amount": 29960, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "워치", "amount": 63900, "type": "선준", "note": "할부", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "카시트", "amount": 103600, "type": "공통", "note": "할부", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "셔츠", "amount": 32728, "type": "선준", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "스벅", "amount": 12800, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "편의점", "amount": 13000, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "기저귀", "amount": 69560, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "바디워시", "amount": 17880, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "", "amount": 1000, "type": "선준", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "컬리", "amount": 38890, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 38440, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "컬리", "amount": 1900, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "파라다이스", "amount": 109084, "type": "공통", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "마이비데", "amount": 20900, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "태블릿 악세", "amount": 33370, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "ㅇ", "amount": 16668, "type": "선준", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "기저귀", "amount": 119060, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "스타필드", "amount": 31500, "type": "생활비", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "이유식", "amount": 22050, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "보호대", "amount": 16700, "type": "선준", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "스벅", "amount": 13200, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "요아정", "amount": 15000, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "장난감", "amount": 16050, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "의자", "amount": 4300, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "탈취제", "amount": 10240, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "방수팩", "amount": 11900, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "속초", "amount": 74579, "type": "공통", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "기저귀", "amount": 77500, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "병풍 고정", "amount": 36000, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "씨유", "amount": 6200, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 35778, "type": "선준", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "약국", "amount": 7000, "type": "선준", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "씨유", "amount": 8870, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "씨유", "amount": 14370, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "샤워타올", "amount": 3460, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "비비큐", "amount": 33000, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "퍼부어", "amount": 35800, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "베라", "amount": 9400, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "롯데카드", "item": "워치", "amount": 63900, "type": "선준", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "롯데카드", "item": "카시트", "amount": 103600, "type": "공통", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "롯데카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "기업카드", "item": "교통", "amount": 6600, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 33030, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "파라다이스", "amount": 109083, "type": "공통", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "ㅇ", "amount": 16666, "type": "선준", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "보호대", "amount": 16700, "type": "선준", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "속초", "amount": 74579, "type": "공통", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "폴바셋", "amount": 11600, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "충전기", "amount": 23100, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "칫솔", "amount": 28190, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "cu", "amount": 10170, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "드라이기", "amount": 37900, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "cu", "amount": 6900, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "다이치", "amount": 22780, "type": "공통", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "cu", "amount": 7770, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "롯데", "amount": 15030, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "롯데", "amount": 7000, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "떡뻥", "amount": 5280, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "행주티슈", "amount": 13230, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "cu", "amount": 6900, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "cu", "amount": 17970, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": " 병원", "amount": 7534, "type": "선준", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "아이스크림", "amount": 4000, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "제습기", "amount": 96424, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "사탕", "amount": 15170, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "선크림", "amount": 12600, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "멤버십", "amount": 46800, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "옷", "amount": 35380, "type": "선준", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 67334, "type": "선준", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "유모차악세", "amount": 79290, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "cu", "amount": 18070, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "순대국", "amount": 22000, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "주유소", "amount": 50000, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "기저귀", "amount": 71800, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "물티슈", "amount": 12810, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "소독이슈", "amount": 12900, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "물티슈", "amount": 12900, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "네스트", "amount": 37440, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 45834, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "선물", "amount": 13900, "type": "선준", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "트더", "amount": 31940, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "스벅", "amount": 13200, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "워치", "amount": 63900, "type": "선준", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "카시트", "amount": 103600, "type": "공통", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "보험", "amount": 87360, "type": "공통", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "기업카드", "item": "교통", "amount": 31700, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 26500, "type": "생활비", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "만두", "amount": 8900, "type": "생활비", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "세븐일레븐", "amount": 8000, "type": "생활비", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "트더", "amount": 31960, "type": "생활비", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "말차", "amount": 11600, "type": "생활비", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "씨유", "amount": 14570, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "칭웨이", "amount": 30000, "type": "선준", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "다이소", "amount": 5000, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "아이스크림", "amount": 7000, "type": "선준", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "", "amount": 26800, "type": "생활비", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 28800, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "ㅇ", "amount": 16666, "type": "선준", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "보호대", "amount": 16700, "type": "선준", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "속초", "amount": 74579, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "파라다이스", "amount": 109083, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 7534, "type": "공통", "note": "선준", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "제습기", "amount": 96422, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 67333, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 45833, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "닥터피엘", "amount": 20920, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "매트리스", "amount": 55800, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 67000, "type": "선준", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡이츠", "amount": 14200, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "CU", "amount": 6970, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "스타필드", "amount": 5000, "type": "생활비", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "스타필드", "amount": 6000, "type": "생활비", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "스타필드", "amount": 38000, "type": "생활비", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "", "amount": 49000, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 4900, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 15800, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "CU", "amount": 14970, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "주유소", "amount": 50000, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "주차비", "amount": 2200, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 22900, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 13600, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 14800, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "트더", "amount": 22460, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "", "amount": 26400, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "메가", "amount": 4000, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "주차비", "amount": 800, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "넥", "amount": 25000, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "주유소", "amount": 50000, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "", "amount": 17900, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "복호두", "amount": 19500, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "이마트", "amount": 50970, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "파바", "amount": 8200, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "우산", "amount": 21900, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "맥날", "amount": 7500, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 9120, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "아인", "amount": 3300, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "랄프", "amount": 4000, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 9900, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "워치", "amount": 63900, "type": "선준", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "카시트", "amount": 103600, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "보험", "amount": 87300, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "이마트", "amount": 31941, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "기업카드", "item": "교통", "amount": 8300, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 28800, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "보호대", "amount": 16700, "type": "선준", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "속초", "amount": 74579, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 7534, "type": "공통", "note": "선준", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "제습기", "amount": 96422, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 67333, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 45833, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "닥터피엘", "amount": 20920, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "매트리스", "amount": 55800, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 67000, "type": "선준", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "아이폰", "amount": 127226, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "에어컨필터", "amount": 18800, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "케이스,필름", "amount": 12320, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "욕조클리너", "amount": 23220, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "서우 바디워시", "amount": 31650, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 18370, "type": "선준", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 21120, "type": "선준", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 14480, "type": "선준", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 23080, "type": "선준", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "언덕농원", "amount": 132000, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "차량용 충전기", "amount": 38600, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "치약,마이비데", "amount": 40820, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "편의점", "amount": 25500, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "핸드워서,필름", "amount": 29860, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "보험", "amount": 87300, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "이마트", "amount": 31941, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}];
+    const DEFAULT_SEONJUN_ITEMS = [{"card": "하나카드", "item": "닥터피엘", "amount": 14050, "type": "공통", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "트레이더스", "amount": 23806, "type": "공통", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "넥", "amount": 12500, "type": "선준", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "한손한끼", "amount": 28475, "type": "공통", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "장갑", "amount": 47666, "type": "선준", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "트레이더스", "amount": 22974, "type": "공통", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 53140, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "컬리", "amount": 1900, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "트더", "amount": 58240, "type": "생활비", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "트더 아이스크림", "amount": 5000, "type": "생활비", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "샤워타올", "amount": 14150, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "오위", "amount": 38700, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "비닐", "amount": 8900, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "기저귀", "amount": 69300, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 4710, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 11740, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 5200, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 33260, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 9350, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "약국", "amount": 21000, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "걸이", "amount": 7950, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "유니클로", "amount": 39800, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "맥날", "amount": 9200, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "네이버", "amount": 20900, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 24500, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "스벅", "amount": 13200, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "바지", "amount": 32500, "type": "선준", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "5월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "롯데카드", "item": "워치", "amount": 63900, "type": "선준", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "롯데카드", "item": "카시트", "amount": 103600, "type": "공통", "note": "할부", "month": "5월", "year": "2026년"}, {"card": "롯데카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "5월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡이츠", "amount": 60300, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "케이스", "amount": 39940, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡이츠", "amount": 14700, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "양말", "amount": 5700, "type": "선준", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "기저귀", "amount": 72900, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "점심", "amount": 10200, "type": "선준", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "편의점", "amount": 4200, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 38460, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "컬리", "amount": 1900, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "편의점", "amount": 4700, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "김브", "amount": 23500, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "패드", "amount": 10900, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "편의점", "amount": 6670, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 35350, "type": "선준", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "스벅", "amount": 13000, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "본죽", "amount": 14500, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "커튼", "amount": 15900, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "이유식", "amount": 60540, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "트더", "amount": 2900, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "트더", "amount": 29960, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "워치", "amount": 63900, "type": "선준", "note": "할부", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "카시트", "amount": 103600, "type": "공통", "note": "할부", "month": "6월", "year": "2026년"}, {"card": "롯데카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "셔츠", "amount": 32728, "type": "선준", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "스벅", "amount": 12800, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "편의점", "amount": 13000, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "기저귀", "amount": 69560, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "바디워시", "amount": 17880, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "", "amount": 1000, "type": "선준", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "컬리", "amount": 38890, "type": "공통", "note": "일반", "month": "6월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 38440, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "컬리", "amount": 1900, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "파라다이스", "amount": 109084, "type": "공통", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "마이비데", "amount": 20900, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "태블릿 악세", "amount": 33370, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "ㅇ", "amount": 16668, "type": "선준", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "기저귀", "amount": 119060, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "스타필드", "amount": 31500, "type": "생활비", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "이유식", "amount": 22050, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "보호대", "amount": 16700, "type": "선준", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "스벅", "amount": 13200, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "요아정", "amount": 15000, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "장난감", "amount": 16050, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "의자", "amount": 4300, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "탈취제", "amount": 10240, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "방수팩", "amount": 11900, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "속초", "amount": 74579, "type": "공통", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "기저귀", "amount": 77500, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "병풍 고정", "amount": 36000, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "씨유", "amount": 6200, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 35778, "type": "선준", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "약국", "amount": 7000, "type": "선준", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "씨유", "amount": 8870, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "씨유", "amount": 14370, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "샤워타올", "amount": 3460, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "비비큐", "amount": 33000, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "퍼부어", "amount": 35800, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "베라", "amount": 9400, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "7월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "롯데카드", "item": "워치", "amount": 63900, "type": "선준", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "롯데카드", "item": "카시트", "amount": 103600, "type": "공통", "note": "할부", "month": "7월", "year": "2026년"}, {"card": "롯데카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "기업카드", "item": "교통", "amount": 6600, "type": "공통", "note": "일반", "month": "7월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 33030, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "파라다이스", "amount": 109083, "type": "공통", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "ㅇ", "amount": 16666, "type": "선준", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "보호대", "amount": 16700, "type": "선준", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "속초", "amount": 74579, "type": "공통", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "폴바셋", "amount": 11600, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "충전기", "amount": 23100, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "칫솔", "amount": 28190, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "cu", "amount": 10170, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "드라이기", "amount": 37900, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "cu", "amount": 6900, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "다이치", "amount": 22780, "type": "공통", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "cu", "amount": 7770, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "롯데", "amount": 15030, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "롯데", "amount": 7000, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "떡뻥", "amount": 5280, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "행주티슈", "amount": 13230, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "cu", "amount": 6900, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "cu", "amount": 17970, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": " 병원", "amount": 7534, "type": "선준", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "아이스크림", "amount": 4000, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "제습기", "amount": 96424, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "사탕", "amount": 15170, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "선크림", "amount": 12600, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "멤버십", "amount": 46800, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "옷", "amount": 35380, "type": "선준", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 67334, "type": "선준", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "유모차악세", "amount": 79290, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "cu", "amount": 18070, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "순대국", "amount": 22000, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "주유소", "amount": 50000, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "기저귀", "amount": 71800, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "물티슈", "amount": 12810, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "소독이슈", "amount": 12900, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "물티슈", "amount": 12900, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "네스트", "amount": 37440, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 45834, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "선물", "amount": 13900, "type": "선준", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "트더", "amount": 31940, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "스벅", "amount": 13200, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "워치", "amount": 63900, "type": "선준", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "카시트", "amount": 103600, "type": "공통", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "보험", "amount": 87360, "type": "공통", "note": "할부", "month": "8월", "year": "2026년"}, {"card": "롯데카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "기업카드", "item": "교통", "amount": 31700, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 26500, "type": "생활비", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "만두", "amount": 8900, "type": "생활비", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "세븐일레븐", "amount": 8000, "type": "생활비", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "트더", "amount": 31960, "type": "생활비", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "말차", "amount": 11600, "type": "생활비", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "씨유", "amount": 14570, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "칭웨이", "amount": 30000, "type": "선준", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "다이소", "amount": 5000, "type": "공통", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "아이스크림", "amount": 7000, "type": "선준", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "", "amount": 26800, "type": "생활비", "note": "일반", "month": "8월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 28800, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "ㅇ", "amount": 16666, "type": "선준", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "보호대", "amount": 16700, "type": "선준", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "속초", "amount": 74579, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "파라다이스", "amount": 109083, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 7534, "type": "공통", "note": "선준", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "제습기", "amount": 96422, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 67333, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 45833, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "닥터피엘", "amount": 20920, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "매트리스", "amount": 55800, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 67000, "type": "선준", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡이츠", "amount": 14200, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "CU", "amount": 6970, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "스타필드", "amount": 5000, "type": "생활비", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "스타필드", "amount": 6000, "type": "생활비", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "스타필드", "amount": 38000, "type": "생활비", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "", "amount": 49000, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 4900, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 15800, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "CU", "amount": 14970, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "주유소", "amount": 50000, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "주차비", "amount": 2200, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 22900, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 13600, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 14800, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "트더", "amount": 22460, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "", "amount": 26400, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "메가", "amount": 4000, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "주차비", "amount": 800, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "넥", "amount": 25000, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "주유소", "amount": 50000, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "", "amount": 17900, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "복호두", "amount": 19500, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "이마트", "amount": 50970, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "파바", "amount": 8200, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "우산", "amount": 21900, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "맥날", "amount": 7500, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 9120, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "아인", "amount": 3300, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "랄프", "amount": 4000, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 9900, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "워치", "amount": 63900, "type": "선준", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "카시트", "amount": 103600, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "보험", "amount": 87300, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "이마트", "amount": 31941, "type": "공통", "note": "할부", "month": "9월", "year": "2026년"}, {"card": "롯데카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "기업카드", "item": "교통", "amount": 8300, "type": "공통", "note": "일반", "month": "9월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "문자", "amount": 300, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 29890, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "보호대", "amount": 16700, "type": "선준", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "속초", "amount": 74579, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 7534, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "제습기", "amount": 96422, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 67333, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 45833, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "닥터피엘", "amount": 20920, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "매트리스", "amount": 55800, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "병원", "amount": 67000, "type": "선준", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "아이폰", "amount": 127226, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "에어컨필터", "amount": 18800, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "케이스,필름", "amount": 12320, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "아인", "amount": 30000, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "트더", "amount": 21280, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "욕조클리너", "amount": 23220, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "서우 바디워시", "amount": 31650, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 18370, "type": "선준", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 21120, "type": "선준", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 14480, "type": "선준", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "우체국", "amount": 23080, "type": "선준", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "언덕농원", "amount": 132000, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "차량용 충전기", "amount": 38600, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "치약,마이비데", "amount": 40820, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "편의점", "amount": 25500, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "핸드워서,필름", "amount": 29860, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 22160, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "네이버", "amount": 12900, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "아인", "amount": 12500, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "택시", "amount": 8600, "type": "선준", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "택시", "amount": 8700, "type": "선준", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "보험", "amount": 87300, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "레고", "amount": 36800, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "아인", "amount": 28000, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "이마트", "amount": 31941, "type": "공통", "note": "할부", "month": "10월", "year": "2026년"}, {"card": "롯데카드", "item": "sms", "amount": 300, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "10월", "year": "2026년"}, {"card": "하나카드", "item": "아이폰", "amount": 127226, "type": "공통", "note": "할부", "month": "11월", "year": "2026년"}, {"card": "하나카드", "item": "에어컨필터", "amount": 18800, "type": "공통", "note": "할부", "month": "11월", "year": "2026년"}, {"card": "하나카드", "item": "케이스,필름", "amount": 12320, "type": "공통", "note": "할부", "month": "11월", "year": "2026년"}, {"card": "롯데카드", "item": "레고", "amount": 36800, "type": "공통", "note": "할부", "month": "11월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "11월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "11월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "11월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 29890, "type": "공통", "note": "고정", "month": "11월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "11월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "11월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "11월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "11월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "11월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "11월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "11월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "11월", "year": "2026년"}, {"card": "하나카드", "item": "아이폰", "amount": 127226, "type": "공통", "note": "할부", "month": "12월", "year": "2026년"}, {"card": "하나카드", "item": "에어컨필터", "amount": 18800, "type": "공통", "note": "할부", "month": "12월", "year": "2026년"}, {"card": "하나카드", "item": "케이스,필름", "amount": 12320, "type": "공통", "note": "할부", "month": "12월", "year": "2026년"}, {"card": "롯데카드", "item": "레고", "amount": 36800, "type": "공통", "note": "할부", "month": "12월", "year": "2026년"}, {"card": "롯데카드", "item": "피부과", "amount": 110000, "type": "공통", "note": "할부", "month": "12월", "year": "2026년"}, {"card": "하나카드", "item": "디즈니", "amount": 9900, "type": "공통", "note": "고정", "month": "12월", "year": "2026년"}, {"card": "하나카드", "item": "제미나이", "amount": 29000, "type": "공통", "note": "고정", "month": "12월", "year": "2026년"}, {"card": "하나카드", "item": "도시가스", "amount": 29890, "type": "공통", "note": "고정", "month": "12월", "year": "2026년"}, {"card": "하나카드", "item": "타이어", "amount": 2000, "type": "공통", "note": "고정", "month": "12월", "year": "2026년"}, {"card": "하나카드", "item": "보험", "amount": 233131, "type": "공통", "note": "고정", "month": "12월", "year": "2026년"}, {"card": "하나카드", "item": "통신", "amount": 42240, "type": "공통", "note": "고정", "month": "12월", "year": "2026년"}, {"card": "하나카드", "item": "웨이브", "amount": 7900, "type": "공통", "note": "고정", "month": "12월", "year": "2026년"}, {"card": "하나카드", "item": "쿠팡", "amount": 7890, "type": "공통", "note": "고정", "month": "12월", "year": "2026년"}, {"card": "롯데카드", "item": "코웨이", "amount": 12320, "type": "공통", "note": "고정", "month": "12월", "year": "2026년"}, {"card": "롯데카드", "item": "LG", "amount": 4000, "type": "공통", "note": "고정", "month": "12월", "year": "2026년"}, {"card": "신한카드", "item": "임대료", "amount": 51500, "type": "공통", "note": "일반", "month": "12월", "year": "2026년"}];
 
 
     let currentSummaryTableMode = 'costs'; // 'costs' | 'flow'
@@ -2027,7 +2038,7 @@
               delete data[k].pocketMoney;
               changed = true;
             }
-            if (data[k].totalCost === 0) {
+            if ([0, 1667389, 1878519].includes(data[k].totalCost)) {
               delete data[k].totalCost;
               changed = true;
             }
@@ -2044,15 +2055,23 @@
               delete data[mKey].livingExpense;
               changed = true;
             }
-            if ([0, 300].includes(data[mKey].savings)) {
+            if ([0, 300, 1800000].includes(data[mKey].savings)) {
               delete data[mKey].savings;
               changed = true;
             }
-            if (data[mKey].totalCost === 0) {
+            if ([0, 1667389, 1878519, 2179281].includes(data[mKey].remain)) {
+              delete data[mKey].remain;
+              changed = true;
+            }
+            if (data[mKey].dajeongRemain === 0) {
+              delete data[mKey].dajeongRemain;
+              changed = true;
+            }
+            if ([0, 1667389, 1878519].includes(data[mKey].totalCost)) {
               delete data[mKey].totalCost;
               changed = true;
             }
-            if ([29433, 93361, 1232611, 1316311, 1393361, 1532611].includes(data[mKey].emergencyFund)) {
+            if ([29433, 33455, 93361, -60000, 1232611, 1316311, 1393361, 1532611].includes(data[mKey].emergencyFund)) {
               delete data[mKey].emergencyFund;
               changed = true;
             }
@@ -2336,18 +2355,24 @@
         dajeongRemain = sheetExp.dajeongRemain;
       }
 
-      // 5. 잔금
+      // 5. 월 잔금 / 남은금액 (구글 가계부 시트 '남은금액' 컬럼 값 100% 최우선 반영)
       let remainBalance = 0;
+      let remainSource = "가계부 시트 연동";
       if (overrides.remain !== undefined && overrides.remain > 0) {
         remainBalance = overrides.remain;
+        remainSource = "직접수정";
+      } else if (row.remain !== undefined && row.remain !== 0 && row.remain !== null) {
+        remainBalance = row.remain;
+        remainSource = "가계부 시트 연동";
+      } else if (sheetExp && sheetExp.remain !== undefined && sheetExp.remain !== 0 && sheetExp.remain !== null) {
+        remainBalance = sheetExp.remain;
+        remainSource = "가계부 시트 연동";
       } else if (salaryMinusCard > 0 || dajeongRemain > 0) {
         remainBalance = salaryMinusCard + dajeongRemain;
-      } else if (row.remain !== undefined && row.remain > 0) {
-        remainBalance = row.remain;
-      } else if (sheetExp && sheetExp.remain !== undefined && sheetExp.remain > 0) {
-        remainBalance = sheetExp.remain;
+        remainSource = "(급여−선준카드)+다정";
       } else {
         remainBalance = row.remain || (sheetExp ? sheetExp.remain : 0);
+        remainSource = "가계부 시트 연동";
       }
 
       // --- [구글 시트 실시간 카드 집계 추출: 선준(용돈), 생활비, 다정(용돈)] ---
@@ -2401,13 +2426,13 @@
         // 카드 내역에서 구분에 '선준' 지출이 확인된 경우: 기준 30만 원에서 실시간 차감
         pocketMoney = Math.max(0, 300000 - seonjunDeduction);
         pocketSource = `30만−선준(${seonjunDeduction.toLocaleString()}원)`;
-      } else if (sheetExp && sheetExp.pocketMoney !== undefined && sheetExp.pocketMoney > 0) {
-        // 시트 원본 값 완벽 유지 (예: 9월 135,734원, 10월 139,250원)
-        pocketMoney = sheetExp.pocketMoney;
-        pocketSource = "시트 원본";
       } else if (row.pocketMoney !== undefined && row.pocketMoney > 0) {
         pocketMoney = row.pocketMoney;
-        pocketSource = "시트 데이터";
+        pocketSource = "가계부 시트 연동";
+      } else if (sheetExp && sheetExp.pocketMoney !== undefined && sheetExp.pocketMoney > 0) {
+        // 시트 원본 값 완벽 유지 (예: 9월 135,734원, 10월 121,950원)
+        pocketMoney = sheetExp.pocketMoney;
+        pocketSource = "시트 원본";
       } else if (year === '2026년' && ['10월', '11월', '12월'].includes(month)) {
         pocketMoney = 300000;
         pocketSource = "기준 용돈 30만";
@@ -2423,6 +2448,9 @@
       if (overrides.livingExpense !== undefined && overrides.livingExpense !== 400000) {
         livingExpense = overrides.livingExpense;
         livingSource = "✏️ 직접수정";
+      } else if (row.livingExpense !== undefined && row.livingExpense > 0) {
+        livingExpense = row.livingExpense;
+        livingSource = "가계부 시트 연동";
       } else if (livingCardDeduction > 0) {
         // 카드 내역에서 구분에 '생활비' 지출이 확인된 경우: 기준 30만 원에서 실시간 차감
         livingExpense = Math.max(0, 300000 - livingCardDeduction);
@@ -2431,9 +2459,6 @@
         // 시트 원본 값 완벽 유지 (예: 9월 251,000원, 10월 300,000원)
         livingExpense = sheetExp.livingExpense;
         livingSource = "시트 원본";
-      } else if (row.livingExpense !== undefined && row.livingExpense > 0) {
-        livingExpense = row.livingExpense;
-        livingSource = "시트 데이터";
       } else if (year === '2026년' && ['10월', '11월', '12월'].includes(month)) {
         livingExpense = 300000;
         livingSource = "기준 생활비 30만";
@@ -2456,6 +2481,7 @@
         salaryMinusCard,
         dajeongRemain,
         remainBalance,
+        remainSource,
         savings,
         pocketMoney,
         livingExpense,
@@ -2673,9 +2699,13 @@
       const dajeongRemainEl = document.getElementById("summaryDajeongRemain");
       if (dajeongRemainEl) dajeongRemainEl.innerText = metrics.dajeongRemain.toLocaleString() + "원";
 
-      // 5. 월 잔금
+      // 5. 월 잔금 (남은금액)
       const remainBalanceEl = document.getElementById("summaryRemainBalance");
       if (remainBalanceEl) remainBalanceEl.innerText = metrics.remainBalance.toLocaleString() + "원";
+      const summaryRemainRatioEl = document.getElementById("summaryRemainRatio");
+      if (summaryRemainRatioEl) {
+        summaryRemainRatioEl.innerText = metrics.isOverridden?.remain ? "✏️ 직접수정" : (metrics.remainSource || "가계부 시트 연동");
+      }
 
       // [섹션 2: 잔금 상세 배분 현황 (적금 · 용돈 · 생활비 · 비상금)]
       const allocBaseAmountEl = document.getElementById("allocBaseAmount");
@@ -3250,11 +3280,65 @@
       const archiveMap = getDajeongArchiveMap();
       const customList = getCustomDajeongItems();
       const allItems = [];
+      const seenKeys = new Set();
 
-      // 1. 아카이브 맵의 모든 월/년 내역 수집
+      const activeY = (typeof getActiveDajeongSyncYear === 'function') ? getActiveDajeongSyncYear() : "2026년";
+      const activeM = (typeof getActiveDajeongSyncMonth === 'function') ? getActiveDajeongSyncMonth() : "10월";
+
+      // 1. 구글 시트 실시간 연동 데이터 (rawData.dajeong) 최우선 수집
+      let liveList = [];
+      if (rawData && rawData.dajeong) {
+        if (Array.isArray(rawData.dajeong)) {
+          liveList = rawData.dajeong;
+        } else if (rawData.dajeong.items && Array.isArray(rawData.dajeong.items)) {
+          liveList = rawData.dajeong.items;
+        }
+        if (rawData.dajeong.archive && Array.isArray(rawData.dajeong.archive)) {
+          liveList = liveList.concat(rawData.dajeong.archive);
+        }
+      }
+
+      liveList.forEach(it => {
+        if (!it) return;
+        const itemStr = String(it.item || '').trim();
+        const amt = Number(it.amount) || 0;
+        if (!itemStr || amt <= 0) return;
+        if (/^202\d년?$/.test(itemStr) && amt < 100) return;
+
+        let y = String(it.year || activeY).trim();
+        let m = String(it.month || activeM).trim();
+        if (m.includes("년")) {
+          const parts = m.split(/\s+/);
+          if (parts.length >= 2) {
+            y = parts[0];
+            m = parts[1];
+          }
+        }
+        const mm = m.match(/(\d{1,2})월?/);
+        m = mm ? (mm[1] + "월") : activeM;
+        const ym = y.match(/(20\d{2})/);
+        y = ym ? (ym[1] + "년") : activeY;
+
+        const card = String(it.card || '다정카드').trim();
+        const key = `${y}_${m}_${card}_${itemStr}_${Math.round(amt)}`;
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          allItems.push({
+            ...it,
+            year: y,
+            month: m,
+            card: card,
+            item: itemStr,
+            amount: amt,
+            type: it.type || '일반'
+          });
+        }
+      });
+
+      // 2. 아카이브 맵의 모든 월/년 내역 병합 (과거 월 보존)
       Object.keys(archiveMap).forEach(key => {
         let defYear = "2026년";
-        let defMonth = "9월";
+        let defMonth = "10월";
         if (key.includes("_")) {
           const parts = key.split("_");
           defYear = parts[0];
@@ -3266,8 +3350,14 @@
         }
 
         (archiveMap[key] || []).forEach(it => {
-          let y = it.year || defYear;
-          let m = it.month || defMonth;
+          if (!it) return;
+          const itemStr = String(it.item || '').trim();
+          const amt = Number(it.amount) || 0;
+          if (!itemStr || amt <= 0) return;
+          if (/^202\d년?$/.test(itemStr) && amt < 100) return;
+
+          let y = String(it.year || defYear).trim();
+          let m = String(it.month || defMonth).trim();
           if (m.includes("년")) {
             const parts = m.split(/\s+/);
             if (parts.length >= 2) {
@@ -3275,34 +3365,26 @@
               m = parts[1];
             }
           }
-          allItems.push({ ...it, year: y, month: m });
+          const mm = m.match(/(\d{1,2})월?/);
+          m = mm ? (mm[1] + "월") : defMonth;
+          const ym = y.match(/(20\d{2})/);
+          y = ym ? (ym[1] + "년") : defYear;
+
+          const card = String(it.card || '다정카드').trim();
+          const itemKey = `${y}_${m}_${card}_${itemStr}_${Math.round(amt)}`;
+          if (!seenKeys.has(itemKey)) {
+            seenKeys.add(itemKey);
+            allItems.push({ ...it, year: y, month: m, card: card, item: itemStr, amount: amt });
+          }
         });
       });
 
-      // 만약 아카이브가 아직 비어있다면 rawData에서 로드
-      if (allItems.length === 0 && rawData && rawData.dajeong && rawData.dajeong.items) {
-        const activeY = getActiveDajeongSyncYear();
-        const activeM = getActiveDajeongSyncMonth();
-        rawData.dajeong.items.forEach(it => {
-          let y = it.year || activeY;
-          let m = it.month || activeM;
-          if (m.includes("년")) {
-            const parts = m.split(/\s+/);
-            if (parts.length >= 2) {
-              y = parts[0];
-              m = parts[1];
-            }
-          }
-          allItems.push({ ...it, year: y, month: m });
-        });
-      }
-
-      // 2. 직접 추가한 커스텀 내역 수집
+      // 3. 사용자가 직접 추가한 커스텀 내역 수집
       customList.forEach(it => {
         allItems.push({
           ...it,
           year: it.year || "2026년",
-          month: it.month || "9월",
+          month: it.month || "10월",
           isCustom: true
         });
       });
@@ -3485,7 +3567,7 @@
       const KNOWN_INSTALLMENT_ITEMS = [
         '아이폰', '에어컨필터', '케이스,필름', '피부과', '워치', '카시트',
         '파라다이스', '보호대', '속초', '제습기', '매트리스', '닥터피엘', '다이치',
-        '한손한끼', '장갑'
+        '한손한끼', '장갑', '레고', '아인', '트더'
       ];
       const KNOWN_FIXED_ITEMS = [
         '디즈니', '제미나이', '도시가스', '타이어', '보험', '통신', '웨이브', '쿠팡', '코웨이', 'LG', '컬리'
@@ -3537,15 +3619,17 @@
           };
         }
 
-        // 2. 키워드 및 패턴 기반 할부 자동 판별 (새로고침 시 시트의 비고가 비어있거나 날짜여도 100% 인식 보장)
+        // 2. 키워드 및 패턴 기반 할부 자동 판별 (시트의 비고/연도가 날짜 형식 'Sat Apr 04 2026...' 등으로 넘어와도 100% 인식 보장)
+        const isDateNote = rawNote.includes('GMT') || rawNote.includes('한국') || /^[A-Z][a-z]{2}\s+[A-Z][a-z]{2}\s+\d+/.test(rawNote) || /^\d{4}[-./]/.test(rawNote);
         const isInstKeyword = KNOWN_INSTALLMENT_ITEMS.some(k => itemStr.includes(k));
         const isInstPattern = itemStr.includes('할부') || rawNote.includes('할부') || /\(\d+\/\d+회?차?\)/.test(itemStr);
         const isHospitalInst = itemStr.includes('병원') && (amt > 30000);
-        const isLotteInst = cardStr.includes('롯데') && (itemStr.includes('보험') || itemStr.includes('이마트'));
-        const isOneCardInst = cardStr.includes('하나') && itemStr === 'ㅇ';
+        const isLotteInst = cardStr.includes('롯데') && (itemStr.includes('보험') || itemStr.includes('이마트') || itemStr.includes('레고') || itemStr.includes('피부과'));
+        const isOneCardInst = cardStr.includes('하나') && (itemStr === 'ㅇ' || itemStr.includes('아인') || itemStr.includes('트더'));
+        const isLego = itemStr.includes('레고');
 
-        if (isInstKeyword || isInstPattern || isHospitalInst || isLotteInst || isOneCardInst) {
-          const tp = (itemStr.includes('보호대') || (itemStr.includes('병원') && amt === 67000) || itemStr.includes('워치') || itemStr.includes('장갑') || itemStr.includes('넥')) ? '선준' : rawType;
+        if (isLego || isDateNote || isInstKeyword || isInstPattern || isHospitalInst || isLotteInst || isOneCardInst) {
+          const tp = (itemStr.includes('보호대') || (itemStr.includes('병원') && amt === 67000) || itemStr.includes('워치') || itemStr.includes('장갑') || itemStr.includes('넥') || (itemStr.includes('택시') && cardStr.includes('하나'))) ? '선준' : rawType;
           return {
             ...it,
             card: cardStr,
@@ -3629,15 +3713,41 @@
         }
       });
 
-      // 4. DEFAULT_SEONJUN_ITEMS에서 누락된 할부 및 카드 항목 안전하게 보충 병합 (새로고침 시 할부 내역 절대 소실 방지!)
+      // 4. DEFAULT_SEONJUN_ITEMS 보충 병합:
+      // - 시트에 데이터가 전혀 없는 월(예: 11월, 12월 등 미래 월)은 DEFAULT_SEONJUN_ITEMS 전량 추가
+      // - 시트에 이미 데이터가 존재하는 월은 시트 내역을 100% 우선하며 중복 주입 방지 (단, 필수 할부가 누락된 경우만 안전 보충)
       if (typeof DEFAULT_SEONJUN_ITEMS !== 'undefined') {
+        const existingMonthItemMap = new Map();
+        allList.forEach(it => {
+          const ymKey = `${it.year}_${it.month}`;
+          if (!existingMonthItemMap.has(ymKey)) existingMonthItemMap.set(ymKey, new Set());
+          existingMonthItemMap.get(ymKey).add(it.item);
+        });
+
         DEFAULT_SEONJUN_ITEMS.forEach(it => {
           const cleaned = cleanSeonjunItem(it);
           if (cleaned) {
-            const key = `${cleaned.year}_${cleaned.month}_${cleaned.card}_${cleaned.item}_${Math.round(cleaned.amount)}`;
-            if (!seenTransactionKeys.has(key)) {
-              seenTransactionKeys.add(key);
-              allList.push(cleaned);
+            const ymKey = `${cleaned.year}_${cleaned.month}`;
+            const isMonthInSheet = existingMonthItemMap.has(ymKey) && existingMonthItemMap.get(ymKey).size >= 5;
+
+            if (!isMonthInSheet) {
+              const key = `${cleaned.year}_${cleaned.month}_${cleaned.card}_${cleaned.item}_${Math.round(cleaned.amount)}`;
+              if (!seenTransactionKeys.has(key)) {
+                seenTransactionKeys.add(key);
+                allList.push(cleaned);
+              }
+            } else if (cleaned.note === '할부') {
+              const itemSet = existingMonthItemMap.get(ymKey);
+              const hasSimilar = Array.from(itemSet).some(sheetItem => 
+                sheetItem.includes(cleaned.item) || cleaned.item.includes(sheetItem)
+              );
+              if (!hasSimilar) {
+                const key = `${cleaned.year}_${cleaned.month}_${cleaned.card}_${cleaned.item}_${Math.round(cleaned.amount)}`;
+                if (!seenTransactionKeys.has(key)) {
+                  seenTransactionKeys.add(key);
+                  allList.push(cleaned);
+                }
+              }
             }
           }
         });
@@ -3831,7 +3941,10 @@
       "보험": 3,
       "이마트": 3,
       "닥터피엘": 3,
-      "병원": 3
+      "병원": 3,
+      "레고": 5,          // 5개월 할부 (36,800원 * 5 = 184,000원)
+      "아인": 3,
+      "트더": 3
     };
 
     /**
@@ -5067,13 +5180,13 @@
             <i class="fa-solid fa-coins ${isHighlighted ? 'text-amber-500' : 'text-slate-400'} mr-2 text-xs"></i>
             ${loanLabel} ${badge}
           </td>
-          <td class="py-3 px-3 sm:px-4 text-right text-slate-700">${res.bunyangRemain.toLocaleString()}원</td>
-          <td class="py-3 px-3 sm:px-4 text-right text-slate-600">${res.interest.toLocaleString()}원</td>
-          <td class="py-3 px-3 sm:px-4 text-right text-slate-600">${res.optionCost.toLocaleString()}원</td>
-          <td class="py-3 px-3 sm:px-4 text-right text-slate-500">${res.etcCost.toLocaleString()}원</td>
-          <td class="py-3 px-3 sm:px-4 text-right font-bold text-indigo-700 bg-indigo-50/30">${res.houseTotal.toLocaleString()}원</td>
-          <td class="py-3 px-3 sm:px-4 text-right font-black text-rose-600 bg-rose-50/30 text-sm">${res.remainingNeeded.toLocaleString()}원</td>
-          <td class="py-3 px-3 sm:px-4 text-center text-slate-500 text-xs">약 ${Math.round(res.monthlyPayment / 10000).toLocaleString()}만원/월</td>
+          <td class="py-3 px-3 sm:px-4 text-right text-slate-700 whitespace-nowrap tabular-nums">${res.bunyangRemain.toLocaleString()}원</td>
+          <td class="py-3 px-3 sm:px-4 text-right text-slate-600 whitespace-nowrap tabular-nums">${res.interest.toLocaleString()}원</td>
+          <td class="py-3 px-3 sm:px-4 text-right text-slate-600 whitespace-nowrap tabular-nums">${res.optionCost.toLocaleString()}원</td>
+          <td class="py-3 px-3 sm:px-4 text-right text-slate-500 whitespace-nowrap tabular-nums">${res.etcCost.toLocaleString()}원</td>
+          <td class="py-3 px-3 sm:px-4 text-right font-bold text-indigo-700 bg-indigo-50/30 whitespace-nowrap tabular-nums">${res.houseTotal.toLocaleString()}원</td>
+          <td class="py-3 px-3 sm:px-4 text-right font-black text-rose-600 bg-rose-50/30 text-sm whitespace-nowrap tabular-nums">${res.remainingNeeded.toLocaleString()}원</td>
+          <td class="py-3 px-3 sm:px-4 text-center text-slate-500 text-xs whitespace-nowrap tabular-nums">약 ${Math.round(res.monthlyPayment / 10000).toLocaleString()}만원/월</td>
         `;
 
         // 행 클릭 시 시뮬레이터에 해당 대출금액 적용

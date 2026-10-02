@@ -188,114 +188,132 @@ function getStockData(ss) {
 }
 
 /**
- * 월별 비용 시트 (잔금, 적금, 용돈, 생활비, 비상금) 자동 추출 함수
- * '월별 비용', '월별비용', '비용' 등의 시트명이나 헤더를 검색하여 추출합니다.
+ * 날짜 및 년월 자동 추출 헬퍼 함수 (Date 객체, 타임스탬프, 문자열 완벽 지원)
  */
-function getMonthlyExpensesData(ss) {
-  var sheet = findSheetByKeywords(ss, ['월별 비용', '월별비용', '비용', '월별지출', '지출'], ['내집', '분양', '아파트', '주식', '다정', '선준']);
-  var sheetsToSearch = [];
-  if (sheet) {
-    sheetsToSearch.push(sheet);
-  } else {
-    var allSheets = ss.getSheets();
-    for (var s = 0; s < allSheets.length; s++) {
-      var curName = allSheets[s].getName().trim();
-      if (curName.indexOf('내집') !== -1 || curName.indexOf('분양') !== -1 || curName.indexOf('아파트') !== -1 ||
-          curName.indexOf('다정') !== -1 || curName.indexOf('선준') !== -1 || curName.indexOf('주식') !== -1) {
-        continue;
-      }
-      sheetsToSearch.push(allSheets[s]);
+function extractYearMonth(val, defaultYear) {
+  if (!val) return null;
+  var dYear = defaultYear || '2026년';
+
+  // 1. Date 객체
+  if (val instanceof Date || (typeof val === 'object' && typeof val.getMonth === 'function')) {
+    var y = val.getFullYear();
+    var m = val.getMonth() + 1;
+    if (m >= 1 && m <= 12) {
+      return { year: y + '년', month: m + '월' };
     }
   }
 
-  for (var i = 0; i < sheetsToSearch.length; i++) {
-    var curSheet = sheetsToSearch[i];
-    var values = curSheet.getDataRange().getValues();
-    if (!values || values.length < 2) continue;
+  var str = String(val).trim();
+  if (!str) return null;
 
-    var headerRowIdx = -1;
-    var colRemain = -1, colSavings = -1, colPocket = -1, colLiving = -1, colEmergency = -1;
-    var colYear = -1, colMonth = -1;
+  // 2. GMT / 한국 표준시 타임스탬프 문자열
+  if (str.indexOf('GMT') !== -1 || str.indexOf('한국') !== -1) {
+    var d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      return { year: d.getFullYear() + '년', month: (d.getMonth() + 1) + '월' };
+    }
+  }
 
-    for (var r = 0; r < Math.min(10, values.length); r++) {
-      var rowStr = values[r].map(function(c) { return String(c || '').trim(); });
-      for (var c = 0; c < rowStr.length; c++) {
-        var val = rowStr[c];
-        if (val.indexOf('년도') !== -1 || val === '년') colYear = c;
-        else if (val === '월' || val.indexOf('월별') !== -1) colMonth = c;
-        else if (val === '잔금' || val.indexOf('잔액') !== -1 || val.indexOf('남은') !== -1 || val.indexOf('잔여') !== -1) colRemain = c;
-        else if (val === '적금' || val.indexOf('저축') !== -1) colSavings = c;
-        else if (val === '용돈') colPocket = c;
-        else if (val === '생활비') colLiving = c;
-        else if (val === '비상금') colEmergency = c;
+  var yPart = '';
+  var ymMatch = str.match(/(20\d{2})/);
+  if (ymMatch) yPart = ymMatch[1] + '년';
+
+  // 3. 2026-10, 2026.10, 2026/10 형식
+  var ydashm = str.match(/20\d{2}[-./](\d{1,2})/);
+  if (ydashm) {
+    var mn = parseInt(ydashm[1], 10);
+    if (mn >= 1 && mn <= 12) {
+      return { year: yPart || dYear, month: mn + '월' };
+    }
+  }
+
+  // 4. "10월" 또는 "10" 형식
+  var mMatch = str.match(/^(\d{1,2})\s*월?$/) || str.match(/(\d{1,2})\s*월/);
+  if (mMatch) {
+    var mn = parseInt(mMatch[1], 10);
+    if (mn >= 1 && mn <= 12) {
+      return { year: yPart || dYear, month: mn + '월' };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * 월별 비용 시트 (잔금, 적금, 용돈, 생활비, 비상금) 자동 추출 함수
+ */
+function getMonthlyExpensesData(ss) {
+  var sheet = findSheetByKeywords(ss, ['월별 비용', '월별비용'], ['내집', '분양', '아파트', '주식', '다정', '선준', '저축', '저축비용', '장보기', '구매', '해야', '경비', '육아', '★']);
+  if (!sheet) return [];
+
+  var values = sheet.getDataRange().getValues();
+  if (!values || values.length < 2) return [];
+
+  var headerRowIdx = -1;
+  var colRemain = -1, colSavings = -1, colPocket = -1, colLiving = -1, colEmergency = -1;
+  var colYear = -1, colMonth = -1;
+
+  for (var r = 0; r < Math.min(20, values.length); r++) {
+    var rowStr = values[r].map(function(c) { return String(c || '').trim(); });
+    for (var c = 0; c < rowStr.length; c++) {
+      var val = rowStr[c];
+      if (val.indexOf('년도') !== -1 || val === '년') colYear = c;
+      else if (val === '월' || val.indexOf('월별') !== -1) colMonth = c;
+      else if (val === '잔금' || val.indexOf('잔액') !== -1 || val.indexOf('남은') !== -1 || val.indexOf('잔여') !== -1) colRemain = c;
+      else if (val === '적금' || val.indexOf('저축') !== -1) colSavings = c;
+      else if (val === '용돈') colPocket = c;
+      else if (val === '생활비') colLiving = c;
+      else if (val === '비상금') colEmergency = c;
+    }
+    if ((colMonth !== -1 && (colRemain !== -1 || colSavings !== -1)) || 
+        (colRemain !== -1 && colPocket !== -1) || 
+        (colSavings !== -1 && colLiving !== -1)) {
+      headerRowIdx = r;
+      break;
+    }
+  }
+
+  if (headerRowIdx !== -1) {
+    var results = [];
+    var currentYear = '2026년';
+
+    for (var r = headerRowIdx + 1; r < values.length; r++) {
+      var row = values[r];
+      var yVal = colYear !== -1 ? row[colYear] : null;
+      var mVal = colMonth !== -1 ? row[colMonth] : null;
+
+      var ym = extractYearMonth(mVal, currentYear) || extractYearMonth(yVal, currentYear);
+      if (!ym) continue;
+      if (ym.year) currentYear = ym.year;
+
+      var remain = colRemain !== -1 ? parseNumeric(row[colRemain]) : 0;
+      var savings = colSavings !== -1 ? parseNumeric(row[colSavings]) : 0;
+      var pocket = colPocket !== -1 ? parseNumeric(row[colPocket]) : 0;
+      var living = colLiving !== -1 ? parseNumeric(row[colLiving]) : 0;
+      var rawEmergency = colEmergency !== -1 ? row[colEmergency] : null;
+      var emergency = 0;
+      if (rawEmergency !== null && rawEmergency !== undefined && String(rawEmergency).trim() !== '') {
+        emergency = parseNumeric(rawEmergency);
+      } else {
+        emergency = remain - (savings + pocket + living);
       }
-      if ((colMonth !== -1 && (colRemain !== -1 || colSavings !== -1)) || 
-          (colRemain !== -1 && colPocket !== -1) || 
-          (colSavings !== -1 && colLiving !== -1)) {
-        headerRowIdx = r;
-        break;
+
+      if (remain === 0 && savings > 10000000) continue;
+
+      if (remain > 0 || savings > 0 || pocket > 0 || living > 0 || emergency !== 0) {
+        results.push({
+          year: currentYear || '2026년',
+          month: ym.month,
+          remain: remain,
+          savings: savings,
+          pocketMoney: pocket,
+          livingExpense: living,
+          emergencyFund: emergency
+        });
       }
     }
 
-    if (headerRowIdx !== -1) {
-      var results = [];
-      var currentYear = '';
-
-      if (colRemain > 1 && colMonth === -1) {
-        colMonth = colRemain - 1;
-        colYear = colRemain - 2;
-      } else if (colMonth === -1) {
-        colMonth = 1;
-        colYear = 0;
-      }
-
-      for (var r = headerRowIdx + 1; r < values.length; r++) {
-        var row = values[r];
-        var yVal = colYear !== -1 ? String(row[colYear] || '').trim() : '';
-        var mVal = colMonth !== -1 ? String(row[colMonth] || '').trim() : '';
-
-        if (yVal && (yVal.indexOf('년') !== -1 || /^\d{4}$/.test(yVal))) {
-          currentYear = yVal.indexOf('년') === -1 ? yVal + '년' : yVal;
-        }
-
-        if (!mVal) continue;
-        // X월 형식 검증 (1월 ~ 12월만 엄격 허용! 37월 등 불가능)
-        var mMatch = mVal.match(/^(\d{1,2})\s*월?$/);
-        if (!mMatch) continue;
-        var mNum = parseInt(mMatch[1], 10);
-        if (mNum < 1 || mNum > 12) continue;
-        var monthStr = mNum + '월';
-
-        // 수식 결과 숫자 추출
-        var remain = colRemain !== -1 ? parseNumeric(row[colRemain]) : 0;
-        var savings = colSavings !== -1 ? parseNumeric(row[colSavings]) : 0;
-        var pocket = colPocket !== -1 ? parseNumeric(row[colPocket]) : 0;
-        var living = colLiving !== -1 ? parseNumeric(row[colLiving]) : 0;
-        var rawEmergency = colEmergency !== -1 ? row[colEmergency] : null;
-        var emergency = 0;
-        if (rawEmergency !== null && rawEmergency !== undefined && String(rawEmergency).trim() !== '') {
-          emergency = parseNumeric(rawEmergency);
-        } else {
-          emergency = remain - (savings + pocket + living);
-        }
-
-        if (remain > 0 || savings > 0 || pocket > 0 || living > 0 || emergency !== 0) {
-          results.push({
-            year: currentYear || '2026년',
-            month: monthStr,
-            remain: remain,
-            savings: savings,
-            pocketMoney: pocket,
-            livingExpense: living,
-            emergencyFund: emergency
-          });
-        }
-      }
-
-      if (results.length > 0) {
-        return results;
-      }
-    }
+    if (results.length > 0) return results;
   }
 
   return [];
@@ -316,166 +334,305 @@ function parseNumeric(val) {
 }
 
 /**
- * 기존 시트 추출 함수 (요약 시트) - 엄격한 1~12월 검증 및 동적 헤더 감지
+ * 가계부 & 월별 요약 시트 추출 함수 ('★저축 및 가계부' 최우선 연동 및 급여/다정남은금액/적금 완벽 파싱)
  */
 function getSummaryData(ss, monthlyExpensesData) {
-  var sheet = findSheetByKeywords(ss, ['월별 요약', '월별요약', '요약', '가계부', '월별 요약 ', '요약 '], ['내집', '분양', '주식', '다정', '선준']);
+  var candidateSheets = [];
+  var allSheets = ss.getSheets();
 
-  if (!sheet) {
-    var allSheets = ss.getSheets();
-    for (var i = 0; i < allSheets.length; i++) {
-      var s = allSheets[i];
-      var sName = s.getName().trim();
-      if (sName.indexOf('다정') !== -1 || sName.indexOf('선준') !== -1 || sName.indexOf('주식') !== -1 || sName.indexOf('내집') !== -1 || sName.indexOf('분양') !== -1) continue;
-      var v = s.getDataRange().getValues();
-      if (!v || v.length < 2) continue;
-      for (var r = 0; r < Math.min(5, v.length); r++) {
-        var rowText = v[r].join(' ');
-        if ((rowText.indexOf('급여') !== -1 || rowText.indexOf('월') !== -1) && 
-            (rowText.indexOf('선준') !== -1 || rowText.indexOf('다정') !== -1 || rowText.indexOf('잔금') !== -1 || rowText.indexOf('적금') !== -1)) {
-          sheet = s;
-          break;
-        }
+  // 1순위: '★'가 포함되고 '저축' 또는 '가계부'가 포함된 시트 (예: '★저축 및 가계부')
+  for (var i = 0; i < allSheets.length; i++) {
+    var sName = allSheets[i].getName().trim();
+    if (sName.indexOf('★') !== -1 && (sName.indexOf('가계부') !== -1 || sName.indexOf('저축') !== -1)) {
+      candidateSheets.push(allSheets[i]);
+      break;
+    }
+  }
+
+  // 2순위: '저축 및 가계부' 또는 '저축및가계부'
+  for (var i = 0; i < allSheets.length; i++) {
+    var sName = allSheets[i].getName().trim();
+    if (sName.indexOf('저축') !== -1 && sName.indexOf('가계부') !== -1 && candidateSheets.indexOf(allSheets[i]) === -1) {
+      candidateSheets.push(allSheets[i]);
+    }
+  }
+
+  // 3순위: '가계부', '월별 요약', '월별요약', '요약'
+  var s1 = ss.getSheetByName('가계부') || ss.getSheetByName('월별 요약') || ss.getSheetByName('월별요약') || ss.getSheetByName('요약');
+  if (s1 && candidateSheets.indexOf(s1) === -1) candidateSheets.push(s1);
+
+  // 4순위: 기타 일반 시트 (자산/세부지출/카드내역 제외)
+  for (var i = 0; i < allSheets.length; i++) {
+    var s = allSheets[i];
+    var sName = s.getName().trim();
+    if (sName.indexOf('다정') !== -1 || sName.indexOf('선준') !== -1 || sName.indexOf('주식') !== -1 || 
+        sName.indexOf('내집') !== -1 || sName.indexOf('분양') !== -1 || sName.indexOf('축의') !== -1 || 
+        sName.indexOf('조의') !== -1 || sName.indexOf('장보기') !== -1 || sName.indexOf('구매') !== -1 ||
+        sName.indexOf('해야') !== -1 || sName.indexOf('신행') !== -1 || sName.indexOf('육아') !== -1 ||
+        sName.indexOf('저축비용') !== -1 || sName.indexOf('시트') !== -1) continue;
+    if (candidateSheets.indexOf(s) === -1) candidateSheets.push(s);
+  }
+
+  for (var sIdx = 0; sIdx < candidateSheets.length; sIdx++) {
+    var curSheet = candidateSheets[sIdx];
+    var values = curSheet.getDataRange().getValues();
+    if (!values || values.length < 2) continue;
+
+    // --- [탐색 방식 A: 세로형 표 (행마다 1개 월, 열에 급여/급여-선준/다정남은금액/남은금액/적금 등)] ---
+    var headerRowIdx = -1;
+    var colYear = -1, colMonth = -1, colSalary = -1, colSalaryMinusCard = -1, colDajeongRemain = -1;
+    var colTotalCost = -1, colCardTotal = -1, colSavings = -1, colPocket = -1, colLiving = -1, colEmergency = -1, colRemain = -1;
+
+    for (var r = 0; r < Math.min(30, values.length); r++) {
+      var row = values[r].map(function(h) { return String(h || '').trim(); });
+      var foundMatches = 0;
+      var tYear = -1, tMonth = -1, tSalary = -1, tSalaryMinusCard = -1, tDajeongRemain = -1;
+      var tTotalCost = -1, tCardTotal = -1, tSavings = -1, tPocket = -1, tLiving = -1, tEmergency = -1, tRemain = -1;
+
+      for (var c = 0; c < row.length; c++) {
+        var h = row[c];
+        if (!h) continue;
+        if (h.indexOf('년도') !== -1 || h === '년' || h === 'Year') { tYear = c; foundMatches++; }
+        else if (h === '월' || h.indexOf('월별') !== -1 || h === 'Month' || h === '기간' || h === '구분' || h.indexOf('일자') !== -1) { tMonth = c; foundMatches++; }
+        // [중요] '급여-' 또는 '급여 -' 또는 '차액'을 '급여'보다 반드시 먼저 매칭!
+        else if (h.indexOf('급여-') !== -1 || h.indexOf('급여−') !== -1 || h.indexOf('급여 -') !== -1 || h.indexOf('차액') !== -1 || (h.indexOf('급여') !== -1 && h.indexOf('카드') !== -1)) { tSalaryMinusCard = c; foundMatches++; }
+        else if (h.indexOf('급여') !== -1 || h.indexOf('수입') !== -1 || h.indexOf('월급') !== -1) { tSalary = c; foundMatches++; }
+        // [중요] '다정' 컬럼 (다정남은금액, 다정 남은금액, 다정카드남은금액 등)
+        else if (h.indexOf('다정') !== -1) { tDajeongRemain = c; foundMatches++; }
+        // 남은금액 / 잔금 / 총잔액
+        else if (h.indexOf('남은금액') !== -1 || h.indexOf('남은 금액') !== -1 || h.indexOf('잔금') !== -1 || h.indexOf('잔액') !== -1 || h.indexOf('남은') !== -1) { tRemain = c; foundMatches++; }
+        // 전체비용 / 선준 카드값
+        else if (h.indexOf('전체비용') !== -1 || h.indexOf('선준 카드') !== -1 || h.indexOf('선준카드') !== -1 || (h.indexOf('선준') !== -1 && h.indexOf('지출') !== -1)) { tTotalCost = c; foundMatches++; }
+        else if (h.indexOf('카드') !== -1 && (h.indexOf('합계') !== -1 || h.indexOf('총액') !== -1)) { tCardTotal = c; foundMatches++; }
+        // [중요] 적금 / 저축 (2,000,000 등 실시간 반영)
+        else if (h.indexOf('적금') !== -1 || h.indexOf('저축') !== -1) { tSavings = c; foundMatches++; }
+        else if (h.indexOf('용돈') !== -1 || (h.indexOf('선준') !== -1 && h.indexOf('용돈') !== -1)) { tPocket = c; foundMatches++; }
+        else if (h.indexOf('생활비') !== -1) { tLiving = c; foundMatches++; }
+        else if (h.indexOf('비상금') !== -1) { tEmergency = c; foundMatches++; }
       }
-      if (sheet) break;
-    }
-  }
 
-  if (!sheet) return [];
-  var values = sheet.getDataRange().getValues();
-  var result = [];
-
-  // 동적 헤더 위치 감지
-  var colYear = 0, colMonth = 1, colSalary = 2, colSalaryMinusCard = 3, colDajeongRemain = 4;
-  var colTotalCost = 5, colCardTotal = 6, colSavings = 7, colPocket = 8, colLiving = 9, colEmergency = 10, colRemain = -1;
-  if (values.length > 0) {
-    var headers = values[0].map(function(h) { return String(h || '').trim(); });
-    for (var c = 0; c < headers.length; c++) {
-      var h = headers[c];
-      if (h.indexOf('년') !== -1) colYear = c;
-      else if (h === '월') colMonth = c;
-      else if (h.indexOf('급여') !== -1 || h.indexOf('수입') !== -1) colSalary = c;
-      else if (h.indexOf('급여-') !== -1 || h.indexOf('급여−') !== -1 || h.indexOf('차액') !== -1) colSalaryMinusCard = c;
-      else if (h.indexOf('다정') !== -1 && h.indexOf('남은') !== -1) colDajeongRemain = c;
-      else if (h.indexOf('남은') !== -1 || h.indexOf('잔금') !== -1 || h.indexOf('잔액') !== -1) colRemain = c;
-      else if (h.indexOf('전체비용') !== -1 || h.indexOf('선준 카드') !== -1 || h.indexOf('선준카드') !== -1) colTotalCost = c;
-      else if (h.indexOf('카드') !== -1 && h.indexOf('합계') !== -1) colCardTotal = c;
-      else if (h.indexOf('적금') !== -1 || h.indexOf('저축') !== -1) colSavings = c;
-      else if (h === '용돈') colPocket = c;
-      else if (h === '생활비') colLiving = c;
-      else if (h === '비상금') colEmergency = c;
-    }
-  }
-  
-  // 행 파싱
-  var currentYear = '2026년';
-  for (var r = 1; r < values.length; r++) {
-    var row = values[r];
-    if (!row[colYear] && !row[colMonth]) continue;
-    var y = String(row[colYear] || '').trim();
-    var m = String(row[colMonth] || '').trim();
-
-    if (y && (y.indexOf('년') !== -1 || /^\d{4}$/.test(y))) {
-      currentYear = y.indexOf('년') === -1 ? y + '년' : y;
-    }
-
-    // 1~12월 검증
-    if (!m) continue;
-    var mMatch = m.match(/^(\d{1,2})\s*월?$/);
-    if (!mMatch) continue;
-    var mNum = parseInt(mMatch[1], 10);
-    if (mNum < 1 || mNum > 12) continue;
-    var formattedMonth = mNum + '월';
-
-    var rawRemain = colRemain !== -1 ? parseNumeric(row[colRemain]) : 0;
-    var rawSalaryMinusCard = colSalaryMinusCard !== -1 ? parseNumeric(row[colSalaryMinusCard]) : 0;
-    if (rawRemain > 0 && rawSalaryMinusCard === 0) {
-      rawSalaryMinusCard = rawRemain;
-    }
-
-    var item = {
-      year: currentYear,
-      month: formattedMonth,
-      salary: parseNumeric(row[colSalary]),
-      salaryMinusCard: rawSalaryMinusCard,
-      dajeongRemain: parseNumeric(row[colDajeongRemain]),
-      remain: rawRemain,
-      totalCost: parseNumeric(row[colTotalCost]),
-      cardTotal: parseNumeric(row[colCardTotal]),
-      savings: parseNumeric(row[colSavings]),
-      pocketMoney: parseNumeric(row[colPocket]),
-      livingExpense: parseNumeric(row[colLiving]),
-      emergencyFund: parseNumeric(row[colEmergency])
-    };
-
-    // totalCost 자동 역산 (급여 - 남은금액)
-    if (item.salary > 0 && item.salaryMinusCard > 0 && item.totalCost === 0) {
-      item.totalCost = item.salary - item.salaryMinusCard;
-    }
-
-    // remain 자동 보정
-    if (item.remain === 0 && item.salaryMinusCard > 0) {
-      item.remain = item.salaryMinusCard + (item.dajeongRemain || 0);
-    }
-
-    // 월별 비용 시트에 기재된 데이터가 있다면 보완
-    if (monthlyExpensesData && monthlyExpensesData.length > 0) {
-      for (var me = 0; me < monthlyExpensesData.length; me++) {
-        var exp = monthlyExpensesData[me];
-        if ((exp.year === item.year || !exp.year) && exp.month === item.month) {
-          if (exp.remain !== undefined && exp.remain > 0) item.remain = exp.remain;
-          if (exp.savings !== undefined && exp.savings > 0) item.savings = exp.savings;
-          if (exp.pocketMoney !== undefined && exp.pocketMoney > 0) item.pocketMoney = exp.pocketMoney;
-          if (exp.livingExpense !== undefined && exp.livingExpense > 0) item.livingExpense = exp.livingExpense;
-          if (exp.emergencyFund !== undefined) item.emergencyFund = exp.emergencyFund;
-          break;
-        }
+      // 핵심 컬럼 2개 이상 감지 시 헤더 행으로 확정!
+      if (foundMatches >= 2 && (tMonth !== -1 || tSalary !== -1 || tSalaryMinusCard !== -1 || tRemain !== -1 || tSavings !== -1 || tDajeongRemain !== -1)) {
+        headerRowIdx = r;
+        colYear = tYear; colMonth = tMonth; colSalary = tSalary; colSalaryMinusCard = tSalaryMinusCard;
+        colDajeongRemain = tDajeongRemain; colTotalCost = tTotalCost; colCardTotal = tCardTotal;
+        colSavings = tSavings; colPocket = tPocket; colLiving = tLiving; colEmergency = tEmergency; colRemain = tRemain;
+        break;
       }
     }
 
-    result.push(item);
+    if (headerRowIdx !== -1) {
+      // 월 열이 감지되지 않은 경우, 데이터 행에서 '10월' 등 월 형식을 담고 있는 열 자동 감지
+      if (colMonth === -1) {
+        for (var testR = headerRowIdx + 1; testR < Math.min(headerRowIdx + 6, values.length); testR++) {
+          for (var testC = 0; testC < values[testR].length; testC++) {
+            if (extractYearMonth(values[testR][testC])) {
+              colMonth = testC;
+              break;
+            }
+          }
+          if (colMonth !== -1) break;
+        }
+      }
+      if (colMonth === -1 && colYear !== -1) colMonth = colYear + 1;
+      if (colMonth === -1 && colSalary > 0) colMonth = colSalary - 1;
+      if (colMonth === -1) colMonth = 0;
+
+      var result = [];
+      var currentYear = '2026년';
+
+      for (var r = headerRowIdx + 1; r < values.length; r++) {
+        var row = values[r];
+        var mCell = colMonth !== -1 ? row[colMonth] : null;
+        var yCell = colYear !== -1 ? row[colYear] : null;
+
+        var ym = extractYearMonth(mCell, currentYear) || extractYearMonth(yCell, currentYear);
+        if (!ym) continue;
+        if (ym.year) currentYear = ym.year;
+
+        var rawSalary = colSalary !== -1 ? parseNumeric(row[colSalary]) : 0;
+        var rawSalaryMinusCard = colSalaryMinusCard !== -1 ? parseNumeric(row[colSalaryMinusCard]) : 0;
+        var rawDajeongRemain = colDajeongRemain !== -1 ? parseNumeric(row[colDajeongRemain]) : 0;
+        var rawRemain = colRemain !== -1 ? parseNumeric(row[colRemain]) : 0;
+        var rawTotalCost = colTotalCost !== -1 ? parseNumeric(row[colTotalCost]) : 0;
+        var rawCardTotal = colCardTotal !== -1 ? parseNumeric(row[colCardTotal]) : 0;
+        var rawSavings = colSavings !== -1 ? parseNumeric(row[colSavings]) : 0;
+        var rawPocket = colPocket !== -1 ? parseNumeric(row[colPocket]) : 0;
+        var rawLiving = colLiving !== -1 ? parseNumeric(row[colLiving]) : 0;
+        var rawEmergency = colEmergency !== -1 ? parseNumeric(row[colEmergency]) : 0;
+
+        // salaryMinusCard 자동 보정 (급여 - 전체비용)
+        if (rawSalary > 0 && rawTotalCost > 0 && rawSalaryMinusCard === 0) {
+          rawSalaryMinusCard = rawSalary - rawTotalCost;
+        }
+        // totalCost 자동 역산 (급여 - 차액)
+        if (rawSalary > 0 && rawSalaryMinusCard > 0 && rawTotalCost === 0) {
+          rawTotalCost = rawSalary - rawSalaryMinusCard;
+        }
+        // remain(총 남은금액) 자동 보정: 급여-선준카드 + 다정남은금액
+        if (rawRemain === 0 && (rawSalaryMinusCard > 0 || rawDajeongRemain > 0)) {
+          rawRemain = rawSalaryMinusCard + rawDajeongRemain;
+        }
+
+        var item = {
+          year: currentYear,
+          month: ym.month,
+          salary: rawSalary,
+          salaryMinusCard: rawSalaryMinusCard,
+          dajeongRemain: rawDajeongRemain,
+          remain: rawRemain, // 가계부 시트 기재값 100% 최우선 반영!
+          totalCost: rawTotalCost,
+          cardTotal: rawCardTotal,
+          savings: rawSavings, // 가계부 시트 적금(2,000,000 등) 100% 최우선 반영!
+          pocketMoney: rawPocket,
+          livingExpense: rawLiving,
+          emergencyFund: rawEmergency
+        };
+
+        // 월별 비용 시트에 보조 데이터가 있다면 보완
+        if (monthlyExpensesData && monthlyExpensesData.length > 0) {
+          for (var me = 0; me < monthlyExpensesData.length; me++) {
+            var exp = monthlyExpensesData[me];
+            if ((exp.year === item.year || !exp.year) && exp.month === item.month) {
+              if (item.remain === 0 && exp.remain > 0) item.remain = exp.remain;
+              if (item.savings === 0 && exp.savings > 0) item.savings = exp.savings;
+              if (item.pocketMoney === 0 && exp.pocketMoney > 0) item.pocketMoney = exp.pocketMoney;
+              if (item.livingExpense === 0 && exp.livingExpense > 0) item.livingExpense = exp.livingExpense;
+              if (item.emergencyFund === 0 && exp.emergencyFund !== 0) item.emergencyFund = exp.emergencyFund;
+              break;
+            }
+          }
+        }
+
+        if (item.salary > 0 || item.remain > 0 || item.totalCost > 0 || item.savings > 0 || item.dajeongRemain > 0) {
+          result.push(item);
+        }
+      }
+
+      if (result.length > 0) {
+        return result;
+      }
+    }
   }
-  return result;
+
+  return [];
 }
 
 /**
- * 다정 시트 추출 함수 (유연 탐색)
+ * 다정 시트 추출 함수 (다정 카드값 & 다정 용돈 & 다정 시트 전체 유연 자동 추출)
  */
 function getDajeongData(ss) {
-  var sheet = findSheetByKeywords(ss, ['다정', '다정카드', '다정 카드', '다정(카드)'], ['보관', '히스토리', '아카이브']);
-  var archiveSheet = findSheetByKeywords(ss, ['다정_기록보관', '다정기록보관', '다정히스토리', '다정보관', '다정 히스토리']);
-  if (!sheet && !archiveSheet) return { items: [], total: 0 };
+  var candidateSheets = [];
+  var allSheets = ss.getSheets();
 
+  // '다정' 키워드가 들어간 모든 시트 수집 (아카이브 제외)
+  for (var i = 0; i < allSheets.length; i++) {
+    var name = allSheets[i].getName().trim();
+    if (name.indexOf('보관') !== -1 || name.indexOf('히스토리') !== -1 || name.indexOf('아카이브') !== -1) continue;
+    if (name.indexOf('다정') !== -1) {
+      // '다정 카드값' 시트를 1순위로 배치
+      if (name.indexOf('카드') !== -1) {
+        candidateSheets.unshift(allSheets[i]);
+      } else {
+        candidateSheets.push(allSheets[i]);
+      }
+    }
+  }
+
+  var archiveSheet = findSheetByKeywords(ss, ['다정_기록보관', '다정기록보관', '다정히스토리', '다정보관', '다정 히스토리']);
   var items = [];
   var total = 0;
 
-  // 1. 현재 '다정' 시트 읽기
-  if (sheet) {
+  for (var sIdx = 0; sIdx < candidateSheets.length; sIdx++) {
+    var sheet = candidateSheets[sIdx];
     var values = sheet.getDataRange().getValues();
-    if (values && values.length > 0) {
-      var colMonth = -1, colItem = 0, colAmount = 1, colCard = -1;
-      var header = values[0].map(function(h) { return String(h || '').trim(); });
+    if (!values || values.length < 2) continue;
+
+    // 헤더 행 탐색 (0 ~ 15행 스캔)
+    var headerRowIdx = -1;
+    var colItem = -1, colAmount = -1, colMonth = -1, colYear = -1, colCard = -1, colDate = -1, colType = -1, colNote = -1;
+
+    for (var r = 0; r < Math.min(25, values.length); r++) {
+      var header = values[r].map(function(h) { return String(h || '').trim(); });
+      var fItem = -1, fAmount = -1, fMonth = -1, fYear = -1, fCard = -1, fDate = -1, fType = -1, fNote = -1;
+
       for (var c = 0; c < header.length; c++) {
-        if (header[c].indexOf('월') !== -1) colMonth = c;
-        else if (header[c].indexOf('항목') !== -1 || header[c].indexOf('내역') !== -1) colItem = c;
-        else if (header[c].indexOf('금액') !== -1 || header[c].indexOf('가격') !== -1) colAmount = c;
-        else if (header[c].indexOf('카드') !== -1) colCard = c;
+        var h = header[c];
+        if (!h) continue;
+        if (h.indexOf('날짜') !== -1 || h.indexOf('일자') !== -1 || h.indexOf('승인일') !== -1 || h.indexOf('결제일') !== -1 || h === 'Date' || h.indexOf('이용일') !== -1 || h.indexOf('거래일') !== -1) fDate = c;
+        else if (h === '월' || h.indexOf('월별') !== -1 || h === 'Month') fMonth = c;
+        else if (h.indexOf('년도') !== -1 || h === '년' || h === 'Year') fYear = c;
+        else if (h.indexOf('항목') !== -1 || h.indexOf('내역') !== -1 || h.indexOf('사용처') !== -1 || h.indexOf('가맹점') !== -1 || h.indexOf('내용') !== -1 || h.indexOf('상호') !== -1 || h.indexOf('적요') !== -1 || h.indexOf('품목') !== -1 || h.indexOf('품명') !== -1 || h.indexOf('거래처') !== -1) fItem = c;
+        else if (h.indexOf('금액') !== -1 || h.indexOf('가격') !== -1 || h.indexOf('이용금액') !== -1 || h.indexOf('결제금액') !== -1 || h.indexOf('청구금액') !== -1 || h.indexOf('사용금액') !== -1 || h.indexOf('지출') !== -1 || h.indexOf('승인금액') !== -1 || h.indexOf('출금') !== -1 || h.indexOf('원금') !== -1) fAmount = c;
+        else if (h.indexOf('카드') !== -1 || h.indexOf('수단') !== -1) fCard = c;
+        else if (h === '구분' || h === '분류' || h === '유형') fType = c;
+        else if (h === '비고' || h === '메모' || h.indexOf('할부') !== -1) fNote = c;
       }
 
-      for (var r = 1; r < values.length; r++) {
-        var item = String(values[r][colItem] || '').trim();
-        var amount = parseNumeric(values[r][colAmount]);
-        var month = colMonth !== -1 ? String(values[r][colMonth] || '').trim() : '';
-        var card = colCard !== -1 ? String(values[r][colCard] || '').trim() : '다정카드';
-        
-        if (item && amount > 0) {
-          items.push({ 
-            item: item, 
-            amount: amount, 
-            month: month || '', 
-            card: card 
+      // 항목과 금액이 모두 존재하는 행을 실제 거래 헤더 행으로 확정!
+      if (fItem !== -1 && fAmount !== -1) {
+        headerRowIdx = r;
+        colItem = fItem; colAmount = fAmount; colMonth = fMonth; colYear = fYear;
+        colCard = fCard; colDate = fDate; colType = fType; colNote = fNote;
+        break;
+      }
+    }
+
+    // 명시적 헤더가 없는 경우 지능형 열 추정 (금액 숫자 열 = 금액, 문자열 열 = 항목)
+    if (headerRowIdx === -1 && values.length >= 2) {
+      headerRowIdx = 0;
+      var bestAmtCol = -1;
+      var bestItemCol = -1;
+
+      for (var c = 0; c < values[0].length; c++) {
+        var numCount = 0;
+        for (var testR = 1; testR < Math.min(10, values.length); testR++) {
+          var n = parseNumeric(values[testR][c]);
+          if (n >= 1000) numCount++;
+        }
+        if (numCount >= 1 && bestAmtCol === -1) {
+          bestAmtCol = c;
+        }
+      }
+
+      if (bestAmtCol !== -1) {
+        colAmount = bestAmtCol;
+        colItem = bestAmtCol > 0 ? bestAmtCol - 1 : 0;
+      } else {
+        colCard = 0; colItem = 1; colAmount = 2; colType = 3; colNote = 4; colMonth = 5; colYear = 6;
+      }
+    }
+
+    if (headerRowIdx !== -1) {
+      for (var r = headerRowIdx + 1; r < values.length; r++) {
+        var row = values[r];
+        var itemStr = colItem !== -1 ? String(row[colItem] || '').trim() : '';
+        var amt = colAmount !== -1 ? parseNumeric(row[colAmount]) : 0;
+        var mVal = colMonth !== -1 ? row[colMonth] : null;
+        var yVal = colYear !== -1 ? row[colYear] : null;
+        var dVal = colDate !== -1 ? row[colDate] : null;
+
+        var ym = extractYearMonth(dVal) || extractYearMonth(mVal) || extractYearMonth(yVal);
+        var finalMonth = ym ? ym.month : '';
+        var finalYear = ym ? ym.year : '2026년';
+        var card = colCard !== -1 ? String(row[colCard] || '다정카드').trim() : '다정카드';
+        var type = colType !== -1 ? String(row[colType] || '일반').trim() : '일반';
+        var note = colNote !== -1 ? String(row[colNote] || '').trim() : '';
+
+        // 단순 연도 문자열(2026년 등)이나 이상치 행 필터링
+        if (/^202\d년?$/.test(itemStr) && amt < 100) continue;
+
+        if (itemStr && amt > 0) {
+          items.push({
+            item: itemStr,
+            amount: amt,
+            month: finalMonth,
+            year: finalYear,
+            card: card,
+            type: type,
+            note: note
           });
-          total += amount;
+          total += amt;
         }
       }
     }
@@ -518,7 +675,7 @@ function getDajeongData(ss) {
           }
         }
 
-        if (aItem && aAmount > 0) {
+        if (aItem && aAmount > 0 && !(/^202\d년?$/.test(aItem) && aAmount < 100)) {
           archiveItems.push({
             year: aYear,
             month: aMonth,
@@ -536,7 +693,7 @@ function getDajeongData(ss) {
 }
 
 /**
- * 선준 시트 추출 함수 (유연 탐색 및 동적 헤더 감지)
+ * 선준 시트 추출 함수 (유연 탐색 및 동적 헤더 감지, 레고 및 할부 자동인식)
  */
 function getSeonjunData(ss) {
   var sheet = findSheetByKeywords(ss, ['선준 카드값', '선준카드값', '선준 카드', '선준카드'], ['축의금', '조의금', '다정', '주식', '내집', '시트']);
@@ -595,8 +752,9 @@ function getSeonjunData(ss) {
       else year = '2026년';
     }
 
-    // 비고에 날짜 객체/타임스탬프가 들어온 경우 할부로 자동 보정
-    if (note && (note.indexOf('GMT') !== -1 || note.indexOf('한국') !== -1 || /^\d{4}[-./]/.test(note))) {
+    // 비고에 날짜 객체/타임스탬프가 들어온 경우 또는 레고 등 할부 항목 자동 보정
+    var isDateNote = note && (note.indexOf('GMT') !== -1 || note.indexOf('한국') !== -1 || /^\d{4}[-./]/.test(note) || /^\d{1,2}\/\d{1,2}/.test(note));
+    if (isDateNote || item.indexOf('레고') !== -1) {
       note = '할부';
     }
 
