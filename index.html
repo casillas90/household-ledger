@@ -1884,12 +1884,31 @@
             if (item.savings !== undefined && item.savings !== null && item.savings > 0) {
               baseMonths[idx].savings = item.savings;
             }
-            
             if (item.remain !== undefined && item.remain !== null && item.remain !== 0) {
               baseMonths[idx].remain = item.remain;
-            } else if (calcRemain > 0 && (!baseMonths[idx].remain || baseMonths[idx].remain === 0)) {
+            } else if (calcRemain > 0) {
               baseMonths[idx].remain = calcRemain;
             }
+            if (item.pocketMoney !== undefined && item.pocketMoney > 0) baseMonths[idx].pocketMoney = item.pocketMoney;
+            if (item.livingExpense !== undefined && item.livingExpense > 0) baseMonths[idx].livingExpense = item.livingExpense;
+            if (item.emergencyFund !== undefined && item.emergencyFund !== null && item.emergencyFund !== 0) baseMonths[idx].emergencyFund = item.emergencyFund;
+            baseMonths[idx].isFromSheet = true;
+          } else {
+            baseMonths.push({
+              year: y,
+              month: validMonth,
+              salary: item.salary || 0,
+              totalCost: item.totalCost || 0,
+              salaryMinusCard: item.salaryMinusCard || 0,
+              dajeongRemain: item.dajeongRemain || 0,
+              cardTotal: item.cardTotal || 0,
+              remain: item.remain || calcRemain || 0,
+              savings: item.savings || 0,
+              pocketMoney: item.pocketMoney || 0,
+              livingExpense: item.livingExpense || 0,
+              emergencyFund: item.emergencyFund || 0,
+              isFromSheet: true
+            });
           }
         });
       }
@@ -2361,15 +2380,22 @@
       if (overrides.remain !== undefined && overrides.remain > 0) {
         remainBalance = overrides.remain;
         remainSource = "직접수정";
-      } else if (row.remain !== undefined && row.remain !== 0 && row.remain !== null) {
+      } else if (row.isFromSheet && row.remain !== undefined && row.remain !== 0) {
         remainBalance = row.remain;
         remainSource = "가계부 시트 연동";
-      } else if (sheetExp && sheetExp.remain !== undefined && sheetExp.remain !== 0 && sheetExp.remain !== null) {
-        remainBalance = sheetExp.remain;
+      } else if (salary > 0 && totalCost > 0 && (overrides.salary || (sheetExp && salary !== sheetExp.salary))) {
+        // 급여 수정 시 잔금 실시간 자동 재계산: (급여 - 선준카드) + 다정남은금액
+        remainBalance = salaryMinusCard + dajeongRemain;
+        remainSource = "(급여−선준카드)+다정";
+      } else if (row.remain !== undefined && row.remain !== 0 && row.remain !== null) {
+        remainBalance = row.remain;
         remainSource = "가계부 시트 연동";
       } else if (salaryMinusCard > 0 || dajeongRemain > 0) {
         remainBalance = salaryMinusCard + dajeongRemain;
         remainSource = "(급여−선준카드)+다정";
+      } else if (sheetExp && sheetExp.remain !== undefined && sheetExp.remain !== 0 && sheetExp.remain !== null) {
+        remainBalance = sheetExp.remain;
+        remainSource = "가계부 시트 연동";
       } else {
         remainBalance = row.remain || (sheetExp ? sheetExp.remain : 0);
         remainSource = "가계부 시트 연동";

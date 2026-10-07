@@ -404,8 +404,8 @@ function getSummaryData(ss, monthlyExpensesData) {
         // 전체비용 / 선준 카드값
         else if (h.indexOf('전체비용') !== -1 || h.indexOf('선준 카드') !== -1 || h.indexOf('선준카드') !== -1 || (h.indexOf('선준') !== -1 && h.indexOf('지출') !== -1)) { tTotalCost = c; foundMatches++; }
         else if (h.indexOf('카드') !== -1 && (h.indexOf('합계') !== -1 || h.indexOf('총액') !== -1)) { tCardTotal = c; foundMatches++; }
-        // [중요] 적금 / 저축 (2,000,000 등 실시간 반영)
-        else if (h.indexOf('적금') !== -1 || h.indexOf('저축') !== -1) { tSavings = c; foundMatches++; }
+        // [중요] 적금 / 저축 (합계, 누계, 총 제외하고 순수 월별 적금 컬럼 정확히 매칭)
+        else if ((h.indexOf('적금') !== -1 || h.indexOf('저축') !== -1) && h.indexOf('합계') === -1 && h.indexOf('누계') === -1 && h.indexOf('총') === -1) { tSavings = c; foundMatches++; }
         else if (h.indexOf('용돈') !== -1 || (h.indexOf('선준') !== -1 && h.indexOf('용돈') !== -1)) { tPocket = c; foundMatches++; }
         else if (h.indexOf('생활비') !== -1) { tLiving = c; foundMatches++; }
         else if (h.indexOf('비상금') !== -1) { tEmergency = c; foundMatches++; }
@@ -472,6 +472,10 @@ function getSummaryData(ss, monthlyExpensesData) {
         // remain(총 남은금액) 자동 보정: 급여-선준카드 + 다정남은금액
         if (rawRemain === 0 && (rawSalaryMinusCard > 0 || rawDajeongRemain > 0)) {
           rawRemain = rawSalaryMinusCard + rawDajeongRemain;
+        }
+        // emergencyFund 자동 보정 (기재값이 없으면 잔금 - 적금 - 용돈 - 생활비)
+        if (rawEmergency === 0 && rawRemain > 0 && (rawSavings > 0 || rawPocket > 0 || rawLiving > 0)) {
+          rawEmergency = rawRemain - (rawSavings + rawPocket + rawLiving);
         }
 
         var item = {
@@ -889,6 +893,48 @@ function doPost(e) {
             else if (field === 'remain') sheetSummary.getRange(sr + 1, 6).setValue(amount);
             else if (field === 'totalCost') sheetSummary.getRange(sr + 1, 9).setValue(amount);
             break;
+          }
+        }
+      }
+
+      // 메인 가계부 시트 ('★저축 및 가계부' 등)에서도 해당 필드 실시간 업데이트
+      var mainSheet = null;
+      var allSh = ss.getSheets();
+      for (var si = 0; si < allSh.length; si++) {
+        var sn = allSh[si].getName().trim();
+        if (sn.indexOf('★') !== -1 && (sn.indexOf('가계부') !== -1 || sn.indexOf('저축') !== -1)) {
+          mainSheet = allSh[si];
+          break;
+        }
+      }
+      if (!mainSheet) {
+        mainSheet = ss.getSheetByName('가계부') || ss.getSheetByName('저축 및 가계부');
+      }
+      if (mainSheet) {
+        var mValues = mainSheet.getDataRange().getValues();
+        var mHeaderRow = -1;
+        var targetCol = -1;
+        var monthCol = -1;
+        for (var mr = 0; mr < Math.min(25, mValues.length); mr++) {
+          var mRow = mValues[mr].map(function(h) { return String(h || '').trim(); });
+          for (var mc = 0; mc < mRow.length; mc++) {
+            var mh = mRow[mc];
+            if (mh === '월' || mh.indexOf('월별') !== -1 || mh === 'Month') monthCol = mc;
+            if (field === 'salary' && (mh.indexOf('급여') !== -1 && mh.indexOf('-') === -1 && mh.indexOf('−') === -1)) targetCol = mc;
+            else if (field === 'savings' && (mh.indexOf('적금') !== -1 || (mh.indexOf('저축') !== -1 && mh.indexOf('합계') === -1 && mh.indexOf('누계') === -1))) targetCol = mc;
+            else if (field === 'remain' && (mh.indexOf('남은금액') !== -1 || mh.indexOf('잔금') !== -1)) targetCol = mc;
+            else if (field === 'dajeongRemain' && mh.indexOf('다정') !== -1) targetCol = mc;
+            else if (field === 'totalCost' && (mh.indexOf('전체비용') !== -1 || mh.indexOf('선준') !== -1)) targetCol = mc;
+          }
+          if (monthCol !== -1 && targetCol !== -1) { mHeaderRow = mr; break; }
+        }
+        if (mHeaderRow !== -1 && targetCol !== -1) {
+          for (var dr = mHeaderRow + 1; dr < mValues.length; dr++) {
+            var ymCheck = extractYearMonth(mValues[dr][monthCol]);
+            if (ymCheck && ymCheck.month === targetMonth) {
+              mainSheet.getRange(dr + 1, targetCol + 1).setValue(amount);
+              break;
+            }
           }
         }
       }
