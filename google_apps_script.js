@@ -38,7 +38,7 @@ function doGet(e) {
 
     var result = {
       status: "success",
-      scriptVersion: "v3.5-debug",
+      scriptVersion: "v3.6-debug",
       debugMainSheet: getDebugMainSheet(ss),
       sheetNames: sheetNames,
       summary: summaryData,
