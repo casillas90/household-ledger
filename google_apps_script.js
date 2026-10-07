@@ -38,6 +38,7 @@ function doGet(e) {
 
     var result = {
       status: "success",
+      scriptVersion: "v3.4-summary-sync",
       sheetNames: sheetNames,
       summary: summaryData,
       monthlyExpenses: monthlyExpensesData,
