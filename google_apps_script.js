@@ -38,7 +38,8 @@ function doGet(e) {
 
     var result = {
       status: "success",
-      scriptVersion: "v3.4-summary-sync",
+      scriptVersion: "v3.5-debug",
+      debugMainSheet: getDebugMainSheet(ss),
       sheetNames: sheetNames,
       summary: summaryData,
       monthlyExpenses: monthlyExpensesData,
@@ -56,6 +57,33 @@ function doGet(e) {
       message: err.toString()
     })).setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+/**
+ * [임시 진단용] 메인 가계부 시트 상단 행 덤프 (헤더 인식 문제 확인용)
+ */
+function getDebugMainSheet(ss) {
+  var out = [];
+  try {
+    var sheets = ss.getSheets();
+    for (var i = 0; i < sheets.length; i++) {
+      var n = sheets[i].getName().trim();
+      if (n.indexOf('★') !== -1 || n === '가계부') {
+        var vals = sheets[i].getDataRange().getValues();
+        var rows = [];
+        for (var r = 0; r < Math.min(40, vals.length); r++) {
+          rows.push(vals[r].slice(0, 20).map(function(v) {
+            if (v instanceof Date) return 'DATE:' + (v.getMonth() + 1) + '/' + v.getDate();
+            return String(v === null || v === undefined ? '' : v).slice(0, 25);
+          }));
+        }
+        out.push({ name: n, totalRows: vals.length, totalCols: vals[0] ? vals[0].length : 0, rows: rows });
+      }
+    }
+  } catch (e) {
+    out.push({ error: String(e) });
+  }
+  return out;
 }
 
 /**
