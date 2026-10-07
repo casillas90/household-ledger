@@ -812,14 +812,15 @@ function getSeonjunData(ss) {
       else year = '2026년';
     }
 
+    var rawNote = note;
     // 비고에 날짜 객체/타임스탬프가 들어온 경우 또는 레고 등 할부 항목 자동 보정
-    var isDateNote = note && (note.indexOf('GMT') !== -1 || note.indexOf('한국') !== -1 || /^\d{4}[-./]/.test(note) || /^\d{1,2}\/\d{1,2}/.test(note));
+    var isDateNote = note && (note.indexOf('GMT') !== -1 || note.indexOf('한국') !== -1 || /^\d{4}[-./]/.test(note) || /^\d{1,2}\/\d{1,2}/.test(note) || /\d+\/\d+/.test(note));
     if (isDateNote || item.indexOf('레고') !== -1) {
       note = '할부';
     }
 
     if (item || amount > 0) {
-      result.push({ card: card, item: item, amount: amount, type: type, note: note, month: month, year: year });
+      result.push({ card: card, item: item, amount: amount, type: type, note: note, month: month, year: year, rawNote: rawNote });
     }
   }
   return result;

@@ -134,7 +134,7 @@
           <div class="min-w-0 flex-1">
             <h1 class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 truncate">
               다정 & 선준 가계부 대시보드
-              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-2xs">v3.5</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-2xs">v3.6</span>
             </h1>
             <p class="text-[11px] sm:text-sm text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
               <span class="inline-flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] sm:text-xs">
@@ -4084,8 +4084,19 @@
         const baseItemName = g.item.replace(/\s*\(\d+\/\d+회?차?\)/, '').trim();
         const configuredRounds = customRoundsMap[baseItemName] || customRoundsMap[g.item] || KNOWN_INSTALLMENT_ROUNDS[baseItemName] || KNOWN_INSTALLMENT_ROUNDS[g.item];
 
+        // 비고(note) 원본 데이터에서 1/12 형태의 할부 회차 추출
+        let rawNoteMatch = null;
+        const currentActiveRec = g.records.find(r => r.month === activeMonth) || g.records[g.records.length - 1];
+        if (currentActiveRec && currentActiveRec.rawNote) {
+            rawNoteMatch = currentActiveRec.rawNote.match(/(\d+)\s*\/\s*(\d+)/);
+        }
+
         const match = g.item.match(/\((\d+)\/(\d+)회?차?\)/);
-        if (match) {
+        
+        if (rawNoteMatch) {
+          currentRound = parseInt(rawNoteMatch[1], 10);
+          totalRounds = parseInt(rawNoteMatch[2], 10);
+        } else if (match) {
           currentRound = parseInt(match[1], 10);
           totalRounds = parseInt(match[2], 10);
         } else if (configuredRounds && configuredRounds > 0) {
