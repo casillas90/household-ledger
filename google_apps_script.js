@@ -71,11 +71,11 @@ function getDebugMainSheet(ss) {
       if (n.indexOf('★') !== -1 || n === '가계부') {
         var vals = sheets[i].getDataRange().getValues();
         var rows = [];
-        for (var r = 0; r < Math.min(40, vals.length); r++) {
-          rows.push(vals[r].slice(0, 20).map(function(v) {
+        for (var r = 20; r < Math.min(60, vals.length); r++) {
+          rows.push(['r' + r].concat(vals[r].slice(0, 30).map(function(v) {
             if (v instanceof Date) return 'DATE:' + (v.getMonth() + 1) + '/' + v.getDate();
             return String(v === null || v === undefined ? '' : v).slice(0, 25);
-          }));
+          })));
         }
         out.push({ name: n, totalRows: vals.length, totalCols: vals[0] ? vals[0].length : 0, rows: rows });
       }
@@ -282,7 +282,7 @@ function getMonthlyExpensesData(ss) {
   var colRemain = -1, colSavings = -1, colPocket = -1, colLiving = -1, colEmergency = -1;
   var colYear = -1, colMonth = -1;
 
-  for (var r = 0; r < Math.min(20, values.length); r++) {
+  for (var r = 0; r < Math.min(60, values.length); r++) {
     var rowStr = values[r].map(function(c) { return String(c || '').trim(); });
     for (var c = 0; c < rowStr.length; c++) {
       var val = rowStr[c];
@@ -410,17 +410,33 @@ function getSummaryData(ss, monthlyExpensesData) {
     // --- [탐색 방식 A: 세로형 표 (행마다 1개 월, 열에 급여/급여-선준/다정남은금액/남은금액/적금 등)] ---
     var headerRowIdx = -1;
     var colYear = -1, colMonth = -1, colSalary = -1, colSalaryMinusCard = -1, colDajeongRemain = -1;
-    var colTotalCost = -1, colCardTotal = -1, colSavings = -1, colPocket = -1, colLiving = -1, colEmergency = -1, colRemain = -1;
+    var colTotalCost = -1, colCardTotal = -1, colSavings = -1, colPocket = -1, colLiving = -1, colEmergency = -1, colRemain = -1, colRemain2 = -1;
 
-    for (var r = 0; r < Math.min(30, values.length); r++) {
+    for (var r = 0; r < Math.min(60, values.length); r++) {
       var row = values[r].map(function(h) { return String(h || '').trim(); });
       var foundMatches = 0;
       var tYear = -1, tMonth = -1, tSalary = -1, tSalaryMinusCard = -1, tDajeongRemain = -1;
-      var tTotalCost = -1, tCardTotal = -1, tSavings = -1, tPocket = -1, tLiving = -1, tEmergency = -1, tRemain = -1;
+      var tTotalCost = -1, tCardTotal = -1, tSavings = -1, tPocket = -1, tLiving = -1, tEmergency = -1, tRemain = -1, tRemain2 = -1;
+
+      // 같은 행에 '월별 비용' 표(오른쪽)가 함께 있는 경우 시작 열을 찾아 좌/우 표를 분리
+      var tMonthlyStart = -1;
+      for (var cs = 0; cs < row.length; cs++) {
+        if (row[cs] && row[cs].indexOf('월별') !== -1 && row[cs].indexOf('비용') !== -1) { tMonthlyStart = cs; break; }
+      }
 
       for (var c = 0; c < row.length; c++) {
         var h = row[c];
         if (!h) continue;
+        if (tMonthlyStart !== -1 && c >= tMonthlyStart) {
+          // 오른쪽 '월별 비용' 표: 잔금 / 적금 / 용돈 / 생활비 / 비상금
+          if (c === tMonthlyStart) continue;
+          if (h.indexOf('잔금') !== -1 || h.indexOf('잔액') !== -1 || h.indexOf('남은') !== -1) { tRemain2 = c; foundMatches++; }
+          else if ((h.indexOf('적금') !== -1 || h.indexOf('저축') !== -1) && h.indexOf('합계') === -1 && h.indexOf('누계') === -1) { tSavings = c; foundMatches++; }
+          else if (h.indexOf('용돈') !== -1) { tPocket = c; foundMatches++; }
+          else if (h.indexOf('생활비') !== -1) { tLiving = c; foundMatches++; }
+          else if (h.indexOf('비상금') !== -1) { tEmergency = c; foundMatches++; }
+          continue;
+        }
         if (h.indexOf('년도') !== -1 || h === '년' || h === 'Year') { tYear = c; foundMatches++; }
         else if (h === '월' || h.indexOf('월별') !== -1 || h === 'Month' || h === '기간' || h === '구분' || h.indexOf('일자') !== -1) { tMonth = c; foundMatches++; }
         // [중요] '급여-' 또는 '급여 -' 또는 '차액'을 '급여'보다 반드시 먼저 매칭!
@@ -446,6 +462,7 @@ function getSummaryData(ss, monthlyExpensesData) {
         colYear = tYear; colMonth = tMonth; colSalary = tSalary; colSalaryMinusCard = tSalaryMinusCard;
         colDajeongRemain = tDajeongRemain; colTotalCost = tTotalCost; colCardTotal = tCardTotal;
         colSavings = tSavings; colPocket = tPocket; colLiving = tLiving; colEmergency = tEmergency; colRemain = tRemain;
+        colRemain2 = tRemain2;
         break;
       }
     }
@@ -467,6 +484,10 @@ function getSummaryData(ss, monthlyExpensesData) {
       if (colMonth === -1 && colSalary > 0) colMonth = colSalary - 1;
       if (colMonth === -1) colMonth = 0;
 
+      // '전체비용' 헤더가 실제로는 연도 열(2024년, 2025년...) 위에 붙어 있는 경우 무시 (연도 숫자가 금액으로 읽히는 것 방지)
+      var yearColByLayout = colMonth > 0 ? colMonth - 1 : -1;
+      if (colTotalCost !== -1 && colTotalCost === yearColByLayout) colTotalCost = -1;
+
       var result = [];
       var currentYear = '2026년';
 
@@ -475,14 +496,20 @@ function getSummaryData(ss, monthlyExpensesData) {
         var mCell = colMonth !== -1 ? row[colMonth] : null;
         var yCell = colYear !== -1 ? row[colYear] : null;
 
+        // 월 열 바로 왼쪽 셀에 '2026년' 같은 연도가 적혀 있으면 현재 연도로 갱신
+        var layoutYearCell = yearColByLayout !== -1 ? String(row[yearColByLayout] || '') : '';
+        var layoutYearMatch = layoutYearCell.match(/(20\d{2})\s*년?/);
+        if (layoutYearMatch) currentYear = layoutYearMatch[1] + '년';
+
         var ym = extractYearMonth(mCell, currentYear) || extractYearMonth(yCell, currentYear);
         if (!ym) continue;
-        if (ym.year) currentYear = ym.year;
+        if (ym.year && !layoutYearMatch && String(mCell || '').match(/20\d{2}/)) currentYear = ym.year;
 
         var rawSalary = colSalary !== -1 ? parseNumeric(row[colSalary]) : 0;
         var rawSalaryMinusCard = colSalaryMinusCard !== -1 ? parseNumeric(row[colSalaryMinusCard]) : 0;
         var rawDajeongRemain = colDajeongRemain !== -1 ? parseNumeric(row[colDajeongRemain]) : 0;
         var rawRemain = colRemain !== -1 ? parseNumeric(row[colRemain]) : 0;
+        if (rawRemain === 0 && colRemain2 !== -1) rawRemain = parseNumeric(row[colRemain2]);
         var rawTotalCost = colTotalCost !== -1 ? parseNumeric(row[colTotalCost]) : 0;
         var rawCardTotal = colCardTotal !== -1 ? parseNumeric(row[colCardTotal]) : 0;
         var rawSavings = colSavings !== -1 ? parseNumeric(row[colSavings]) : 0;
@@ -585,7 +612,7 @@ function getDajeongData(ss) {
     var headerRowIdx = -1;
     var colItem = -1, colAmount = -1, colMonth = -1, colYear = -1, colCard = -1, colDate = -1, colType = -1, colNote = -1;
 
-    for (var r = 0; r < Math.min(25, values.length); r++) {
+    for (var r = 0; r < Math.min(50, values.length); r++) {
       var header = values[r].map(function(h) { return String(h || '').trim(); });
       var fItem = -1, fAmount = -1, fMonth = -1, fYear = -1, fCard = -1, fDate = -1, fType = -1, fNote = -1;
 
@@ -944,7 +971,7 @@ function doPost(e) {
         var mHeaderRow = -1;
         var targetCol = -1;
         var monthCol = -1;
-        for (var mr = 0; mr < Math.min(25, mValues.length); mr++) {
+        for (var mr = 0; mr < Math.min(60, mValues.length); mr++) {
           var mRow = mValues[mr].map(function(h) { return String(h || '').trim(); });
           for (var mc = 0; mc < mRow.length; mc++) {
             var mh = mRow[mc];
