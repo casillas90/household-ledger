@@ -1029,10 +1029,11 @@
     }
 
     async function fetchSheetData() {
-      const params = new URLSearchParams({ t: Date.now().toString() });
+      // URLSearchParams 는 띄어쓰기를 '+' 로 바꾸는데 Apps Script 가 이를 띄어쓰기로 되돌리지 않을 수 있어 %20 으로 인코딩
+      let query = 't=' + Date.now();
       const key = getApiKey();
-      if (key) params.set('key', key);
-      const res = await fetch(APPS_SCRIPT_URL + (APPS_SCRIPT_URL.includes('?') ? '&' : '?') + params.toString(), { cache: 'no-store' });
+      if (key) query += '&key=' + encodeURIComponent(key);
+      const res = await fetch(APPS_SCRIPT_URL + (APPS_SCRIPT_URL.includes('?') ? '&' : '?') + query, { cache: 'no-store' });
       return res.json();
     }
 
