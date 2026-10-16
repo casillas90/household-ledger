@@ -696,6 +696,16 @@
           </div>
         </section>
 
+        <!-- 남은 할부 (시트 비고의 회차 '2/12' 기준) -->
+        <section class="lg:col-span-12 m-card">
+          <div class="m-label">남은 할부 <span id="remainInstMonthLabel" class="m-sub font-semibold"></span></div>
+          <div id="remainInstTotalText" class="m-hero-num mt-1">0원</div>
+          <div class="m-sub mt-0.5">이번 달 결제 후 앞으로 낼 할부 금액</div>
+          <div id="remainInstSummary" class="flex flex-wrap items-center gap-1.5 text-[11px] mt-3"></div>
+          <div id="remainInstList" class="m-rows"></div>
+          <div id="remainInstUnknown" class="m-sub mt-3"></div>
+        </section>
+
       </div>
     </div>
 
@@ -3408,6 +3418,106 @@
       });
     }
 
+    /**
+     * 시트 비고의 할부 회차 '2/12'(12개월 중 2회차)를 { round, total } 으로 읽는다.
+     * 구글 시트가 '2/12'를 날짜(2월 12일)로 바꿔 'Thu Feb 12 2026 ... GMT+0900' 처럼 넘겨도 월=회차, 일=개월수로 읽는다.
+     */
+    function parseInstallmentRound(rawNote) {
+      const s = String(rawNote || '').trim();
+      if (!s) return null;
+      let round = 0, total = 0;
+      const frac = s.match(/^(\d{1,3})\s*\/\s*(\d{1,3})(?!\d)/);
+      const dateStr = s.match(/^[A-Z][a-z]{2}\s+([A-Z][a-z]{2})\s+(\d{1,2})\s+\d{4}/);
+      const iso = s.match(/^\d{4}[-./](\d{1,2})[-./](\d{1,2})/);
+      if (frac) {
+        round = parseInt(frac[1], 10); total = parseInt(frac[2], 10);
+      } else if (dateStr) {
+        const mi = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(dateStr[1]);
+        round = mi + 1; total = parseInt(dateStr[2], 10);
+      } else if (iso) {
+        round = parseInt(iso[1], 10); total = parseInt(iso[2], 10);
+      }
+      if (round < 1 || total < 1 || round > total) return null;
+      return { round, total };
+    }
+
+    /**
+     * 💳 남은 할부 박스: 선택 월의 할부 항목마다 (월 금액 × 개월수) 전체 금액, (월 금액 × 남은 회차) 남은 금액
+     */
+    function renderRemainingInstallments(selectedYear, selectedMonth) {
+      const listEl = document.getElementById("remainInstList");
+      if (!listEl) return;
+
+      let year = selectedYear, month = selectedMonth;
+      if (!month || month === "ALL") {
+        const latest = getLatestDataMonth();
+        year = latest.year; month = latest.month;
+      }
+      if (!year || year === "ALL") year = getLatestDataMonth().year;
+
+      const rows = getAllSeonjunItems().filter(it =>
+        (it.year || '2026년') === year && it.month === month && it.note === '할부'
+      );
+
+      const items = [];
+      const unknown = [];
+      rows.forEach(it => {
+        const r = parseInstallmentRound(it.rawNote) || parseInstallmentRound(it.note);
+        const amt = Number(it.amount) || 0;
+        if (!r) { unknown.push(it.item || '(항목 미기재)'); return; }
+        items.push({
+          item: it.item || '(항목 미기재)',
+          card: it.card || '카드',
+          amount: amt,
+          round: r.round,
+          total: r.total,
+          totalAmount: amt * r.total,
+          remainAmount: amt * (r.total - r.round)
+        });
+      });
+      items.sort((a, b) => b.remainAmount - a.remainAmount || b.amount - a.amount);
+
+      const monthSum = items.reduce((s, it) => s + it.amount, 0);
+      const remainSum = items.reduce((s, it) => s + it.remainAmount, 0);
+      const grandSum = items.reduce((s, it) => s + it.totalAmount, 0);
+      const doneCount = items.filter(it => it.round === it.total).length;
+
+      document.getElementById("remainInstMonthLabel").innerText = `· ${year.replace('년', '.')}${month} 기준`;
+      document.getElementById("remainInstTotalText").innerText = `${remainSum.toLocaleString()}원`;
+      document.getElementById("remainInstSummary").innerHTML = items.length ? `
+        <span class="m-chip !bg-[#f2f4f6]">이번 달 할부: ${monthSum.toLocaleString()}원</span>
+        <span class="m-chip !bg-[#f2f4f6]">전체 할부 금액: ${grandSum.toLocaleString()}원</span>
+        ${doneCount ? `<span class="m-chip !bg-emerald-50 !text-emerald-700">이번 달 완납 ${doneCount}건</span>` : ''}
+      ` : '';
+
+      if (items.length === 0) {
+        listEl.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">${month}에 회차가 적힌 할부가 없습니다.</div>`;
+      } else {
+        listEl.innerHTML = items.map(it => {
+          const left = it.total - it.round;
+          const pct = Math.round((it.round / it.total) * 100);
+          return `
+            <div class="m-row">
+              <div class="min-w-0 flex-1">
+                <div class="text-[15px] font-semibold text-slate-800 truncate">${it.item}</div>
+                <div class="m-sub mt-0.5">${it.card} · ${it.round}/${it.total}회 · 월 ${it.amount.toLocaleString()}원</div>
+                <div class="w-full max-w-[160px] bg-slate-100 rounded-full h-1 mt-1.5 overflow-hidden">
+                  <div class="bg-indigo-500 h-1 rounded-full" style="width: ${pct}%"></div>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="m-row-amount">${left > 0 ? it.remainAmount.toLocaleString() + '원' : '완납'}</span>
+                <span class="m-row-meta">${left > 0 ? `${left}회 남음 · ` : ''}전체 ${it.totalAmount.toLocaleString()}원</span>
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      document.getElementById("remainInstUnknown").innerText = unknown.length
+        ? `회차 미기재: ${unknown.join(', ')} (시트 비고에 2/12처럼 적으면 계산돼요)`
+        : '';
+    }
+
     function renderSeonjunList() {
       const allSeonjun = getAllSeonjunItems();
 
@@ -3424,6 +3534,7 @@
 
       // 💳 할부 분석 표 함께 갱신
       renderSeonjunInstallmentTable(selectedYear, selectedMonth);
+      renderRemainingInstallments(selectedYear, selectedMonth);
 
       const tbody = document.getElementById("seonjunTableBody");
       if (!tbody) return;
