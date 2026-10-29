@@ -25,6 +25,12 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
   <script src="validation.js?v=3.9"></script>
+  <script>
+    // 차트 기본값: 토스 톤의 회색 글자·옅은 격자
+    Chart.defaults.font.family = "Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
+    Chart.defaults.color = '#8b95a1';
+    Chart.defaults.borderColor = '#f2f4f6';
+  </script>
   <!-- QRCode.js (아이폰 QR코드 생성) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
@@ -161,6 +167,76 @@
     .m-ghost { font-size: 13px; font-weight: 600; color: var(--m-blue); padding: 8px 10px; border-radius: 10px; cursor: pointer; }
     .m-ghost:hover { background: #e8f3ff; }
     @media (max-width: 640px) { .m-hero-num { font-size: 28px; } .m-card { padding: 20px 18px; } }
+
+    /* ===== v4.1 토스·애플 스타일: 강조색은 블루 하나, 테두리 대신 회색 면, 눌림 피드백 ===== */
+    :root {
+      --m-grey50: #f9fafb; --m-grey100: #f2f4f6; --m-grey200: #e5e8eb; --m-grey700: #4e5968;
+      --m-blue-press: #1b64da; --m-blue-soft: #e8f3ff; --m-orange: #f18600;
+    }
+    h1, h2, h3, h4 { letter-spacing: -0.02em; }
+
+    /* 탭 바: 스크롤해도 위에 붙어 있고 뒤가 흐리게 비침 (iOS 내비게이션 바 느낌) */
+    .m-tabs { position: sticky; top: 0; z-index: 40; margin: 0 -8px; padding: 0 8px;
+      background: rgba(244, 245, 247, 0.82); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--m-line) !important; }
+
+    /* 강조색: 인디고 → 토스 블루 */
+    .bg-indigo-500, .bg-indigo-600, .bg-indigo-700, .bg-blue-600, .bg-brand-600 { background-color: var(--m-blue) !important; }
+    .hover\:bg-indigo-700:hover, .hover\:bg-indigo-600:hover { background-color: var(--m-blue-press) !important; }
+    .text-indigo-500, .text-indigo-600, .text-indigo-700, .text-indigo-800, .text-indigo-900, .text-indigo-950,
+    .text-blue-600, .text-blue-700, .text-violet-600 { color: var(--m-blue) !important; }
+    .bg-indigo-50, .bg-indigo-100, .bg-blue-50 { background-color: var(--m-blue-soft) !important; }
+    /* 의미 있는 색(수입·지출·비상금)만 토스 팔레트로 남김 */
+    .text-rose-400, .text-rose-500, .text-rose-600, .text-rose-700, .text-rose-800, .text-rose-900 { color: var(--m-red) !important; }
+    .text-emerald-500, .text-emerald-600, .text-emerald-700, .text-emerald-800 { color: var(--m-green) !important; }
+    .text-amber-500, .text-amber-600, .text-amber-700, .text-amber-800, .text-amber-900 { color: var(--m-orange) !important; }
+    .bg-rose-500, .bg-rose-600, .bg-rose-700 { background-color: var(--m-red) !important; }
+    .bg-emerald-500 { background-color: var(--m-green) !important; }
+    /* 아이콘 타일: 진한 색 대신 연한 면 + 색 아이콘 */
+    .bg-amber-500.text-white { background-color: #fff3e0 !important; color: var(--m-orange) !important; }
+    .w-10.h-10.rounded-2xl { border-radius: 14px !important; }
+
+    /* 연한 색 배경 배지·칩·표 머리글 → 회색 면 하나로 */
+    .bg-amber-50, .bg-amber-100, .bg-amber-200, .bg-rose-50, .bg-rose-100, .bg-emerald-50, .bg-emerald-100,
+    .bg-sky-50, .bg-violet-50, .bg-slate-100 { background-color: var(--m-grey100) !important; }
+    button.bg-amber-50, button.bg-rose-50, button.bg-slate-100 { color: var(--m-grey700) !important; }
+    .hover\:bg-amber-100:hover, .hover\:bg-rose-100:hover, .hover\:bg-slate-200:hover { background-color: var(--m-grey200) !important; }
+
+    /* 색 테두리 걷어내기 */
+    [class*="border-amber-"], [class*="border-rose-"], [class*="border-emerald-"], [class*="border-sky-"],
+    [class*="border-purple-"], [class*="border-blue-"], .border-indigo-100, .border-indigo-200 { border-color: transparent !important; }
+    .border-slate-200, .border-slate-300, .divide-slate-200 > * + * { border-color: var(--m-line) !important; }
+    [class*="ring-amber-"], [class*="ring-rose-"], [class*="ring-indigo-"] { --tw-ring-color: transparent !important; }
+
+    /* 카드 안의 상자: 선 대신 옅은 회색 면 */
+    .rounded-3xl .rounded-xl.border, .rounded-3xl .rounded-2xl.border, .m-card .rounded-xl.border { background-color: var(--m-grey50) !important; border-color: transparent !important; }
+    .rounded-2xl { border-radius: 20px !important; }
+
+    /* 큰 금액은 색 대신 진한 글자로 */
+    .text-2xl.font-black, .text-3xl.font-black { color: var(--m-text) !important; letter-spacing: -0.03em; }
+
+    /* 입력칸: 회색 채움, 포커스하면 흰 바탕 + 블루 링 */
+    input[type="text"], input[type="number"], input[type="password"], input[type="date"], input[type="month"], input:not([type]), textarea, select:not(.m-select) {
+      background-color: var(--m-grey100) !important; border-color: transparent !important; border-radius: 12px !important; }
+    input:focus, textarea:focus, select:focus {
+      background-color: #fff !important; box-shadow: 0 0 0 2px var(--m-blue) !important; outline: none !important; }
+
+    /* 주요 버튼: 블루, 둥글게 */
+    [class*="bg-gradient-to-"].text-white { background-color: var(--m-blue) !important; }
+    button[class*="bg-gradient-to-"].text-white, button.bg-indigo-600 { border-radius: 14px !important; }
+
+    /* 눌림 피드백 (토스 앱처럼 살짝 작아짐) */
+    button, .m-select, a { transition: transform .12s ease, background-color .15s ease, color .15s ease; -webkit-tap-highlight-color: transparent; }
+    button:active:not(:disabled) { transform: scale(0.97); }
+
+    /* 표: 머리글은 회색 작은 글씨, 줄은 얇게 */
+    thead { background-color: var(--m-grey50) !important; color: var(--m-sub) !important; }
+    thead th { font-weight: 600 !important; background-color: transparent !important; color: var(--m-sub) !important; }
+    tbody td { border-color: var(--m-line) !important; }
+
+    /* 모달·팝업 */
+    .shadow-2xl { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12) !important; }
+    .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.4) !important; }
   </style>
 </head>
 <body class="bg-slate-50/80 text-slate-800 antialiased min-h-screen p-2.5 sm:p-6 lg:p-8">
@@ -170,7 +246,7 @@
     <header class="m-header">
       <div class="min-w-0">
         <h1 class="m-title">가계부</h1>
-        <p class="m-caption">다정 &amp; 선준 · <span id="lastUpdated">-</span> 동기화 · v4.0</p>
+        <p class="m-caption">다정 &amp; 선준 · <span id="lastUpdated">-</span> 동기화 · v4.1</p>
       </div>
       <div class="flex items-center gap-0.5 shrink-0">
         <button id="btnRefresh" onclick="loadData()" class="m-icon-btn" title="새로고침" aria-label="새로고침">
@@ -189,7 +265,7 @@
     <div id="dataHealth" class="hidden"></div>
 
     <!-- 탭 내비게이션 (모바일 가로 스와이프 지원) -->
-    <div class="border-b border-slate-200/80 pb-0.5">
+    <div class="m-tabs pb-0.5">
       <div class="flex flex-nowrap overflow-x-auto no-scrollbar touch-scroll gap-1 sm:gap-2 -mx-2.5 px-2.5 sm:mx-0 sm:px-0">
         <button onclick="switchTab('tab-summary')" id="btn-tab-summary" class="tab-btn shrink-0 px-3.5 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-indigo-600 border-b-2 border-indigo-600 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
           <i class="fa-solid fa-chart-pie text-xs sm:text-sm"></i>
@@ -3973,7 +4049,7 @@
               type: 'bar',
               label: '총 급여 (수입)',
               data: salaries,
-              backgroundColor: 'rgba(16, 185, 129, 0.75)',
+              backgroundColor: 'rgba(49, 130, 246, 0.85)',
               borderRadius: 6,
               barPercentage: 0.7,
             },
@@ -3981,7 +4057,7 @@
               type: 'bar',
               label: '선준 카드값 (지출)',
               data: totalCosts,
-              backgroundColor: 'rgba(244, 63, 94, 0.75)',
+              backgroundColor: 'rgba(240, 68, 82, 0.85)',
               borderRadius: 6,
               barPercentage: 0.7,
             },
@@ -3989,12 +4065,12 @@
               type: 'line',
               label: '월 잔금 (배분자금)',
               data: remainBalances,
-              borderColor: 'rgba(217, 119, 6, 1)',
-              backgroundColor: 'rgba(217, 119, 6, 0.1)',
+              borderColor: '#191f28',
+              backgroundColor: 'rgba(25, 31, 40, 0.06)',
               borderWidth: 3,
               tension: 0.3,
               fill: false,
-              pointBackgroundColor: 'rgba(217, 119, 6, 1)',
+              pointBackgroundColor: '#191f28',
               pointRadius: 4,
             }
           ]
@@ -4062,7 +4138,7 @@
 
       const typeLabels = Object.keys(typeMap);
       const typeData = Object.values(typeMap);
-      const typeColors = ['#6366f1', '#f59e0b', '#10b981', '#ec4899', '#64748b'];
+      const typeColors = ['#3182f6', '#f18600', '#15b371', '#f04452', '#b0b8c1'];
 
       const canvasType = document.getElementById("typeDoughnutChart");
       if (canvasType) {
@@ -4113,7 +4189,7 @@
 
       const cardLabels = Object.keys(cardMap);
       const cardData = Object.values(cardMap);
-      const cardColors = ['#0ea5e9', '#ef4444', '#8b5cf6', '#10b981', '#f97316'];
+      const cardColors = ['#3182f6', '#f04452', '#f18600', '#15b371', '#8b95a1'];
 
       const canvasCard = document.getElementById("cardDoughnutChart");
       if (canvasCard) {
