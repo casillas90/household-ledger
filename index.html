@@ -12,8 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="다정선준 가계부">
-  <meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#17171c" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" id="themeColorMeta" content="#f4f5f7">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" href="favicon.png">
 
@@ -27,12 +26,22 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
   <script src="validation.js?v=3.9"></script>
   <script>
-    // 차트 기본값: 토스 톤의 회색 글자·옅은 격자 (다크 모드면 어두운 색)
+    // 화면 테마: 기본은 라이트, 상단 버튼으로 다크를 고르면 이 기기에 기억
+    (function () {
+      let theme = 'light';
+      try { if (localStorage.getItem('ledgerTheme') === 'dark') theme = 'dark'; } catch (e) {}
+      document.documentElement.dataset.theme = theme;
+    })();
+
+    // 차트 기본값: 토스 톤의 회색 글자·옅은 격자 (다크 테마면 어두운 색)
     const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    function applyChartTheme() {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      Chart.defaults.color = dark ? '#7e7e87' : '#8b95a1';
+      Chart.defaults.borderColor = dark ? '#2c2c35' : '#f2f4f6';
+    }
     Chart.defaults.font.family = "Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
-    Chart.defaults.color = isDark ? '#7e7e87' : '#8b95a1';
-    Chart.defaults.borderColor = isDark ? '#2c2c35' : '#f2f4f6';
+    applyChartTheme();
   </script>
   <!-- QRCode.js (아이폰 QR코드 생성) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -315,47 +324,45 @@
     .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.4) !important; }
 
     /* ===== 다크 모드: 아이폰이 다크 모드면 자동으로 어두운 화면 ===== */
-    :root { color-scheme: light dark; }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --m-bg: #17171c; --m-card: #202027; --m-text: #e4e4e7; --m-sub: #a0a0a8; --m-faint: #7e7e87;
-        --m-line: #2c2c35; --m-blue: #4593fc; --m-red: #f25a66; --m-green: #2fc78a; --m-orange: #ffa53d;
-        --m-grey50: #26262d; --m-grey100: #2c2c35; --m-grey200: #3a3a45; --m-grey700: #c3c3c8;
-        --m-blue-press: #2f7cf0; --m-blue-soft: rgba(69, 147, 252, 0.16);
-      }
-      /* 흰 면 → 카드색, 연회색 면 → 한 단계 밝은 회색 */
-      .bg-white, [class*="bg-white/"], .via-white { background-color: var(--m-card) !important; }
-      .bg-slate-50, [class*="bg-slate-50/"], .from-slate-50 { background-color: var(--m-grey50) !important; }
-      .bg-slate-100, .bg-slate-200 { background-color: var(--m-grey100) !important; }
-      .hover\:bg-slate-50:hover, .hover\:bg-slate-200:hover, .hover\:bg-slate-300:hover { background-color: var(--m-grey200) !important; }
-      /* 글자색 */
-      .text-slate-900, .text-slate-800, .text-slate-700, .hover\:text-slate-800:hover { color: var(--m-text) !important; }
-      .text-slate-600, .text-slate-500 { color: var(--m-sub) !important; }
-      .text-slate-400, .text-slate-300 { color: var(--m-faint) !important; }
-      /* 선 */
-      [class*="border-slate-1"], [class*="border-slate-2"], [class*="border-slate-3"], [class*="divide-slate-"] > * + * { border-color: var(--m-line) !important; }
-      /* 직접 적어둔 밝은 색들 */
-      .m-icon-btn:hover { background: var(--m-grey100); }
-      .m-ghost:hover { background: var(--m-blue-soft); }
-      .m-tabs { background: rgba(23, 23, 28, 0.82); }
-      .m-bottom-nav { background: rgba(32, 32, 39, 0.86); }
-      .m-nav-btn { color: #5c5c66; }
-      .m-sheet-panel { background: var(--m-card); }
-      .m-sheet-backdrop { background: rgba(0, 0, 0, 0.6); }
-      input:focus, textarea:focus, select:focus { background-color: var(--m-grey50) !important; }
-      .m-chevron, .m-month-chevron { color: #4a4a55; }
-      .bg-amber-500.text-white { background-color: rgba(255, 165, 61, 0.16) !important; }
-      .shadow-2xl { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important; }
-      ::-webkit-scrollbar-track { background: var(--m-bg); }
-      ::-webkit-scrollbar-thumb { background: var(--m-grey200); }
-      ::placeholder { color: #5c5c66 !important; }
-      /* 코드에 직접 적힌 토스 회색들 (카드 필터 칩 등) */
-      .bg-\[\#191f28\] { background-color: var(--m-text) !important; color: var(--m-bg) !important; }
-      .bg-\[\#f2f4f6\], .\!bg-\[\#f2f4f6\] { background-color: var(--m-grey100) !important; }
-      .hover\:bg-\[\#e5e8eb\]:hover { background-color: var(--m-grey200) !important; }
-      .text-\[\#4e5968\] { color: var(--m-grey700) !important; }
-      .border-\[\#eef0f3\] { border-color: var(--m-line) !important; }
-    }
+    :root { color-scheme: light; }
+    :root[data-theme="dark"] { color-scheme: dark;
+      --m-bg: #17171c; --m-card: #202027; --m-text: #e4e4e7; --m-sub: #a0a0a8; --m-faint: #7e7e87;
+      --m-line: #2c2c35; --m-blue: #4593fc; --m-red: #f25a66; --m-green: #2fc78a; --m-orange: #ffa53d;
+      --m-grey50: #26262d; --m-grey100: #2c2c35; --m-grey200: #3a3a45; --m-grey700: #c3c3c8;
+      --m-blue-press: #2f7cf0; --m-blue-soft: rgba(69, 147, 252, 0.16); }
+    /* 흰 면 → 카드색, 연회색 면 → 한 단계 밝은 회색 */
+    [data-theme="dark"] .bg-white, [data-theme="dark"] [class*="bg-white/"], [data-theme="dark"] .via-white { background-color: var(--m-card) !important; }
+    [data-theme="dark"] .bg-slate-50, [data-theme="dark"] [class*="bg-slate-50/"], [data-theme="dark"] .from-slate-50 { background-color: var(--m-grey50) !important; }
+    [data-theme="dark"] .bg-slate-100, [data-theme="dark"] .bg-slate-200 { background-color: var(--m-grey100) !important; }
+    [data-theme="dark"] .hover\:bg-slate-50:hover, [data-theme="dark"] .hover\:bg-slate-200:hover, [data-theme="dark"] .hover\:bg-slate-300:hover { background-color: var(--m-grey200) !important; }
+    /* 글자색 */
+    [data-theme="dark"] .text-slate-900, [data-theme="dark"] .text-slate-800, [data-theme="dark"] .text-slate-700, [data-theme="dark"] .hover\:text-slate-800:hover { color: var(--m-text) !important; }
+    [data-theme="dark"] .text-slate-600, [data-theme="dark"] .text-slate-500 { color: var(--m-sub) !important; }
+    [data-theme="dark"] .text-slate-400, [data-theme="dark"] .text-slate-300 { color: var(--m-faint) !important; }
+    /* 선 */
+    [data-theme="dark"] [class*="border-slate-1"], [data-theme="dark"] [class*="border-slate-2"], [data-theme="dark"] [class*="border-slate-3"], [data-theme="dark"] [class*="divide-slate-"] > * + * { border-color: var(--m-line) !important; }
+    /* 직접 적어둔 밝은 색들 */
+    [data-theme="dark"] .m-icon-btn:hover { background: var(--m-grey100); }
+    [data-theme="dark"] .m-ghost:hover { background: var(--m-blue-soft); }
+    [data-theme="dark"] .m-tabs { background: rgba(23, 23, 28, 0.82); }
+    [data-theme="dark"] .m-bottom-nav { background: rgba(32, 32, 39, 0.86); }
+    [data-theme="dark"] .m-nav-btn { color: #5c5c66; }
+    [data-theme="dark"] .m-nav-btn.is-active { color: var(--m-text); }
+    [data-theme="dark"] .m-sheet-panel { background: var(--m-card); }
+    [data-theme="dark"] .m-sheet-backdrop { background: rgba(0, 0, 0, 0.6); }
+    [data-theme="dark"] input:focus, [data-theme="dark"] textarea:focus, [data-theme="dark"] select:focus { background-color: var(--m-grey50) !important; }
+    [data-theme="dark"] .m-chevron, [data-theme="dark"] .m-month-chevron { color: #4a4a55; }
+    [data-theme="dark"] .bg-amber-500.text-white { background-color: rgba(255, 165, 61, 0.16) !important; }
+    [data-theme="dark"] .shadow-2xl { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important; }
+    :root[data-theme="dark"]::-webkit-scrollbar-track, [data-theme="dark"] ::-webkit-scrollbar-track { background: var(--m-bg); }
+    :root[data-theme="dark"]::-webkit-scrollbar-thumb, [data-theme="dark"] ::-webkit-scrollbar-thumb { background: var(--m-grey200); }
+    :root[data-theme="dark"]::placeholder, [data-theme="dark"] ::placeholder { color: #5c5c66 !important; }
+    /* 코드에 직접 적힌 토스 회색들 (카드 필터 칩 등) */
+    [data-theme="dark"] .bg-\[\#191f28\] { background-color: var(--m-text) !important; color: var(--m-bg) !important; }
+    [data-theme="dark"] .bg-\[\#f2f4f6\], [data-theme="dark"] .\!bg-\[\#f2f4f6\] { background-color: var(--m-grey100) !important; }
+    [data-theme="dark"] .hover\:bg-\[\#e5e8eb\]:hover { background-color: var(--m-grey200) !important; }
+    [data-theme="dark"] .text-\[\#4e5968\] { color: var(--m-grey700) !important; }
+    [data-theme="dark"] .border-\[\#eef0f3\] { border-color: var(--m-line) !important; }
   </style>
 </head>
 <body class="bg-slate-50/80 text-slate-800 antialiased min-h-screen p-2.5 sm:p-6 lg:p-8">
@@ -365,11 +372,14 @@
     <header class="m-header">
       <div class="min-w-0">
         <h1 class="m-title">가계부</h1>
-        <p class="m-caption">다정 &amp; 선준 · <span id="lastUpdated">-</span> 동기화 · v4.4</p>
+        <p class="m-caption">다정 &amp; 선준 · <span id="lastUpdated">-</span> 동기화 · v4.5</p>
       </div>
       <div class="flex items-center gap-0.5 shrink-0">
         <button id="btnRefresh" onclick="loadData()" class="m-icon-btn" title="새로고침" aria-label="새로고침">
           <i id="refreshIcon" class="fa-solid fa-arrows-rotate"></i>
+        </button>
+        <button id="btnTheme" onclick="toggleTheme()" class="m-icon-btn" title="다크 모드" aria-label="다크 모드">
+          <i id="themeIcon" class="fa-solid fa-moon"></i>
         </button>
         <button id="btnShareMobile" onclick="openShareModal()" class="m-icon-btn" title="공유 · 동기화" aria-label="공유 · 동기화">
           <i class="fa-solid fa-ellipsis"></i>
@@ -1970,6 +1980,30 @@
       saveEmergencyFundAction();
       closeEmergencySheet();
     }
+
+    // 상단 해/달 버튼: 라이트 ↔ 다크
+    function toggleTheme() {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try { localStorage.setItem('ledgerTheme', next); } catch (e) {}
+      updateThemeUI();
+      applyChartTheme();
+      if (!document.getElementById('tab-charts').classList.contains('hidden')) renderCharts();
+    }
+
+    function updateThemeUI() {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      const icon = document.getElementById('themeIcon');
+      const btn = document.getElementById('btnTheme');
+      if (icon) icon.className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+      if (btn) {
+        const label = dark ? '라이트 모드' : '다크 모드';
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+      }
+      document.getElementById('themeColorMeta')?.setAttribute('content', dark ? '#17171c' : '#f4f5f7');
+    }
+    updateThemeUI();
 
     // 눌러서 수정하는 줄: 키보드 Enter/Space 로도 열림
     document.addEventListener("keydown", (e) => {
