@@ -234,6 +234,23 @@
     thead th { font-weight: 600 !important; background-color: transparent !important; color: var(--m-sub) !important; }
     tbody td { border-color: var(--m-line) !important; }
 
+    /* 하단 탭 바: 폰에서만 보이고, 위쪽 탭은 숨김 */
+    .m-bottom-nav { display: none; }
+    @media (max-width: 767px) {
+      .m-tabs { display: none; }
+      body { padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important; }
+      .m-bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+        padding: 6px 8px env(safe-area-inset-bottom);
+        background: rgba(255, 255, 255, 0.86); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+        border-top: 1px solid var(--m-line); }
+      .m-nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0 8px;
+        color: #b0b8c1; font-size: 11px; font-weight: 600; cursor: pointer; }
+      .m-nav-btn i { font-size: 19px; }
+      .m-nav-btn.is-active { color: var(--m-text); }
+      /* 알림 토스트가 탭 바에 가리지 않게 */
+      .fixed.bottom-6.right-6 { bottom: calc(80px + env(safe-area-inset-bottom)) !important; right: 16px !important; left: 16px !important; }
+    }
+
     /* 모달·팝업 */
     .shadow-2xl { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12) !important; }
     .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.4) !important; }
@@ -246,7 +263,7 @@
     <header class="m-header">
       <div class="min-w-0">
         <h1 class="m-title">가계부</h1>
-        <p class="m-caption">다정 &amp; 선준 · <span id="lastUpdated">-</span> 동기화 · v4.1</p>
+        <p class="m-caption">다정 &amp; 선준 · <span id="lastUpdated">-</span> 동기화 · v4.2</p>
       </div>
       <div class="flex items-center gap-0.5 shrink-0">
         <button id="btnRefresh" onclick="loadData()" class="m-icon-btn" title="새로고침" aria-label="새로고침">
@@ -264,24 +281,24 @@
     <!-- 데이터 점검 결과 (validation.js) -->
     <div id="dataHealth" class="hidden"></div>
 
-    <!-- 탭 내비게이션 (모바일 가로 스와이프 지원) -->
+    <!-- 탭 내비게이션 (넓은 화면용 · 폰에서는 하단 탭 바를 씀) -->
     <div class="m-tabs pb-0.5">
       <div class="flex flex-nowrap overflow-x-auto no-scrollbar touch-scroll gap-1 sm:gap-2 -mx-2.5 px-2.5 sm:mx-0 sm:px-0">
         <button onclick="switchTab('tab-summary')" id="btn-tab-summary" class="tab-btn shrink-0 px-3.5 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-indigo-600 border-b-2 border-indigo-600 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
           <i class="fa-solid fa-chart-pie text-xs sm:text-sm"></i>
-          <span>월별 가계부 & 자산</span>
+          <span>가계부</span>
         </button>
         <button onclick="switchTab('tab-cards')" id="btn-tab-cards" class="tab-btn shrink-0 px-3.5 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
           <i class="fa-solid fa-credit-card text-xs sm:text-sm"></i>
-          <span>카드값 & 할부 관리</span>
+          <span>카드값</span>
         </button>
         <button onclick="switchTab('tab-charts')" id="btn-tab-charts" class="tab-btn shrink-0 px-3.5 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
           <i class="fa-solid fa-chart-line text-xs sm:text-sm"></i>
-          <span>통계 & 추이</span>
+          <span>통계</span>
         </button>
         <button onclick="switchTab('tab-house')" id="btn-tab-house" class="tab-btn shrink-0 px-3.5 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
-          <i class="fa-solid fa-house-chimney text-amber-500 text-xs sm:text-sm"></i>
-          <span>내 집 마련 플랜</span>
+          <i class="fa-solid fa-house-chimney text-xs sm:text-sm"></i>
+          <span>내 집 마련</span>
         </button>
       </div>
     </div>
@@ -310,7 +327,7 @@
           <div class="min-w-0">
             <div class="m-label">이번 달 남은 돈</div>
             <div id="summaryRemainBalance" class="m-hero-num mt-1">-</div>
-            <div id="summaryRemainRatio" class="m-sub mt-0.5">가계부 시트 연동</div>
+            <div id="summaryRemainRatio" class="m-sub mt-0.5">시트에서 가져옴</div>
           </div>
           <button type="button" onclick="openAllocEditModal('remain')" class="m-edit mt-1" title="잔금 직접 수정" aria-label="잔금 직접 수정"><i class="fa-solid fa-pen"></i></button>
         </div>
@@ -426,10 +443,9 @@
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <h3 class="text-base sm:text-lg font-bold text-slate-900">비상금 금고 & 잔액 실시간 관리</h3>
-                <span class="px-2 py-0.5 bg-amber-200 text-amber-900 text-[10px] font-extrabold rounded-md">사이트 직접 입력</span>
+                <h3 class="text-base sm:text-lg font-bold text-slate-900">비상금</h3>
               </div>
-              <p class="text-xs text-slate-600 mt-0.5">비상금이 얼마 남았는지 사이트에서 직접 적고 브라우저에 안전하게 보관하세요.</p>
+              <p class="text-xs text-slate-600 mt-0.5">통장에 남은 비상금을 적어두면 이 기기에 저장돼요.</p>
             </div>
           </div>
           <div class="flex items-center gap-2">
@@ -446,10 +462,10 @@
           <div class="lg:col-span-5 bg-white p-5 sm:p-6 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col justify-between space-y-4">
             <div>
               <div class="flex justify-between items-center text-xs font-semibold text-slate-500">
-                <span>현재 비상금 통장 잔액</span>
+                <span>지금 비상금 통장</span>
                 <span class="flex items-center gap-1 text-emerald-600 font-bold">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  실시간 보존
+                  <i class="fa-solid fa-check text-[10px]"></i>
+                  저장됨
                 </span>
               </div>
               <div class="mt-3">
@@ -463,7 +479,7 @@
             </div>
 
             <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span class="text-slate-500 font-medium">선택 월(<span id="emergencyTargetMonthText">기준월</span>) 배분액</span>
+              <span class="text-slate-500 font-medium"><span id="emergencyTargetMonthText">기준월</span>에 모은 비상금</span>
               <span id="monthEmergencyAllocationText" class="font-bold text-slate-800">0원</span>
             </div>
           </div>
@@ -524,7 +540,7 @@
                 class="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm shadow-amber-300 transition flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
               >
                 <i class="fa-solid fa-floppy-disk"></i>
-                <span>비상금 저장하기</span>
+                <span>저장하기</span>
               </button>
             </div>
           </div>
@@ -534,12 +550,12 @@
         <div class="bg-white/70 p-3.5 rounded-2xl border border-amber-200/50">
           <div class="flex justify-between items-center mb-2">
             <span class="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
-              <i class="fa-solid fa-clock-rotate-left text-amber-500"></i> 최근 비상금 기록 히스토리
+              <i class="fa-solid fa-clock-rotate-left text-amber-500"></i> 최근 기록
             </span>
             <button type="button" onclick="clearEmergencyHistory()" class="text-[10px] text-slate-400 hover:text-rose-500 transition">기록 지우기</button>
           </div>
           <div id="emergencyHistoryList" class="space-y-1.5 text-xs">
-            <span class="text-slate-400 text-[11px] block py-1">아직 기록된 비상금 히스토리가 없습니다.</span>
+            <span class="text-slate-400 text-[11px] block py-1">아직 기록이 없어요.</span>
           </div>
         </div>
       </div>
@@ -552,10 +568,10 @@
               <i class="fa-solid fa-table-cells"></i> 월별 비용
             </div>
             <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-              월별 비용 배분 현황표 (잔금 · 적금 · 용돈 · 생활비 · 비상금)
+              월별로 나눈 돈
             </h3>
             <p class="text-xs text-slate-400 mt-0.5">
-              구글 시트의 <strong>[월별 비용]</strong> 시트 데이터와 100% 동일하게 맞춰 표시됩니다 (행 클릭 시 상단 카드가 해당 월로 전환됩니다).
+              달을 누르면 위 카드가 그 달로 바뀌어요.
             </p>
           </div>
           
@@ -631,7 +647,7 @@
             <div class="bg-rose-50/80 border border-rose-200/70 rounded-2xl p-2.5 mb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 flex-wrap">
                 <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                <span class="text-[11px] font-bold text-rose-900">시트 작성 년월:</span>
+                <span class="text-[11px] font-bold text-rose-900">작성 중인 달</span>
                 <select id="dajeongSyncYearSelect" onchange="onDajeongSyncMonthChange()" class="px-2 py-0.5 bg-white border border-rose-300 rounded-lg text-xs font-bold text-rose-700 outline-none cursor-pointer">
                   <option value="2026년" selected>2026년</option>
                   <option value="2025년">2025년</option>
@@ -653,11 +669,11 @@
                   <option value="8월">8월</option>
                 </select>
                 <button type="button" onclick="archiveCurrentDajeongData()" class="px-2.5 py-0.5 bg-white hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold rounded-lg transition flex items-center gap-1 cursor-pointer">
-                  <i class="fa-solid fa-box-archive"></i> 현재 년월 보관
+                  <i class="fa-solid fa-box-archive"></i> 이 달 보관하기
                 </button>
               </div>
               <span class="text-[10px] text-rose-600 font-medium">
-                <i class="fa-solid fa-shield-halved"></i> 시트에서 지워도 대시보드에 영구 보존
+                <i class="fa-solid fa-shield-halved"></i> 보관하면 시트에서 지워도 남아 있어요
               </span>
             </div>
 
@@ -795,9 +811,9 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
           <div>
             <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-              <i class="fa-solid fa-chart-line text-indigo-500"></i> 월별 급여 vs 선준 카드값 vs 월 잔금 추이
+              <i class="fa-solid fa-chart-line text-indigo-500"></i> 월별 수입과 지출
             </h3>
-            <p class="text-xs text-slate-400 mt-0.5">수입(급여)과 선준 카드값 지출, 그리고 남은 월 잔금의 변동성을 시각적으로 확인합니다</p>
+            <p class="text-xs text-slate-400 mt-0.5">급여, 선준 카드값, 남은 돈이 어떻게 바뀌었는지 보여드려요.</p>
           </div>
           <div class="flex items-center gap-2">
             <button type="button" onclick="updateTrendChartRange(6)" id="btnRange6" class="px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 transition cursor-pointer">최근 6개월</button>
@@ -817,7 +833,7 @@
         <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm flex flex-col justify-between">
           <div class="flex justify-between items-center mb-4">
             <div>
-              <h3 class="text-sm font-bold text-slate-900">선준 카드값 구분 비율</h3>
+              <h3 class="text-sm font-bold text-slate-900">어디에 썼을까요</h3>
               <p class="text-[11px] text-slate-400 mt-0.5" id="chartTypeSub">현재 필터 기준</p>
             </div>
             <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-bold">지출 비중</span>
@@ -850,7 +866,7 @@
     <!-- ============================================== -->
     <div id="tab-house" class="tab-content hidden space-y-6">
       <div id="houseLocked" class="bg-white p-6 rounded-2xl border border-slate-200/70 shadow-xs text-center text-sm text-slate-500">
-        <i class="fa-solid fa-lock text-slate-400 mr-1"></i> 접근 키 확인 후 표시됩니다.
+        <i class="fa-solid fa-lock text-slate-400 mr-1"></i> 접근 키를 입력하면 보여드려요.
       </div>
     </div>
 
@@ -905,7 +921,7 @@
           document.body.appendChild(gate);
         }
         gate.classList.remove("hidden");
-        document.getElementById("keyGateMsg").innerText = message || "데이터를 보려면 접근 키를 입력하세요.";
+        document.getElementById("keyGateMsg").innerText = message || "가계부를 보려면 접근 키를 입력해 주세요.";
         const input = document.getElementById("keyGateInput");
         input.value = "";
         setTimeout(() => input.focus(), 50);
@@ -1024,7 +1040,7 @@
         let data = await fetchSheetData();
         // 키가 맞을 때까지 입력 화면을 다시 띄움
         while (data && data.status === 'unauthorized') {
-          await askApiKey(getApiKey() ? "접근 키가 맞지 않습니다. 다시 입력하세요." : undefined);
+          await askApiKey(getApiKey() ? "접근 키가 맞지 않아요. 다시 입력해 주세요." : undefined);
           data = await fetchSheetData();
         }
         if (data && data.status === 'error') {
@@ -1099,6 +1115,12 @@
       const activeBtn = document.getElementById("btn-" + tabId);
       activeBtn.classList.add("text-indigo-600", "border-b-2", "border-indigo-600", "font-bold");
       activeBtn.classList.remove("text-slate-500");
+      document.querySelectorAll(".m-nav-btn").forEach(el => {
+        const on = el.dataset.tab === tabId;
+        el.classList.toggle("is-active", on);
+        if (on) el.setAttribute("aria-current", "page"); else el.removeAttribute("aria-current");
+      });
+      window.scrollTo({ top: 0 });
 
       if (tabId === 'tab-cards') {
         renderSeonjunList();
@@ -1647,29 +1669,29 @@
 
       // 5. 월 잔금 / 남은금액 (구글 가계부 시트 '남은금액' 컬럼 값 100% 최우선 반영)
       let remainBalance = 0;
-      let remainSource = "가계부 시트 연동";
+      let remainSource = "시트에서 가져옴";
       if (overrides.remain !== undefined && overrides.remain > 0) {
         remainBalance = overrides.remain;
         remainSource = "직접수정";
       } else if (row.isFromSheet && row.remain !== undefined && row.remain !== 0) {
         remainBalance = row.remain;
-        remainSource = "가계부 시트 연동";
+        remainSource = "시트에서 가져옴";
       } else if (salary > 0 && totalCost > 0 && (overrides.salary || (sheetExp && salary !== sheetExp.salary))) {
         // 급여 수정 시 잔금 실시간 자동 재계산: (급여 - 선준카드) + 다정남은금액
         remainBalance = salaryMinusCard + dajeongRemain;
         remainSource = "(급여−선준카드)+다정";
       } else if (row.remain !== undefined && row.remain !== 0 && row.remain !== null) {
         remainBalance = row.remain;
-        remainSource = "가계부 시트 연동";
+        remainSource = "시트에서 가져옴";
       } else if (salaryMinusCard > 0 || dajeongRemain > 0) {
         remainBalance = salaryMinusCard + dajeongRemain;
         remainSource = "(급여−선준카드)+다정";
       } else if (sheetExp && sheetExp.remain !== undefined && sheetExp.remain !== 0 && sheetExp.remain !== null) {
         remainBalance = sheetExp.remain;
-        remainSource = "가계부 시트 연동";
+        remainSource = "시트에서 가져옴";
       } else {
         remainBalance = row.remain || (sheetExp ? sheetExp.remain : 0);
-        remainSource = "가계부 시트 연동";
+        remainSource = "시트에서 가져옴";
       }
 
       // --- [구글 시트 실시간 카드 집계 추출: 선준(용돈), 생활비, 다정(용돈)] ---
@@ -1711,25 +1733,25 @@
       // B. 용돈 (사용자 룰: 선준 카드값에서 구분에 선준 할부+일반 금액 차감)
       // 공식: 월 용돈 = 300,000원 - (구분에 선준 할부+일반 금액)
       let pocketMoney = 0;
-      let pocketSource = "구글 시트";
+      let pocketSource = "시트에서 가져옴";
       const seonjunDeductInfo = getSeonjunDeduction(year, month);
       const seonjunDeduction = seonjunDeductInfo.total;
 
       // 400,000원 잘못된 오버라이드는 무시
       if (overrides.pocketMoney !== undefined && overrides.pocketMoney !== 400000) {
         pocketMoney = overrides.pocketMoney;
-        pocketSource = "✏️ 직접수정";
+        pocketSource = "✏️ 직접 수정함";
       } else if (seonjunDeduction > 0) {
         // 카드 내역에서 구분에 '선준' 지출이 확인된 경우: 기준 30만 원에서 실시간 차감
         pocketMoney = Math.max(0, 300000 - seonjunDeduction);
         pocketSource = `30만−선준(${seonjunDeduction.toLocaleString()}원)`;
       } else if (row.pocketMoney !== undefined && row.pocketMoney > 0) {
         pocketMoney = row.pocketMoney;
-        pocketSource = "가계부 시트 연동";
+        pocketSource = "시트에서 가져옴";
       } else if (sheetExp && sheetExp.pocketMoney !== undefined && sheetExp.pocketMoney > 0) {
         // 시트 원본 값 완벽 유지 (예: 9월 135,734원, 10월 121,950원)
         pocketMoney = sheetExp.pocketMoney;
-        pocketSource = "시트 원본";
+        pocketSource = "시트에서 가져옴";
       } else if (year === '2026년' && ['10월', '11월', '12월'].includes(month)) {
         pocketMoney = 300000;
         pocketSource = "기준 용돈 30만";
@@ -1738,16 +1760,16 @@
       // C. 생활비 (사용자 룰: 선준 카드값에서 구분에 생활비라고 적혀있으면 생활비 금액에서 차감)
       // 공식: 월 생활비 = 300,000원 - (선준 카드값 중 구분='생활비' 금액)
       let livingExpense = 0;
-      let livingSource = "구글 시트";
+      let livingSource = "시트에서 가져옴";
       const livingCardDeduction = getLivingCardDeduction(year, month);
 
       // 400,000원 잘못된 오버라이드는 무시
       if (overrides.livingExpense !== undefined && overrides.livingExpense !== 400000) {
         livingExpense = overrides.livingExpense;
-        livingSource = "✏️ 직접수정";
+        livingSource = "✏️ 직접 수정함";
       } else if (row.livingExpense !== undefined && row.livingExpense > 0) {
         livingExpense = row.livingExpense;
-        livingSource = "가계부 시트 연동";
+        livingSource = "시트에서 가져옴";
       } else if (livingCardDeduction > 0) {
         // 카드 내역에서 구분에 '생활비' 지출이 확인된 경우: 기준 30만 원에서 실시간 차감
         livingExpense = Math.max(0, 300000 - livingCardDeduction);
@@ -1755,7 +1777,7 @@
       } else if (sheetExp && sheetExp.livingExpense !== undefined && sheetExp.livingExpense > 0) {
         // 시트 원본 값 완벽 유지 (예: 9월 251,000원, 10월 300,000원)
         livingExpense = sheetExp.livingExpense;
-        livingSource = "시트 원본";
+        livingSource = "시트에서 가져옴";
       } else if (year === '2026년' && ['10월', '11월', '12월'].includes(month)) {
         livingExpense = 300000;
         livingSource = "기준 생활비 30만";
@@ -1847,7 +1869,7 @@
       const historyContainer = document.getElementById("emergencyHistoryList");
       if (historyContainer) {
         if (history.length === 0) {
-          historyContainer.innerHTML = '<span class="text-slate-400 text-[11px] block py-1">아직 기록된 비상금 히스토리가 없습니다.</span>';
+          historyContainer.innerHTML = '<span class="text-slate-400 text-[11px] block py-1">아직 기록이 없어요.</span>';
         } else {
           historyContainer.innerHTML = history.slice(0, 4).map(h => `
             <div class="flex items-center justify-between py-1 border-b border-amber-100/60 last:border-none text-xs">
@@ -1924,7 +1946,7 @@
     }
 
     function clearEmergencyHistory() {
-      if (confirm("비상금 변경 히스토리를 초기화하시겠습니까? (현재 비상금 잔액은 유지됩니다)")) {
+      if (confirm("비상금 기록을 모두 지울까요? 지금 잔액은 그대로예요.")) {
         localStorage.removeItem(STORAGE_KEY_EMERGENCY_HISTORY);
         renderEmergencyFundUI();
         showToast("비상금 기록 히스토리가 초기화되었습니다.");
@@ -2001,7 +2023,7 @@
       if (remainBalanceEl) remainBalanceEl.innerText = metrics.remainBalance.toLocaleString() + "원";
       const summaryRemainRatioEl = document.getElementById("summaryRemainRatio");
       if (summaryRemainRatioEl) {
-        summaryRemainRatioEl.innerText = metrics.isOverridden?.remain ? "✏️ 직접수정" : (metrics.remainSource || "가계부 시트 연동");
+        summaryRemainRatioEl.innerText = metrics.isOverridden?.remain ? "✏️ 직접 수정함" : (metrics.remainSource || "시트에서 가져옴");
       }
 
       // [섹션 2: 잔금 상세 배분 현황 (적금 · 용돈 · 생활비 · 비상금)]
@@ -2013,7 +2035,7 @@
       if (allocSavingsEl) allocSavingsEl.innerText = metrics.savings.toLocaleString() + "원";
       const allocSavingsSubEl = document.getElementById("allocSavingsSub");
       if (allocSavingsSubEl) {
-        allocSavingsSubEl.innerText = metrics.isOverridden.savings ? "✏️ 직접수정" : "시트 데이터";
+        allocSavingsSubEl.innerText = metrics.isOverridden.savings ? "✏️ 직접 수정함" : "시트에서 가져옴";
       }
 
       // 2. 용돈
@@ -2021,7 +2043,7 @@
       if (allocPocketEl) allocPocketEl.innerText = metrics.pocketMoney.toLocaleString() + "원";
       const allocPocketSubEl = document.getElementById("allocPocketSub");
       if (allocPocketSubEl) {
-        allocPocketSubEl.innerText = metrics.isOverridden.pocketMoney ? "✏️ 직접수정" : (metrics.pocketSource || "기준 용돈 30만");
+        allocPocketSubEl.innerText = metrics.isOverridden.pocketMoney ? "✏️ 직접 수정함" : (metrics.pocketSource || "기준 용돈 30만");
         allocPocketSubEl.title = `용돈 산출: ${metrics.pocketSource}`;
       }
 
@@ -2030,7 +2052,7 @@
       if (allocLivingEl) allocLivingEl.innerText = metrics.livingExpense.toLocaleString() + "원";
       const allocLivingSubEl = document.getElementById("allocLivingSub");
       if (allocLivingSubEl) {
-        allocLivingSubEl.innerText = metrics.isOverridden.livingExpense ? "✏️ 직접수정" : (metrics.livingSource || "기준 생활비 30만");
+        allocLivingSubEl.innerText = metrics.isOverridden.livingExpense ? "✏️ 직접 수정함" : (metrics.livingSource || "기준 생활비 30만");
         allocLivingSubEl.title = `생활비 산출: ${metrics.livingSource}`;
       }
 
@@ -2047,7 +2069,7 @@
       }
       const allocEmergencySubEl = document.getElementById("allocEmergencySub");
       if (allocEmergencySubEl) {
-        allocEmergencySubEl.innerText = metrics.isOverridden.emergencyFund ? "✏️ 직접수정" : "잔금−(적금+용돈+생활비)";
+        allocEmergencySubEl.innerText = metrics.isOverridden.emergencyFund ? "✏️ 직접 수정함" : "잔금−(적금+용돈+생활비)";
       }
 
       // 비율 계산 및 프로그레스 바 갱신 (합계 = 잔금 100%)
@@ -2531,7 +2553,7 @@
       const activeKey = `${activeYear}_${activeMonth}`;
       const items = (rawData && rawData.dajeong && rawData.dajeong.items) ? rawData.dajeong.items : [];
       if (items.length === 0) {
-        alert("현재 보관할 시트 데이터가 없습니다. 구글 시트 '다정' 탭에 내역을 작성해 주세요.");
+        alert("보관할 내역이 없어요. 구글 시트 '다정' 탭에 먼저 적어 주세요.");
         return;
       }
 
@@ -2789,7 +2811,7 @@
       if (countEl) countEl.innerText = `총 ${filtered.length}건 (선택: ${filterDesc})`;
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400">지출 내역이 없습니다. (시트 작성 후 [현재 년월 보관]을 눌러두면 영구 보존됩니다)</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400">아직 내역이 없어요. 시트에 적고 [이 달 보관하기]를 누르면 계속 남아 있어요.</td></tr>`;
         return;
       }
 
@@ -5148,5 +5170,20 @@
     </div>
   </div>
 
+  <!-- 하단 탭 바 (폰 전용, iOS 탭 바처럼 화면 아래 고정) -->
+  <nav class="m-bottom-nav" aria-label="탭">
+    <button type="button" onclick="switchTab('tab-summary')" data-tab="tab-summary" class="m-nav-btn is-active" aria-current="page">
+      <i class="fa-solid fa-house"></i><span>홈</span>
+    </button>
+    <button type="button" onclick="switchTab('tab-cards')" data-tab="tab-cards" class="m-nav-btn">
+      <i class="fa-solid fa-credit-card"></i><span>카드값</span>
+    </button>
+    <button type="button" onclick="switchTab('tab-charts')" data-tab="tab-charts" class="m-nav-btn">
+      <i class="fa-solid fa-chart-simple"></i><span>통계</span>
+    </button>
+    <button type="button" onclick="switchTab('tab-house')" data-tab="tab-house" class="m-nav-btn">
+      <i class="fa-solid fa-key"></i><span>내 집</span>
+    </button>
+  </nav>
 </body>
 </html>
