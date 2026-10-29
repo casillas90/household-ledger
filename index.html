@@ -251,6 +251,54 @@
       .fixed.bottom-6.right-6 { bottom: calc(80px + env(safe-area-inset-bottom)) !important; right: 16px !important; left: 16px !important; }
     }
 
+    /* 비상금 바텀시트 */
+    .m-row-amount-sub { font-weight: 600; color: var(--m-sub); font-size: 14px; }
+    .m-sheet { position: fixed; inset: 0; z-index: 60; visibility: hidden; transition: visibility 0s .3s; }
+    .m-sheet.is-open { visibility: visible; transition-delay: 0s; }
+    .m-sheet-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.4); opacity: 0; transition: opacity .25s ease; }
+    .m-sheet.is-open .m-sheet-backdrop { opacity: 1; }
+    .m-sheet-panel { position: absolute; left: 0; right: 0; bottom: 0; max-height: 90vh; overflow-y: auto; background: #fff;
+      border-radius: 24px 24px 0 0; padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
+      transform: translateY(100%); transition: transform .32s cubic-bezier(.2, .8, .2, 1); }
+    .m-sheet.is-open .m-sheet-panel { transform: none; }
+    .m-sheet-handle { width: 36px; height: 5px; border-radius: 999px; background: var(--m-grey200); margin: 0 auto 18px; }
+    .m-sheet-title { font-size: 20px; font-weight: 700; color: var(--m-text); }
+    .m-amount-field { display: flex; align-items: baseline; gap: 4px; margin-top: 20px; border-bottom: 2px solid var(--m-line); transition: border-color .15s; }
+    .m-amount-field:focus-within { border-bottom-color: var(--m-blue); }
+    .m-sheet .m-amount-input { flex: 1; min-width: 0; font-size: 30px !important; font-weight: 800; letter-spacing: -0.02em; color: var(--m-text);
+      background: transparent !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; padding: 6px 0; font-variant-numeric: tabular-nums; }
+    .m-amount-unit { font-size: 24px; font-weight: 700; color: var(--m-text); }
+    .m-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .m-chip-btn { padding: 9px 14px; border-radius: 12px; background: var(--m-grey100); color: var(--m-grey700); font-size: 14px; font-weight: 600; cursor: pointer; }
+    .m-chip-btn:hover { background: var(--m-grey200); }
+    .m-sheet .m-memo-input { width: 100%; margin-top: 16px; padding: 14px 16px; font-size: 15px; }
+    .m-primary { width: 100%; height: 54px; margin-top: 20px; border-radius: 16px; background: var(--m-blue); color: #fff; font-size: 17px; font-weight: 700; cursor: pointer; }
+    .m-primary:hover { background: var(--m-blue-press); }
+    @media (min-width: 768px) {
+      .m-sheet-panel { left: 50%; right: auto; top: 50%; bottom: auto; width: 420px; border-radius: 24px; padding: 28px 24px 24px;
+        opacity: 0; transform: translate(-50%, -46%); transition: transform .25s ease, opacity .25s ease; }
+      .m-sheet.is-open .m-sheet-panel { transform: translate(-50%, -50%); opacity: 1; }
+      .m-sheet-handle { display: none; }
+    }
+
+    /* 월별: 폰은 월 목록, 넓은 화면은 표 */
+    .m-month-list { display: none; }
+    @media (max-width: 767px) {
+      .m-desktop-only { display: none !important; }
+      .m-month-list { display: block; }
+    }
+    .m-month-year { font-size: 13px; font-weight: 600; color: var(--m-faint); padding: 14px 0 4px; }
+    .m-month-row { width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 10px; margin: 0 -10px; width: calc(100% + 20px);
+      border-radius: 14px; text-align: left; cursor: pointer; }
+    .m-month-row:hover { background: var(--m-grey50); }
+    .m-month-row.is-selected { background: var(--m-blue-soft); }
+    .m-month-name { width: 40px; flex-shrink: 0; font-size: 15px; font-weight: 700; color: var(--m-text); }
+    .m-month-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .m-month-amount { font-size: 17px; font-weight: 700; color: var(--m-text); font-variant-numeric: tabular-nums; }
+    .m-month-meta { font-size: 12px; color: var(--m-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+    .m-month-side { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+    .m-month-side-val { font-size: 14px; font-weight: 700; color: var(--m-orange); font-variant-numeric: tabular-nums; }
+
     /* 모달·팝업 */
     .shadow-2xl { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12) !important; }
     .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.4) !important; }
@@ -263,7 +311,7 @@
     <header class="m-header">
       <div class="min-w-0">
         <h1 class="m-title">가계부</h1>
-        <p class="m-caption">다정 &amp; 선준 · <span id="lastUpdated">-</span> 동기화 · v4.2</p>
+        <p class="m-caption">다정 &amp; 선준 · <span id="lastUpdated">-</span> 동기화 · v4.3</p>
       </div>
       <div class="flex items-center gap-0.5 shrink-0">
         <button id="btnRefresh" onclick="loadData()" class="m-icon-btn" title="새로고침" aria-label="새로고침">
@@ -434,128 +482,31 @@
 
       </div>
 
-      <!-- [섹션 3] 비상금 금고 & 잔액 실시간 직접 입력 및 관리 -->
-      <div class="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-orange-500/10 p-5 sm:p-7 rounded-3xl border border-amber-200/80 shadow-sm space-y-5">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-amber-200/60 pb-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-lg shadow-sm shadow-amber-200">
-              <i class="fa-solid fa-vault"></i>
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h3 class="text-base sm:text-lg font-bold text-slate-900">비상금</h3>
-              </div>
-              <p class="text-xs text-slate-600 mt-0.5">통장에 남은 비상금을 적어두면 이 기기에 저장돼요.</p>
-            </div>
+      <!-- [섹션 3] 비상금: 잔액 하나 + 수정 버튼, 입력은 바텀시트(#emergencySheet)에서 -->
+      <div class="m-card">
+        <div class="flex items-center justify-between">
+          <span class="m-label">비상금 통장</span>
+          <button type="button" onclick="openEmergencySheet()" class="m-ghost">수정</button>
+        </div>
+        <button type="button" onclick="openEmergencySheet()" id="currentEmergencyDisplay" class="m-hero-num mt-1 block text-left">0원</button>
+        <p id="currentEmergencyNote" class="m-sub mt-1">수정을 눌러 남은 비상금을 적어 보세요.</p>
+        <div class="m-rows">
+          <div class="m-row">
+            <span class="m-row-label"><span><span id="emergencyTargetMonthText">기준월</span>에 모은 비상금</span></span>
+            <span id="monthEmergencyAllocationText" class="m-row-amount">0원</span>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="text-[11px] text-slate-500 bg-white/80 px-3 py-1.5 rounded-xl border border-amber-200" id="emergencyLastUpdated">
-              최종 저장: 없음
-            </span>
+          <div class="m-row">
+            <span class="m-row-label">마지막 저장</span>
+            <span id="emergencyLastUpdated" class="m-row-amount m-row-amount-sub">없음</span>
           </div>
         </div>
-
-        <!-- 비상금 메인 영역: 좌측 현재 잔액 표시 / 우측 직접 입력 및 조절 -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-          
-          <!-- 좌측: 현재 비상금 잔액 대형 배너 (lg:col-span-5) -->
-          <div class="lg:col-span-5 bg-white p-5 sm:p-6 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col justify-between space-y-4">
-            <div>
-              <div class="flex justify-between items-center text-xs font-semibold text-slate-500">
-                <span>지금 비상금 통장</span>
-                <span class="flex items-center gap-1 text-emerald-600 font-bold">
-                  <i class="fa-solid fa-check text-[10px]"></i>
-                  저장됨
-                </span>
-              </div>
-              <div class="mt-3">
-                <span id="currentEmergencyDisplay" class="text-2xl sm:text-3xl font-black text-amber-600 tracking-tight block">
-                  0원
-                </span>
-                <p class="text-xs text-slate-400 mt-1" id="currentEmergencyNote">
-                  현재 등록된 비상금 잔액이 없습니다. 우측에서 입력해보세요.
-                </p>
-              </div>
-            </div>
-
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span class="text-slate-500 font-medium"><span id="emergencyTargetMonthText">기준월</span>에 모은 비상금</span>
-              <span id="monthEmergencyAllocationText" class="font-bold text-slate-800">0원</span>
-            </div>
+        <div class="mt-5">
+          <div class="flex items-center justify-between">
+            <span class="m-label" style="font-size:13px">최근 기록</span>
+            <button type="button" onclick="clearEmergencyHistory()" class="text-[12px] text-slate-400 hover:text-rose-500 transition">기록 지우기</button>
           </div>
-
-          <!-- 우측: 비상금 직접 입력창 및 빠른 조절 버튼 (lg:col-span-7) -->
-          <div class="lg:col-span-7 bg-white p-5 sm:p-6 rounded-2xl border border-amber-200/80 shadow-xs space-y-4">
-            <div>
-              <label class="text-xs font-bold text-slate-700 block mb-1.5">
-                남은 비상금 금액 적기
-              </label>
-              <div class="relative">
-                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">₩</span>
-                <input 
-                  type="text" 
-                  id="emergencyInput" 
-                  placeholder="예: 2,500,000" 
-                  oninput="onEmergencyInputChange(this)"
-                  class="w-full pl-8 pr-24 py-3 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-lg font-bold text-slate-800 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition"
-                />
-                <button 
-                  type="button" 
-                  onclick="applyCurrentDisplayToInput()" 
-                  class="absolute right-2.5 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800 bg-slate-200/80 hover:bg-slate-300 rounded-lg transition"
-                  title="현재 저장된 금액 불러오기"
-                >
-                  현재값
-                </button>
-              </div>
-            </div>
-
-            <!-- 빠른 증감 버튼 -->
-            <div>
-              <span class="text-[11px] font-semibold text-slate-400 block mb-1">빠른 금액 조절</span>
-              <div class="flex flex-wrap gap-1.5">
-                <button type="button" onclick="adjustEmergencyInput(100000)" class="px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200/60 transition active:scale-95">+10만</button>
-                <button type="button" onclick="adjustEmergencyInput(300000)" class="px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200/60 transition active:scale-95">+30만</button>
-                <button type="button" onclick="adjustEmergencyInput(500000)" class="px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200/60 transition active:scale-95">+50만</button>
-                <button type="button" onclick="adjustEmergencyInput(1000000)" class="px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200/60 transition active:scale-95">+100만</button>
-                <span class="w-[1px] h-6 bg-slate-200 mx-0.5 self-center"></span>
-                <button type="button" onclick="adjustEmergencyInput(-50000)" class="px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg border border-slate-200 transition active:scale-95">-5만</button>
-                <button type="button" onclick="adjustEmergencyInput(-100000)" class="px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg border border-slate-200 transition active:scale-95">-10만</button>
-                <button type="button" onclick="adjustEmergencyInput(-300000)" class="px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg border border-slate-200 transition active:scale-95">-30만</button>
-                <button type="button" onclick="resetEmergencyInputField()" class="px-2.5 py-1 text-xs font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg border border-rose-200 transition active:scale-95">0원 초기화</button>
-              </div>
-            </div>
-
-            <!-- 메모 입력 및 저장 버튼 행 -->
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-              <input 
-                type="text" 
-                id="emergencyMemoInput" 
-                placeholder="메모 / 변동 사유 (예: 정기 생활비 잔액 비상금으로 이체)" 
-                class="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-amber-400 outline-none"
-              />
-              <button 
-                type="button" 
-                onclick="saveEmergencyFundAction()" 
-                class="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm shadow-amber-300 transition flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
-              >
-                <i class="fa-solid fa-floppy-disk"></i>
-                <span>저장하기</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 최근 비상금 변경 내역 (히스토리) -->
-        <div class="bg-white/70 p-3.5 rounded-2xl border border-amber-200/50">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
-              <i class="fa-solid fa-clock-rotate-left text-amber-500"></i> 최근 기록
-            </span>
-            <button type="button" onclick="clearEmergencyHistory()" class="text-[10px] text-slate-400 hover:text-rose-500 transition">기록 지우기</button>
-          </div>
-          <div id="emergencyHistoryList" class="space-y-1.5 text-xs">
-            <span class="text-slate-400 text-[11px] block py-1">아직 기록이 없어요.</span>
+          <div id="emergencyHistoryList">
+            <span class="m-sub block py-2">아직 기록이 없어요.</span>
           </div>
         </div>
       </div>
@@ -564,9 +515,6 @@
       <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/70 shadow-sm space-y-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 text-xs font-bold mb-1">
-              <i class="fa-solid fa-table-cells"></i> 월별 비용
-            </div>
             <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
               월별로 나눈 돈
             </h3>
@@ -581,7 +529,7 @@
               <span>월 추가</span>
             </button>
             <!-- 뷰 모드 전환 버튼 -->
-            <div class="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-bold">
+            <div class="m-desktop-only bg-slate-100 p-1 rounded-xl flex items-center text-xs font-bold">
               <button type="button" id="btnModeCosts" onclick="setSummaryTableMode('costs')" class="px-3 py-1.5 rounded-lg bg-white text-indigo-700 shadow-2xs transition">
                 📋 월별 비용표
               </button>
@@ -596,12 +544,15 @@
         </div>
 
         <!-- 모바일 가로 스크롤 안내 힌트 -->
-        <div class="flex items-center justify-between text-[11px] text-slate-400 px-1 sm:hidden">
+        <div class="hidden">
           <span><i class="fa-solid fa-arrows-left-right text-indigo-500"></i> 좌우로 스크롤하여 전체 열 확인</span>
           <span>행 클릭 시 해당 월 선택</span>
         </div>
 
-        <div class="overflow-x-auto rounded-2xl border border-slate-300 shadow-xs touch-scroll">
+        <!-- 폰: 월 목록 (renderMonthList) -->
+        <div id="summaryMonthList" class="m-month-list"></div>
+
+        <div class="m-desktop-only overflow-x-auto rounded-2xl border border-slate-300 shadow-xs touch-scroll">
           <table class="w-full text-xs sm:text-sm border-collapse" id="summaryMainTable">
             <thead class="bg-slate-100 text-slate-800 font-bold border-b border-slate-300 text-xs" id="summaryTableHeader">
               <!-- Dynamically rendered header based on view mode -->
@@ -1850,35 +1801,34 @@
       if (history.length > 0) {
         const latest = history[0];
         if (noteEl) {
-          noteEl.innerText = latest.memo ? `메모: "${latest.memo}"` : `최근 수정: ${latest.date}`;
+          noteEl.innerText = latest.memo ? latest.memo : "이 기기에 저장돼 있어요.";
         }
         if (lastUpdatedEl) {
-          lastUpdatedEl.innerText = `최종 저장: ${latest.date}`;
+          lastUpdatedEl.innerText = latest.date;
         }
       } else {
         if (noteEl) {
           noteEl.innerText = currentBalance > 0 
-            ? "비상금 잔액이 안전하게 저장되어 있습니다." 
-            : "현재 등록된 비상금 잔액이 없습니다. 우측에서 입력해보세요.";
+            ? "이 기기에 저장돼 있어요." 
+            : "수정을 눌러 남은 비상금을 적어 보세요.";
         }
         if (lastUpdatedEl) {
-          lastUpdatedEl.innerText = "최종 저장: 없음";
+          lastUpdatedEl.innerText = "없음";
         }
       }
 
       const historyContainer = document.getElementById("emergencyHistoryList");
       if (historyContainer) {
         if (history.length === 0) {
-          historyContainer.innerHTML = '<span class="text-slate-400 text-[11px] block py-1">아직 기록이 없어요.</span>';
+          historyContainer.innerHTML = '<span class="m-sub block py-2">아직 기록이 없어요.</span>';
         } else {
           historyContainer.innerHTML = history.slice(0, 4).map(h => `
-            <div class="flex items-center justify-between py-1 border-b border-amber-100/60 last:border-none text-xs">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-[10px] text-slate-400">${h.date}</span>
-                <span class="font-bold text-amber-800">${h.amount.toLocaleString()}원</span>
-                ${h.memo ? `<span class="text-[11px] text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-100">${h.memo}</span>` : ''}
-              </div>
-              <span class="text-[10px] text-emerald-600 font-medium">저장완료</span>
+            <div class="m-row">
+              <span class="m-row-label" style="font-size:14px">${h.memo || '금액 수정'}</span>
+              <span class="text-right">
+                <span class="m-row-amount" style="font-size:15px">${h.amount.toLocaleString()}원</span>
+                <span class="m-row-meta">${h.date}</span>
+              </span>
             </div>
           `).join('');
         }
@@ -1944,6 +1894,34 @@
       renderEmergencyFundUI();
       showToast(`비상금 금고 잔액이 ${amount.toLocaleString()}원으로 안전하게 저장되었습니다!`);
     }
+
+    function openEmergencySheet() {
+      const sheet = document.getElementById("emergencySheet");
+      const input = document.getElementById("emergencyInput");
+      input.value = "";
+      if (getStoredEmergencyBalance() > 0) applyCurrentDisplayToInput();
+      sheet.classList.add("is-open");
+      sheet.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+      input.focus({ preventScroll: true });
+    }
+
+    function closeEmergencySheet() {
+      const sheet = document.getElementById("emergencySheet");
+      sheet.classList.remove("is-open");
+      sheet.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      document.activeElement?.blur();
+    }
+
+    function saveEmergencyFromSheet() {
+      saveEmergencyFundAction();
+      closeEmergencySheet();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && document.getElementById("emergencySheet")?.classList.contains("is-open")) closeEmergencySheet();
+    });
 
     function clearEmergencyHistory() {
       if (confirm("비상금 기록을 모두 지울까요? 지금 잔액은 그대로예요.")) {
@@ -2117,10 +2095,10 @@
       if (monthAllocTextEl) {
         if (metrics.emergencyFund < 0) {
           monthAllocTextEl.innerText = `(${Math.abs(metrics.emergencyFund).toLocaleString()}원)`;
-          monthAllocTextEl.className = "text-sm font-black text-rose-600";
+          monthAllocTextEl.className = "m-row-amount text-rose-600";
         } else {
           monthAllocTextEl.innerText = metrics.emergencyFund.toLocaleString() + "원";
-          monthAllocTextEl.className = "text-sm font-black text-amber-800";
+          monthAllocTextEl.className = "m-row-amount";
         }
       }
 
@@ -2129,6 +2107,7 @@
 
       // 비상금 금고 UI 갱신
       renderEmergencyFundUI();
+      renderMonthList(getValidSummaryList());
     }
 
     function renderSummaryTable() {
@@ -2270,6 +2249,55 @@
           tbody.appendChild(tr);
         });
       }
+      renderMonthList(list);
+    }
+
+    // 폰용 월 목록: 최근 달이 위, 누르면 위 카드가 그 달로 바뀜
+    function renderMonthList(list) {
+      const box = document.getElementById("summaryMonthList");
+      if (!box) return;
+      if (list.length === 0) {
+        box.innerHTML = '<p class="m-sub py-6 text-center">아직 등록된 달이 없어요.</p>';
+        return;
+      }
+      const selected = selectedSummaryIndex >= 0 && selectedSummaryIndex < list.length ? selectedSummaryIndex : list.length - 1;
+      let html = "";
+      let lastYear = null;
+      list.map((row, i) => ({ row, i })).reverse().forEach(({ row, i }) => {
+        const m = getMonthMetrics(row);
+        const year = row.year || "";
+        if (year !== lastYear) {
+          html += `<div class="m-month-year">${year}</div>`;
+          lastYear = year;
+        }
+        const emg = m.emergencyFund < 0
+          ? `<span class="text-rose-600">−${toManwon(Math.abs(m.emergencyFund))}</span>`
+          : toManwon(m.emergencyFund);
+        html += `
+          <button type="button" class="m-month-row${i === selected ? " is-selected" : ""}" onclick="selectMonthFromList(${i})">
+            <span class="m-month-name">${m.month}</span>
+            <span class="m-month-body">
+              <span class="m-month-amount">${m.remainBalance.toLocaleString()}원</span>
+              <span class="m-month-meta">적금 ${toManwon(m.savings)} · 용돈 ${toManwon(m.pocketMoney)} · 생활비 ${toManwon(m.livingExpense)}</span>
+            </span>
+            <span class="m-month-side"><span class="m-month-meta">비상금</span><span class="m-month-side-val">${emg}</span></span>
+          </button>`;
+      });
+      box.innerHTML = html;
+    }
+
+    // 1,150,000 → "115만", 12,345 → "1.2만", 0 → "0"
+    function toManwon(amount) {
+      if (!amount) return "0";
+      const man = amount / 10000;
+      return (man >= 10 ? Math.round(man).toLocaleString() : (Math.round(man * 10) / 10)) + "만";
+    }
+
+    function selectMonthFromList(index) {
+      document.getElementById("summaryMonthSelect").value = index;
+      selectedSummaryIndex = index;
+      renderSummaryCardsOnly();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // ==========================================
@@ -5167,6 +5195,29 @@
           등록하기
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- 비상금 수정 바텀시트 (폰: 아래에서 올라옴 / 넓은 화면: 가운데 창) -->
+  <div id="emergencySheet" class="m-sheet" aria-hidden="true">
+    <div class="m-sheet-backdrop" onclick="closeEmergencySheet()"></div>
+    <div class="m-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="emergencySheetTitle">
+      <div class="m-sheet-handle"></div>
+      <h3 id="emergencySheetTitle" class="m-sheet-title">비상금이 얼마 남았나요?</h3>
+      <div class="m-amount-field">
+        <input type="text" inputmode="numeric" id="emergencyInput" placeholder="0" oninput="onEmergencyInputChange(this)" class="m-amount-input" aria-label="비상금 금액" />
+        <span class="m-amount-unit">원</span>
+      </div>
+      <div class="m-chip-row">
+        <button type="button" onclick="adjustEmergencyInput(100000)" class="m-chip-btn">+10만</button>
+        <button type="button" onclick="adjustEmergencyInput(500000)" class="m-chip-btn">+50만</button>
+        <button type="button" onclick="adjustEmergencyInput(1000000)" class="m-chip-btn">+100만</button>
+        <button type="button" onclick="adjustEmergencyInput(-100000)" class="m-chip-btn">−10만</button>
+        <button type="button" onclick="adjustEmergencyInput(-500000)" class="m-chip-btn">−50만</button>
+        <button type="button" onclick="resetEmergencyInputField()" class="m-chip-btn">0원</button>
+      </div>
+      <input type="text" id="emergencyMemoInput" placeholder="메모 (선택)" class="m-memo-input" />
+      <button type="button" onclick="saveEmergencyFromSheet()" class="m-primary">저장하기</button>
     </div>
   </div>
 
